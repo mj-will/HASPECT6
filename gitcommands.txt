@@ -1,0 +1,4 @@
+git add .
+git commit -m "note "
+git push origin master
+git pull origin master (if anything changed on master branch)
