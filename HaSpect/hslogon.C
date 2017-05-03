@@ -125,9 +125,7 @@ void HSproject(TString pname){
 }
 void HSdata(){
   if(gSystem->Getenv("RHIPO"))
-    gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("RHIPO"));
-  if(gSystem->Getenv("CHIPO"))
-    gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("CHIPO"));
+    gROOT->ProcessLine(TString(".x ")+gSystem->Getenv("RHIPO")+"/Hipo2Root.C");
 
   LoadMacro("THSWeights.C");
   LoadMacro("THSParticle.C");
