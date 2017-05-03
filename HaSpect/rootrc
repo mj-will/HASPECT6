@@ -1,0 +1,3 @@
+Rint.Logon:              $HSANA/hslogon.C
+Unix.*.Root.MacroPath:      .:$(HSANA)/:$(ROOTSYS)/macros:
+ACLiC.IncludePaths:     -I$(HSANA)
