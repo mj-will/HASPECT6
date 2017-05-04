@@ -14,4 +14,5 @@
   //loop through tree and add a UID, 
   //reader->SetUID(100); //may want to apply offset
   //reader->AddUID(HSout());
+  gROOT->ProcessLine(".q");
 }
