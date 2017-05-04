@@ -14,7 +14,7 @@ void MakeAll();
 void HSMacPath(TString opt);
 #include <TProof.h> //MAke sure gProof can be seen here
 TString MACPATH; //additional macro path needed for proof
-
+Bool_t gISFARM=kFALSE;
 
 void hslogon(){
    //get command line options first check if makeall
@@ -40,6 +40,33 @@ void hslogon(){
     //look for --proof=Nworkers optionif Nworkers not given all cores will be used
     if((opt.Contains("--proof"))) startproof(TString(opt(8,opt.Sizeof())).Atoi());
     
+  }
+   //get command line options first check if farm job
+  for(Int_t i=1;i<gApplication->Argc();i++){
+    TString opt=gApplication->Argv(i);
+    //look for --farm and copy all hsroot files to local hsana directory
+    if((opt.Contains("--farm"))){
+      gISFARM=kTRUE;
+      TString HSANA=gSystem->Getenv("HSANA");
+      //gSystem->Exec(Form("mkdir hsana"));
+      gSystem->Exec(Form("cp %s/*.h hsana/.",HSANA.Data()));
+      gSystem->Exec(Form("cp %s/*.C hsana/.",HSANA.Data()));
+      gSystem->Setenv("HSANA","./");
+      if(gSystem->Getenv("RHIPO")){
+	TString RHIPO=gSystem->Getenv("RHIPO");
+	gSystem->Exec(Form("cp %s/THipo.h hsana/.",RHIPO.Data()));
+	gSystem->Exec(Form("cp %s/THipo.C hsana/.",RHIPO.Data()));
+	gSystem->Exec(Form("cp %s/Hipo2Root.C hsana/.",RHIPO.Data()));
+	gSystem->Setenv("RHIPO","./");	
+      }
+      if(gSystem->Getenv("CHIPO")){
+	TString CHIPO=gSystem->Getenv("CHIPO");
+	gSystem->Exec(Form("cp %s/*.h hsana/.",CHIPO.Data()));
+	gSystem->Exec(Form("cp %s/*.cpp hsana/.",CHIPO.Data()));
+	gSystem->Setenv("CHIPO","./");	
+      }
+      gROOT->SetMacroPath(TString("hsana/")+gROOT->GetMacroPath());
+    }
   }
   
   //get command line options and call assiciated functions
@@ -77,7 +104,6 @@ void MakeAll(){
   gROOT->LoadMacro("THSDataManager.C++");
   gROOT->LoadMacro("THSLundReader.C++");
 
-  gSystem->Exec("ar rcs libHSana.so *so");
   gSystem->Exec(Form("cd %s",CurDir.Data()));
 }
 void HSfit(){
