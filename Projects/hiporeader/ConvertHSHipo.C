@@ -1,7 +1,7 @@
 //Run with root --hsdata ConvertHS.C --hsin=ep_eppi0.lund --hsout=ep_eppi0.root
 {
   THSHipoReader* reader=new THSHipoReader();
-  hipo->SetWriteGenBranch("Generated");
+  reader->SetWriteGenBranch("Generated");
 
   gBenchmark->Start("time");
 
