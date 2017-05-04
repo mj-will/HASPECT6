@@ -48,7 +48,7 @@ void hslogon(){
     if((opt.Contains("--farm"))){
       gISFARM=kTRUE;
       TString HSANA=gSystem->Getenv("HSANA");
-      //gSystem->Exec(Form("mkdir hsana"));
+      gSystem->Exec(Form("mkdir hsana"));
       gSystem->Exec(Form("cp %s/*.h hsana/.",HSANA.Data()));
       gSystem->Exec(Form("cp %s/*.C hsana/.",HSANA.Data()));
       gSystem->Setenv("HSANA","./");
