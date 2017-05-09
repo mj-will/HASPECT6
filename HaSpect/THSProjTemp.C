@@ -8,7 +8,6 @@ THSProjTemp::THSProjTemp(){
   //include topology for analysis and get index
  
   //Set final state
-  fFinal.push_back(&fElectron);
 }
 Bool_t THSProjTemp::WorkOnEvent(){
   //Should this event be saved?

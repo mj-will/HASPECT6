@@ -495,6 +495,7 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events a
   //It will be deleted by this object
   // cout<<fOutDir<<endl;
   THSRooFit* RFa=new THSRooFit();
+  RFa->SetIDBranchName(fIDBranchName);
   RFa->SetName(ctree->GetName());
   if(fBinnedFit)RFa->SetBinnedFit();
   RFa->SetSingleSpecies(fSingleSp);
