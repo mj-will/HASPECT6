@@ -10,13 +10,14 @@
   RF->LoadAuxVars("Eg[3,4]");//Not to be fitted but limits applied to dataset
   RooRealVar * var=RF->GetWorkSpace()->var("Mmiss");
   var->setBins(100); //number of bins used in PDF histogram 
+
   //////////////////////////////Make signal PDF
   RF->Factory("RooHSEventsHistPDF::Sig(Mmiss,alpha[0,0,20],off[0,-2,2],scale[1,0.8,1.2])");
   RooHSEventsHistPDF* pdf=dynamic_cast<RooHSEventsHistPDF*>(RF->GetWorkSpace()->pdf("Sig"));
   //Attach MC signal data
   TChain *chainmc=new TChain("MyModel","mcsignal");
-  chainmc->Add("SigDataMulti.root");
-  chainmc->Add("BG1DataMulti.root");
+  chainmc->Add("SigData.root");
+  chainmc->Add("BG1Data.root");
   pdf->SetEvTree(chainmc);
   RF->LoadSpeciesPDF("Sig",1); 
   //////////////////////////////Make background PDF
@@ -32,13 +33,13 @@
   RooHSEventsHistPDF* pdfb2=dynamic_cast<RooHSEventsHistPDF*>(RF->GetWorkSpace()->pdf("BG2"));
   //Attach MC background data
   TChain *chainmcb2=new TChain("MyModel","mcbackground");
-  chainmcb2->Add("BG2DataMulti.root");
+  chainmcb2->Add("BG2Data.root");
   pdfb->SetEvTree(chainmcb2);
   RF->LoadSpeciesPDF("BG2",1);
 
   //Add data to chain
   TChain chain("MyModel");
-  chain.Add("DataMulti.root");
+  chain.Add("Data.root");
   RF->SetIDBranchName("fgID");
   //import to RooFit
   RF->LoadDataSet(&chain);
