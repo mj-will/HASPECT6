@@ -65,7 +65,7 @@ void hslogon(){
 	gSystem->Exec(Form("cp %s/*.cpp hsana/.",CHIPO.Data()));
 	gSystem->Setenv("CHIPO","./");	
       }
-      gROOT->SetMacroPath(TString("hsana/")+gROOT->GetMacroPath());
+      gROOT->SetMacroPath(TString("hsana/:")+gROOT->GetMacroPath());
     }
   }
   

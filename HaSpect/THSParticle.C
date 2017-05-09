@@ -17,6 +17,9 @@ THSParticle::THSParticle() : fP4(), fVertex(), fPDGCode(0), fPDGMass(0), fMeasMa
 THSParticle::THSParticle(int code) : fP4(), fVertex(), fPDGCode(0), fPDGMass(0), fMeasMass(0) {
   SetPDGcode(code);
 }
+THSParticle::THSParticle(TString pdgname) : fP4(), fVertex(), fPDGCode(0), fPDGMass(0), fMeasMass(0) {
+  SetPDGcode(TDatabasePDG::Instance()->GetParticle(pdgname)->PdgCode());
+}
 void THSParticle::Print(Option_t *) const{
   cout<<"Printing THSParticle of type "<<TDatabasePDG::Instance()->GetParticle(fPDGCode)->GetName()<<endl;
   fP4.Print("");

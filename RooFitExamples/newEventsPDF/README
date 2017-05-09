@@ -2,7 +2,7 @@ This example implements a PDF based on simulated or sideband data in a custom
 class THSEventsPDF. Signal and background events are genreated and used in
 constructing the models which are then fit to the "data" and sWeights calculated.
 The second part of this example shows how fits can be split up and run in batch
-mode, in particular on a CPU farm
+mode, in particular on a CPU farm (see end of README)
 /////////////////////////////////////////////////////////////////////
 MODEL
 To produce test data, and signal/background events run the macro :
@@ -108,3 +108,26 @@ Once this done you can run the fits/weights :
 $>root --hsfit  FitHSMCModelSavedBins.C
 
 The content of FitHSMCModelSavedBins.C is actually simpler than the other two.
+############################################################
+Batch Farm 
+Having split data up into bin it is possible to run each on a batch farm.
+As before to split data into bins :
+   root  --hsfit ConfigureBins.C
+Now each fit will be run as defined in FitHSMCModelFarm.C. This should follow the method in the prvious fit macros. But it now uses the FitBatchBin function.
+    RF->FitBatchBin(1);
+To tell the fitter where the binned files are you must set the variable FILEDIR
+   setenv FILEDIR path
+Where path is now the outdir given in ConfigureBins.C :
+      RF->SetOutDir("outBins/");
+so
+   setenv FILEDIR $PWD/outBins
+Note it needs the full path to copy the output files back to the correct place
+You need to edit the pbs_run script to match your own pbs system. This script is run on the farm node. 
+The fit is called via root :
+    root -l -b -q --farm --hsfit '$RUNMAC'  >& $LOG
+--farm tells root to copy all the haspect classes and compile them on the farm node
+--hsfit tells it just to compile the fit classes
+$RUNMAC is defined in the HSSubmitBatch.C macro to be the FitHSMCModelFarm.C macro. Obviously you can change this to any macro you want.
+To run :
+root --THSBins HSSubmitBatch.C
+It only needs the THSBins class to configure the different jobs and send them.

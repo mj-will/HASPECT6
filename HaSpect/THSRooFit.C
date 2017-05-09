@@ -649,6 +649,39 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
   }
   
 }
+void THSRooFit::FitBatchBin(Int_t Nfits){
+  
+  Info("THSRooFit::FitBatchBin","Goint to run fit from %s",fBinDir.Data());
+  if(!fWS->set("PDFs"))DefineSets();
+  TDirectory *saveDir=gDirectory;
+
+  TChain *chainData=new TChain("BinnedTree");
+  chainData->Add(GetBinDir()+TString("/Tree")+"Data"+".root");
+  cout<<"Data chain "<<GetBinDir()+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
+  LoadDataSet(chainData);
+ //THSRooFit* rf=CreateSubFitBins(chainData,kFALSE);
+  //fBinDir.ReplaceAll("/","");
+  // rf->SetName(fBinDir);
+  //look for RooHSEventsPDFs to get MC events trees
+  for(Int_t ip=0;ip<fPDFs.getSize();ip++){
+    RooAbsPdf* pdf=fWS->pdf(fPDFs[ip].GetName());
+    RooHSAbsEventsPDF* hspdf=0;
+    if((hspdf=dynamic_cast<RooHSAbsEventsPDF*>(pdf))){    
+      Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
+      cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
+      TChain *chainMC=new TChain("BinnedTree");
+      //pdf has ownership of chain when set
+      chainMC->Add(GetBinDir()+TString("/Tree")+hspdf->GetName()+".root");
+      if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+    }
+  } 
+  //Configured the fir for this bin now do it
+  //if(fModel) TotalPDF();//total PDF defined in parent so also for child
+  FitAndStudy(Nfits);
+  // delete rf;
+  delete chainData;
+  
+}
 void THSRooFit::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree
   if(!fWS->set("PDFs"))DefineSets();

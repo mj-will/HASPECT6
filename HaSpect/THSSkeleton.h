@@ -41,6 +41,8 @@ class THSSkeleton :public TObject  {
   Int_t fPlace;
   TString fOption;
   TString fProjName;
+  TString fProjTopo;
+  TString fProjFinal;
   
  public :
   
@@ -54,6 +56,8 @@ class THSSkeleton :public TObject  {
   void SetWeights(Bool_t is=kTRUE){fIsWeights=is;}
   void SetLPS(Int_t is=0){fNLPS=is;}
   void SetProject(TString proj,Bool_t perm=kFALSE){fProjName=proj;fIsProject=kTRUE;fIsProjectPerm=perm;}
+  void SetProjectTopo(TString topos){fProjTopo=topos;};
+  void SetProjectFinal(TString finals){fProjFinal=finals;};
   void SetFileName(TString name){fFileName=name;}
   void SetSelName(TString name){fSelName=name;}
   void CreateSelector(TString selname,TString filename,TString treename,TString opt="");
@@ -67,7 +71,8 @@ class THSSkeleton :public TObject  {
   void HSWeights();
   void HSLPS();
   void HSProject();
-
+  void CreateMyProject();
+  
   //RooFit classes
   void CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString parNames);
   
@@ -76,6 +81,7 @@ class THSSkeleton :public TObject  {
   void MoveToLine(TString line0);
   TString FindNextLineLike(TString linelike);
   void ReplaceMacroText(TString text0,TString text1);
+  void ReplaceAllMacroText(TString text0,TString text1);
   
 };
 

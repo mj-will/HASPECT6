@@ -452,7 +452,82 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   fCurMacro.SaveSource(pdfName+".h");
 
 }
+void THSSkeleton::CreateMyProject(){
 
+  TObjArray* topos=0;
+  if(fProjTopo==TString(""))cout<<"Warning No project topologies set, you will have to edit the files yourself"<<endl;
+  else{
+    topos=fProjTopo.Tokenize(",");
+  }
+  TObjArray* finals=0;
+  if(fProjFinal==TString(""))cout<<"Warning No project final state set, you will have to edit the files yourself"<<endl;
+  else{
+    finals=fProjFinal.Tokenize(",");
+  }
+  TString HSANA=gSystem->Getenv("HSANA");
+  gSystem->Exec(Form("cp %s/THSProjTemp.h THS%s.h",HSANA.Data(),fProjName.Data()));
+  //gSystem->Exec(Form("cp %s/THSProjTemp.h THS%s.h",".",fProjName.Data()));
+  fCurMacro=TMacro(TString("THS")+fProjName+".h");
+  ReplaceAllMacroText("ProjTemp",fProjName);
+  TString UpperProjName=fProjName;
+  UpperProjName.ToUpper();
+  ReplaceAllMacroText("PROJTEMP",UpperProjName);
+
+  FindNextLineLike("//Topology flags for this project");
+  for(Int_t io=0;io<topos->GetEntries();io++)
+    ContinueLineAfter(Form("  Int_t fTID_%d=-1;",io));
+
+  fPlace=0;
+  FindNextLineLike("//Init functions");
+  for(Int_t io=0;io<topos->GetEntries();io++)
+    ContinueLineAfter(Form("  void Init_%d();",io));
+
+  fPlace=0;
+  FindNextLineLike("//Final Particles");
+  for(Int_t io=0;io<finals->GetEntries();io++){
+    TString sparticle=finals->At(io)->GetName();
+    ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.Sizeof())).Data()));
+  }
+  
+  fCurMacro.SaveSource(TString("THS")+fProjName+".h");
+  ///////////////////////////////////////////////////////
+  
+  gSystem->Exec(Form("cp %s/THSProjTemp.C THS%s.C",HSANA.Data(),fProjName.Data()));
+  fCurMacro=TMacro(TString("THS")+fProjName+".C");
+  fPlace=0;
+  ReplaceAllMacroText("ProjTemp",fProjName);
+  fPlace=0;
+  FindNextLineLike("//include topology for analysis");
+  for(Int_t io=0;io<topos->GetEntries();io++)
+    ContinueLineAfter(Form("  fTID_%d=AddTopology(\"%s\");",io,topos->At(io)->GetName()));
+
+  fPlace=0;
+  FindNextLineLike("//Do they correspond to a defined topology?");
+  for(Int_t io=0;io<topos->GetEntries();io++)
+    ContinueLineAfter(Form("    else if(fCurrTopo==fTID_%d) Init_%d();",io,io));
+
+  fPlace=0;
+  FindNextLineLike("//Define topology Init functions");
+  for(Int_t io=0;io<topos->GetEntries();io++){
+    ContinueLineAfter(Form("void THS%s::Init_%d(){",fProjName.Data(),io));
+    ContinueLineAfter(TString("  //define init for detected ")+topos->At(io)->GetName());
+    ContinueLineAfter("  //Set detected particles");
+    ContinueLineAfter("");
+    ContinueLineAfter("  //Reconstruct missing or combined particles");
+    ContinueLineAfter("");
+    ContinueLineAfter("}");
+    
+  }
+  fPlace=0;
+  FindNextLineLike("//Set final state");
+  for(Int_t io=0;io<finals->GetEntries();io++){
+    TString sparticle=finals->At(io)->GetName();
+    ContinueLineAfter(Form("  fFinal.push_back(&f%s);",TString(sparticle(0,sparticle.First(":"))).Data()));
+  }
+  
+  fCurMacro.SaveSource(TString("THS")+fProjName+".C");
+
+}
 
 
 //////////////////////////////////////////////////////
@@ -490,4 +565,15 @@ void THSSkeleton::ReplaceMacroText(TString text0,TString text1){
   TString strline=fCurMacro.GetLineWith(text0)->GetString();
   strline.ReplaceAll(text0,text1);
   fCurMacro.GetLineWith(text0)->SetString(strline);
+}
+void THSSkeleton::ReplaceAllMacroText(TString text0,TString text1){
+  TList *lines=fCurMacro.GetListOfLines();
+  TObjString* thisline=0;
+  Int_t count=0;
+  for(count=fPlace;count<lines->GetEntries();count++){
+    thisline=dynamic_cast<TObjString*>(lines->At(count));
+    if(thisline->String().Contains(text0))
+      thisline->SetString(thisline->String().ReplaceAll(text0,text1));
+  }
+
 }

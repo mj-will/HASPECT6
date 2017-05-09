@@ -38,6 +38,7 @@ class THSParticle {
  public:
   THSParticle();  	        //Constructor
   THSParticle(int code);  	        //Constructor
+  THSParticle(TString pdgname);  	        //Constructor
   virtual ~THSParticle(){};	     	//Destructor
 
 

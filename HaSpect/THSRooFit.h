@@ -137,6 +137,7 @@ public:
   void SavePlots(TString filename);
   virtual void FitMany(Int_t Nfits=1);
   void FitSavedBins(Int_t Nfits);
+  void FitBatchBin(Int_t Nfits);
   virtual void FitAndStudy(Int_t Nfits=1);
   void RandomisePars();
   void MakeBins();
