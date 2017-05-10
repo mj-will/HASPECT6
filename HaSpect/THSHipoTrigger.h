@@ -3,17 +3,15 @@
 #ifndef THSHIPOTRIGGER_h
 #define THSHIPOTRIGGER_h
 
-#include <iostream>
-#include <fstream>
 #include "THSHipoReader.h"
 
 class THSHipoTrigger: public THSHipoReader{
 
  public :
   THSHipoTrigger();
-  ~THSHipoTrigger(){};
+  virtual ~THSHipoTrigger(){};
 
-  virtual Bool_t Init(TString filename,TString name="");
+  //  virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
   virtual void InitOutput(TString filename);
 

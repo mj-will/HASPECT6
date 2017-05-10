@@ -14,7 +14,7 @@ class THSHipoReader: public THSDataManager{
 
  public :
   THSHipoReader();
-  ~THSHipoReader(){if(fHipo) delete fHipo;};
+  virtual ~THSHipoReader(){if(fHipo) delete fHipo;};
 
   virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);

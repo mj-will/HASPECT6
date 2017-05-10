@@ -62,7 +62,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 // type is 1 for particles in the detector
   if(!fHipo->NextEvent()) return kFALSE;
   fEntry++;
-  
+  //cout<<fEntry<<endl;
   fParticles.clear();//reset fParticles
   if(fAddGenerated) fGenerated.clear();//reset fGenerated
   

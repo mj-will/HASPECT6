@@ -14,6 +14,6 @@
   gBenchmark->Print("time");
 
   //loop through tree and add a UID, 
-  reader->SetUID(100); //may want to apply offset
-  reader->AddUID(HSout());
+  // reader->SetUID(100); //may want to apply offset
+  // reader->AddUID(HSout());
 }

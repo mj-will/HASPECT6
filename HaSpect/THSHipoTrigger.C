@@ -3,7 +3,7 @@
 THSHipoTrigger::THSHipoTrigger(){
   fHipo->ConfigBank("FTCAL::hits");
   //Get the necessary items from FT Bank
-  fFTCalBank=fHipo->GetBank("FTCal::hits");
+  fFTCalBank=fHipo->GetBank("FTCAL::hits");
 
   fFTCal_E=fFTBank->GetItem("energy");
 }
@@ -17,7 +17,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fPassTrig1=kFALSE;
   fFTEsum=0;
   
-  if(!ReadEvent()) return kFALSE;
+  if(!THSHipoReader::ReadEvent()) return kFALSE;
 
   //Now do some trigger simulations
 
@@ -28,4 +28,5 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   }
 
   if(fFTEsum>1) fPassTrig1=kTRUE;
+  return kTRUE;
 }
