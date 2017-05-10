@@ -41,7 +41,7 @@ class THSDataManager{
   void SetReadBranch(TString name){fReadBName=name;}
   void SetReadGenBranch(TString name){fReadGName=name;fInGenerated=kTRUE;}
   void SetWriteGenBranch(TString name){fWriteGName=name;fAddGenerated=kTRUE;}
-  void InitOutput(TString filename);
+  virtual void InitOutput(TString filename);
   void WriteEvent(){fWriteTree->Fill();}
   void CloseOutput();
   void ReadWriteChain(TChain* chain,TString OutDirName,TString FileAppend);
@@ -49,6 +49,8 @@ class THSDataManager{
   
   void AddUID(TString filename,TString treename="HSParticles"); //Add branch with unique ID to the HSParticles tree
   void SetUID(Long64_t val){UID=val;}
+
+  Long64_t GetEntry(){return fEntry;}
  protected :
   //GENERAL VECTORS FOR READING/WRITING
   vector<THSParticle*> fParticles; //vector of  particles

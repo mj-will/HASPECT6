@@ -1,6 +1,6 @@
-//Run with root --hsdata ConvertHSHipo.C --hsin=ep_eppi0.lund --hsout=ep_eppi0.root
+//Run with root --hsdata ConvertHSHipoTrig.C --hsin=ep_eppi0.hipo --hsout=ep_eppi0.root
 {
-  THSHipoReader* reader=new THSHipoReader();
+  THSHipoTrigger* reader=new THSHipoTrigger();
   // hipo->SetWriteGenBranch("Generated");
 
   gBenchmark->Start("time");

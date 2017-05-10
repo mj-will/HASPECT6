@@ -61,7 +61,8 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 // # of Particles, # of e, particle id, parent, daughter, p_x, p_y, p_z, E, mass, x vertex, y vertex, z vertex
 // type is 1 for particles in the detector
   if(!fHipo->NextEvent()) return kFALSE;
-
+  fEntry++;
+  
   fParticles.clear();//reset fParticles
   if(fAddGenerated) fGenerated.clear();//reset fGenerated
   
@@ -102,7 +103,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
      }
   }
   //FT particle bank
-  if(fFTBank){ //Filling reconstructed fParticles
+  if(fFTBank){ //Filling FT fParticles
     UInt_t Nin=fFTPid->Size()+fParticles.size();
     //in case some events have more particles
     while(Nin>fReadParticles->size()){

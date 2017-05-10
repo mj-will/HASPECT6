@@ -20,7 +20,7 @@ class THSHipoReader: public THSDataManager{
   virtual Bool_t ReadEvent(Long64_t entry=0);
 
 
- private :
+ protected :
   
   THipo *fHipo=nullptr;
   THipoBank *fPBank=nullptr;
