@@ -17,6 +17,8 @@ TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
 
 void hslogon(){
+  //Execute system .rootlogon.C script 
+  if(gSystem->AccessPathName("~/.rootlogon.C")){};
    //get command line options first check if makeall
   for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
