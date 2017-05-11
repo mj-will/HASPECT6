@@ -1,0 +1,98 @@
+#if !defined(CONSTANT)
+#define CONSTANT
+
+#include "IUAmpTools/Amplitude.h"
+#include "IUAmpTools/UserAmplitude.h"
+#include "IUAmpTools/AmpParameter.h"
+#include "GPUManager/GPUCustomTypes.h"
+#include "TLorentzVector.h"
+
+#include <utility>
+#include <string>
+#include <complex>
+#include <vector>
+
+#ifdef GPU_ACCELERATION
+
+void GPUConstant_exec( dim3 dimGrid, dim3 dimBlock, GPU_AMP_PROTO,
+		       GDouble module, GDouble phase);
+
+#endif // GPU_ACCELERATION
+
+
+
+
+
+using std::complex;
+using namespace std;
+
+
+//Unfortunately, I need to use a structure to move the ElectronScatteringTerm from the calcElectronScattering to the calcAmplitude, because all members that I derive a const!
+
+typedef struct{
+
+  complex<GDouble> JP;
+  complex<GDouble> J0;
+  complex<GDouble> JM;
+
+} ElectronScatteringTerm;
+
+
+class Kinematics;
+
+class Clas12PhotonsAmplitude : public Amplitude{ //deriva da Amplitude.
+
+ public:
+
+  
+  Clas12PhotonsAmplitude() : Amplitude() {}
+    Clas12PhotonsAmplitude(const vector <string>& args);
+
+    
+    ~ Clas12PhotonsAmplitude(){}
+    
+    string name() const { return "Clas12PhotonsAmplitude"; }
+
+    complex< GDouble > calcAmplitude( GDouble** pKin ) const;
+
+
+    /* to calculate the electron scattering term. 
+       ``electron'' and ``scattered'' are the indexes of these two particles in the pKin array
+    */
+    int calcElectronScattering( GDouble** pKin,int Ielectron,int Iscattered, ElectronScatteringTerm &ElectronScattering) const;
+    virtual complex< GDouble > calcHelicityAmplitude(int helicity,GDouble** pKin ) const {} //this will be derived by the user in his amplitude!!! //=0
+
+
+
+#ifdef GPU_ACCELERATION
+
+  void launchGPUKernel( dim3 dimGrid, dim3 dimBlock, GPU_AMP_PROTO ) const;
+  
+
+  
+  bool isGPUEnabled() const { return true; }
+
+#endif // GPU_ACCELERATION
+  
+ private:	
+ 
+
+ protected: //it's important that they're protected, NOT private.
+  int m_helicity_beam; //beam helicity
+  int m_helicity_electron; //scattered electron helicity
+
+  int m_Ielectron=0;
+  int m_Iscattered=3;
+  
+  //These are the three components of the amplitude for the electron scattering. One for each intermediate photon helicity.
+  //I put them here as class members because in this way I can (in the future) calculate them only ONCE for each event.
+  //complex<GDouble> JP;
+  //complex<GDouble> J0;
+  //complex<GDouble> JM;
+
+
+};
+
+
+
+#endif

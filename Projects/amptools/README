@@ -1,0 +1,56 @@
+############################################################
+#Downlad AmpTools from sourceforge and follow installation instructions
+#https://sourceforge.net/projects/amptools/
+#############################################################
+#configure and source SetAmpTools.csh with paths to your AmpTools installation
+
+source SetAmpTools.csh
+Edit file run/gen.in for input (phase space) data path
+cd DataIO/
+make dict
+cd ../
+make
+cd Exe
+make
+cd ../run
+../Exe/pseudoData gen_pKK.cfg test.root
+
+////////////////////////////////////////////////
+DataIO
+
+Conatains HSDataReader and HSDataWriter. Needs HSANA to be set as it will copy the necessary files from there THSWeights, THSParticle, THSDataManager
+
+////////////////////////////////////////////////
+Amp
+
+Some example amplitude classes including TwoPSAngles inheriting from Clas12Photons.
+**Currently this is not configured properly and needs some work
+
+/////////////////////////////////////////////////
+Exe
+
+Contains pseudoData.cc which loads phase space data and folds which ever amplitude is configured.
+
+/////////////////////////////////////////////////
+run
+contains configuration files :
+gen_pKK.cfg
+ -configure amplitude
+ # Reaction name  + final state particles (ordering important for amp syncing)
+ reaction pKK beam e p p1 p2
+
+ # DataReader, with reader configuration gen.in
+ data pKK HSDataReader gen.in
+
+ # example amplitude factor
+ amplitude pKK::s1::phi_1020p BreitWigner  1.20  0.08 4 5
+ amplitude pKK::s1::phi_1020p TwoPSAngles 1 1 -1
+
+gen.in :
+eg_eKK.root #input file
+HSParticles  #input treename
+Truth       #use HSParticle::P4 (if not Truth) or HSPArticle::TruthP4 (if Truth)
+11,2212,321,-321 #pdgs of particles to be fit in HSParticles
+Beam: 11    #e- beam energy
+
+

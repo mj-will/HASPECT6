@@ -1,0 +1,104 @@
+#include <iostream>
+#include <string>
+#include "TString.h"
+#include "TH1F.h"
+#include "TFile.h"
+#include "IUAmpTools/AmplitudeManager.h"
+#include "IUAmpTools/ConfigFileParser.h"
+#include "IUAmpTools/ConfigurationInfo.h"
+#include "IUAmpTools/AmpToolsInterface.h"
+#include "DataIO/HSDataReader.h"
+//#include "DataIO/HSDataWriter.h"
+#include "Amp/BreitWigner.h"
+#include "Amp/TwoPSAngles.h"
+using namespace std;
+
+int main(int argc, char** argv){
+
+
+    // ************************
+    // usage
+    // ************************
+
+  cout << endl << " *** Generating Events According to Amplitudes *** " << endl << endl;
+
+  if (argc <= 2){
+    cout << "Usage:" << endl << endl;
+    cout << "\tpseudoData <config file name> <output file name>" << endl << endl;
+    return 0;
+  }
+
+
+    // ************************
+    // parse the command line parameters
+    // ************************
+
+  string cfgname(argv[1]);
+  string outfilename(argv[2]);
+
+  cout << "Config file name = " << cfgname << endl << endl;
+  cout << "Output file name = " << outfilename << endl;
+
+
+    // ************************
+    // parse the config file
+    // ************************
+
+  ConfigFileParser parser(cfgname);
+  ConfigurationInfo* cfgInfo = parser.getConfigurationInfo();
+  cfgInfo->display();
+
+
+    // ************************
+    // AmpToolsInterface
+    // ************************
+
+  AmpToolsInterface::registerAmplitude(BreitWigner());
+  AmpToolsInterface::registerAmplitude(TwoPSAngles());
+  AmpToolsInterface::registerDataReader(HSDataReader());
+
+  AmpToolsInterface ATI(cfgInfo);
+
+  pKKDataReader* dataReader = dynamic_cast<pKKDataReader*>(ATI.dataReader(cfgInfo->reactionList()[0]->reactionName()));
+  cout<<dataReader->getTree()<<endl;
+  cout<<dataReader->getTree()->GetName()<<endl;
+
+
+  ATI.loadEvents(dataReader);
+
+  pKKDataWriter* dataWriter = new pKKDataWriter(outfilename);
+  dataWriter->setTree(dataReader->getTree());
+
+ // ************************
+    // calculate intensities for all events
+    // ************************
+
+  cout << "calculating intensities..." << endl;
+  double maxIntensity = 1.2 * ATI.processEvents(cfgInfo->reactionList()[0]->reactionName());
+  cout << "... finished calculating intensities" << endl;
+
+
+    // ************************
+    // loop over all events again and do accept/reject
+    // ************************
+
+  cout << "doing accept/reject..." << endl;
+  dataReader->resetSource();//back to first event
+  for (int i = 0; i < dataReader->numEvents(); i++){
+    dataReader->getTreeEntry(i);
+    double intensity = ATI.intensity(i); 
+    double rndm = drand48() * maxIntensity;
+    if (intensity > rndm){
+      //  ATI.kinematics(i);
+      dataWriter->writeEvent();
+    }
+    //    delete kin;
+ 
+  }
+  cout << "... finished doing accept/reject" << endl;
+
+  cout << "KEPT " << dataWriter->eventCounter() << "  events" << endl;
+
+  delete dataWriter;
+
+}
