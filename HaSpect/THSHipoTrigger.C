@@ -5,7 +5,7 @@ THSHipoTrigger::THSHipoTrigger(){
   //Get the necessary items from FT Bank
   fFTCalBank=fHipo->GetBank("FTCAL::hits");
 
-  fFTCal_E=fFTBank->GetItem("energy");
+  fFTCal_E=fFTCalBank->GetItem("energy");
 }
 void THSHipoTrigger::InitOutput(TString filename){
   THSDataManager::InitOutput(filename);
@@ -22,7 +22,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   //Now do some trigger simulations
 
   if(fFTCalBank){ //Get FTCAL hits information
-    while(fFTBank->NextEntry()){ //iterate over hits
+    while(fFTCalBank->NextEntry()){ //iterate over hits
       fFTEsum+=fFTCal_E->Val(); //sum energy of each cluster
     }
   }

@@ -36,7 +36,7 @@ Bool_t THSProjTemp::WorkOnEvent(){
   //if()fGoodEvent=kTRUE;
   //else() fGoodEvent =kFALSE;
   if(fIsGenerated) return kFALSE; //Generated only 1 permutation
-  PermutateParticles();//comment out if not permutating
+  PermutateParticles();
   return kFALSE;
 }
 void THSProjTemp::Init_Generated(){

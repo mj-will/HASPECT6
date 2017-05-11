@@ -151,6 +151,7 @@ void THSProject::ProcessEvent(){
     while(IsPermutating());
  }
 Bool_t THSProject::PermutateParticles(){
+  if(!fTryPerm) return kFALSE;
   //returns true if another valid permuation to be tried
   //returns false when time to move on
   //check through particle types
