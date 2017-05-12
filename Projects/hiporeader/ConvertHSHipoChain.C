@@ -4,7 +4,7 @@
   reader->SetWriteGenBranch("Generated");
 
   TChain chain("hipo");
-  chain.Add(HSin()+"out*.hipo");
+  chain.Add(HSin()+"/out*.hipo");
   
   gBenchmark->Start("time");
 
