@@ -1,4 +1,5 @@
 #include "THSDataManager.h"
+#include "TSystem.h"
 #include "TObjArray.h"
 
 
@@ -60,18 +61,6 @@ Bool_t THSDataManager::InitTreeReader(TString filename,TString name){
 }
 Bool_t THSDataManager::Init(TString filename,TString name){
   return InitTreeReader(filename,name); //default use tree reader
-  //   fReadFile=TFile::Open(filename);
-//   if(!fReadFile) {Error("THSDataManager::Init","No file found %s",filename.Data());return kFALSE;}
-//   fReadTree=dynamic_cast<TTree*>(fReadFile->Get(name));
-//   if(!fReadTree){Error("THSDataManager::Init","No tree found %s",name.Data());return kFALSE;}
-//   fReadParticles=new vector<THSParticle*>;//note crashes on GetEntry without this...
-//   fReadTree->SetBranchAddress(fReadBName,&fReadParticles);
-//   fReadTree->GetEntry(0);
-//   fNin=fReadParticles->size();
-//   for(Int_t i=0;i<fNin;i++)
-//     fParticles.push_back(fReadParticles->at(i));
-//   Info("THSDataManager::Init","Found %d particles in first event",fNin);
-//   return kTRUE;
 
 }
 Bool_t THSDataManager::ReadEvent(Long64_t entry){
@@ -124,10 +113,11 @@ void THSDataManager::ReadWriteChain(TChain* chain,TString OutDirName,TString Fil
   
   for(Int_t i=0;i<files->GetEntries();i++){
     TString fname=files->At(i)->GetTitle();
-    Init(fname,fname);
-    fname.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);
-    Info("THSDataManager::ReadWriteChain"," Writing to %s",(OutDirName+fname).Data());
-    WriteParticles(OutDirName+"/"+fname);
+    Init(fname,chain->GetName());
+    TString outfile=gSystem->BaseName(fname);
+    outfile.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);
+    Info("THSDataManager::ReadWriteChain"," Writing to %s",(OutDirName+outfile).Data());
+    WriteParticles(OutDirName+"/"+outfile);
     CloseReadTree();
   }
 }

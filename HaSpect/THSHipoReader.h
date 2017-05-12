@@ -18,7 +18,7 @@ class THSHipoReader: public THSDataManager{
 
   virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
-
+  virtual void CloseReadTree();
 
  protected :
   

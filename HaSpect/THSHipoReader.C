@@ -54,6 +54,9 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
   Info("THSHipoReader","Opened file");
   return kTRUE;
 }
+void THSHipoReader::CloseReadTree(){
+  //noting to do for hipo files (I think)
+}
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
   //return false at end of file
   // LUND format:
