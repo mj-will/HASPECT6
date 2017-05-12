@@ -4,11 +4,11 @@
   reader->SetWriteGenBranch("Generated");
 
   TChain chain("hipo");
-  chain.Add(hsin()+"out*.hipo");
+  chain.Add(HSin()+"out*.hipo");
   
   gBenchmark->Start("time");
 
-  reader->ReadWriteChain(&chain,hsout(),".root");
+  reader->ReadWriteChain(&chain,HSout(),".root");
   
   cout<<"Analysed "<<reader->GetEntry()<<" events"<<endl;
   
