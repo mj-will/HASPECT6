@@ -15,7 +15,7 @@
   RooHSAbsEventsPDF* PDF=dynamic_cast<RooHSAbsEventsPDF*>(RF->GetWorkSpace()->pdf("SigAsym"));
  
   TChain *chainMC=new TChain("MyModel");
-  chainMC->Add("SimDataRes10.root");
+  chainMC->Add("SimDataSymRes10.root");
   if(!PDF->SetEvTree(chainMC)) exit(0);
   //PDF->SetNInt(1E4);
   //PDF->SetConstInt();
@@ -25,7 +25,7 @@
   RF->TotalPDF();
   RF->SetStudyPDF("SigAsym");
   //RF->SetStudyPlot();
-  RF->SetNStudyTrials(20);
+  RF->SetNStudyTrials(2);
   RF->StudyFit();
   gBenchmark->Stop("Binned");
   gBenchmark->Print("Binned");

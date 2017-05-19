@@ -16,14 +16,14 @@
   RF->LoadSpeciesPDF("SigAsym");
   RooHSAbsEventsPDF* PDF=dynamic_cast<RooHSAbsEventsPDF*>(RF->GetWorkSpace()->pdf("SigAsym"));
   TChain *chainMC=new TChain("MyModel");
-  chainMC->Add("SimDataRes10.root");
+  chainMC->Add("SimDataSymRes10.root");
   if(!PDF->SetEvTree(chainMC)) exit(0);
   //PDF->SetNInt(5E4);
   PDF->CheckIntegralParDep(4);
   //  PDF->SetConstInt();
   RF->TotalPDF();
   TChain *chainData=new TChain("MyModel");
-  chainData->Add("DataRes10.root");
+  chainData->Add("DataSymRes10.root");
   RF->LoadDataSet(chainData);
   gBenchmark->Start("Binned");
   RF->SetStudyPDF("SigAsym");

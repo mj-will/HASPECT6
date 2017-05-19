@@ -29,6 +29,7 @@ class RooHSAbsEventsPDF : public RooAbsPdf {
   Long64_t fNInt=-1;
   Long64_t fNMCGen=0; //Number of generated MC events
   Int_t fNpars=0;
+  Int_t fNvars=0;
   Bool_t fIsIntegrating=kFALSE;
   Bool_t fIsClone=kFALSE;
   Bool_t fForceConstInt=kFALSE;

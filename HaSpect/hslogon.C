@@ -160,7 +160,8 @@ void HSdata(){
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
   LoadMacro("THSRADSReader.C");
-  LoadMacro("THSHipoReader.C");
+  if(gSystem->Getenv("RHIPO"))
+    LoadMacro("THSHipoReader.C");
 
 }
 void startproof(Int_t Nw){

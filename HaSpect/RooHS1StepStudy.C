@@ -104,7 +104,9 @@ Bool_t RooHS1StepStudy::execute()
   //genereate n events from poisson
   Long64_t nexp=RooRandom::randomGenerator()->Poisson(fHSRooFit->GetModel()->expectedEvents(fHSRooFit->GetVariables()));
   //generate data from  model
-    RooDataSet* DS=fHSRooFit->GetModel()->generate(fHSRooFit->GetVariables(),nexp);
+  RooDataSet* DS=fHSRooFit->GetModel()->generate(fHSRooFit->GetVariables(),nexp);
+  Info("RooHS1StepStudy::execute() ","generated pseudo data :");
+  DS->Print();
   PDF->initIntegrator(); //move back to reconstruced branches
   //get generated tree, this will be flat
   TTree* tree=PDF->GetGenTree();

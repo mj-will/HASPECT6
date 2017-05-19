@@ -65,6 +65,7 @@ void RooHSAbsEventsPDF::InitSets(){
   //   fVarSet.push_back(aset);
   // }
   fNpars=fParSet.size();
+  fNvars=fProxSet.size();
   fLast=new Double_t[fNpars+1]; //Number of fit parameters
   for(Int_t i=0;i<fNpars+1;i++)
     fLast[i]=100;
@@ -79,7 +80,8 @@ RooArgSet RooHSAbsEventsPDF::VarSet(Int_t iset) const{
   else{
     for(UInt_t j=0;j<fProxSet.size();j++){//add if not proxy being removed
       fProxSet.at(j)->arg().Print("");
-      if(fProxSet[iset]->GetName()!=fProxSet[j]->GetName()) aset.add(fProxSet.at(j)->arg());
+      //if(fProxSet[iset]->GetName()!=fProxSet[j]->GetName()) aset.add(fProxSet.at(j)->arg());
+      if(fProxSet[iset-1]->GetName()!=fProxSet[j]->GetName()) aset.add(fProxSet.at(j)->arg());
     }
   }
   return aset;
@@ -89,8 +91,8 @@ RooArgSet RooHSAbsEventsPDF::VarSet(Int_t iset) const{
   Info("RooHSAbsEventsPDF::getGenerator","Looking for generator");
   if(!fEvTree) return 0; //no MC events to generate from
   //case generate all variables
-  if (matchArgs(directVars,generateVars,*fVarSet[0])) return 1 ;
-  //if (matchArgs(directVars,generateVars,VarSet(0))) return 1 ;
+  //if (matchArgs(directVars,generateVars,*fVarSet[0])) return 1 ;
+  if (matchArgs(directVars,generateVars,VarSet(0))) return 1 ;
   return 0;
 
 }
@@ -103,14 +105,15 @@ void RooHSAbsEventsPDF::initIntegrator()
     if(fEvTree->GetBranch(fProxSet[i]->GetName())){
       fEvTree->SetBranchStatus(fProxSet[i]->GetName(),1);
       fEvTree->SetBranchAddress(fProxSet[i]->GetName(),&fMCVar[i]);
-    }
+     }
   }
 }
 void RooHSAbsEventsPDF::initGenerator(Int_t code)
 {
   Info("RooHSAbsEventsPDF::initGenerator","Going to generate starting from %lld with weights %d",fGeni,(Int_t)fUseWeightsGen);
- fEvTree->ResetBranchAddresses();
   //First check if gen branches are available and use them
+   if(fEvTree->GetBranch(fgenStr+fProxSet[0]->GetName()))fEvTree->ResetBranchAddresses();
+
   for(UInt_t i=0;i<fProxSet.size();i++){
     //Look for true branches
     if(fEvTree->GetBranch(fgenStr+fProxSet[i]->GetName())){
@@ -120,7 +123,7 @@ void RooHSAbsEventsPDF::initGenerator(Int_t code)
     }
     else{
       Warning("RooHSAbsEventsPDF::initGenerator"," No gen branches found will use standard");
-     }
+    }
   }
   Double_t value=0;
   if(code==1){
@@ -128,7 +131,7 @@ void RooHSAbsEventsPDF::initGenerator(Int_t code)
     //for(Int_t i=0;i<fEvTree->GetEntries();i++){
     for(Int_t i=1;i<fEvTree->GetEntries();i++){
       fEvTree->GetEntry(i);
-      value=evaluateMC();
+        value=evaluateMC();
       if(value>fMaxValue)fMaxValue=value;
     }
   }
@@ -159,7 +162,7 @@ void RooHSAbsEventsPDF::generateEvent(Int_t code){
       fEvTree->GetEntry(fGeni++);
       value=evaluateMC();
       if(value>fMaxValue*RooRandom::uniform()){//accept
-	for(Int_t i=0;i<fNpars;i++)
+	for(Int_t i=0;i<fNvars;i++)
 	  (*(fProxSet[i]))=fMCVar[i];
 	fEntryList->Enter(fGeni-1);
 	return;
@@ -172,7 +175,7 @@ void RooHSAbsEventsPDF::generateEvent(Int_t code){
       fEvTree->GetEntry(fGeni++);
       if(!CheckRange("")) continue;
       value=evaluateMC();
-      for(Int_t i=0;i<fNpars;i++)
+      for(Int_t i=0;i<fNvars;i++)
 	(*(fProxSet[i]))=fMCVar[i];
       fWeights->FillWeight(fGeni-1,value); 
       fEntryList->Enter(fGeni-1);
@@ -192,6 +195,7 @@ Int_t RooHSAbsEventsPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& an
     if (matchArgs(allVars,analVars,VarSet(0))) return 1 ;
   }
   else{
+    //    for(UInt_t i=0;i<1+fProxSet.size();i++){
     for(UInt_t i=0;i<1+fProxSet.size();i++){
       //fVarSet[i]->Print("");
       //if (matchArgs(allVars,analVars,*fVarSet[i])) return i+1 ;
@@ -308,7 +312,9 @@ Bool_t RooHSAbsEventsPDF::SetEvTree(TChain* tree,Long64_t ngen){
       return kFALSE;
     }
   }
-  
+  // cout<<"CHECK TREE "<<endl;
+  // fEvTree->GetEntry(1);
+  // cout<<fMCVar[0]<<" "<<fMCVar[1]<<endl;
   return kTRUE;
 }
 void  RooHSAbsEventsPDF::CheckIntegralParDep(Int_t Ntests){

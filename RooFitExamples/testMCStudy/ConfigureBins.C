@@ -10,10 +10,10 @@
   RF->LoadBinVars("Eg",1,3,4);//Must have at least 1 bin defined
 
   TChain *chainData=new TChain("MyModel");
-  chainData->Add("DataRes10.root");
+  chainData->Add("DataSymRes10.root");
    
   TChain *chainMC=new TChain("MyModel");
-  chainMC->Add("SimDataRes10.root");
+  chainMC->Add("SimDataSymRes10.root");
 
   gBenchmark->Start("Trees");
   

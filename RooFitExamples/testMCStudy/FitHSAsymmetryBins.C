@@ -15,7 +15,8 @@
   RF->Factory("MyNewPDF::SigAsym( Phi,Pol,A[0.4,-1,1],B[-0.8,-1,1] )");
   RF->LoadSpeciesPDF("SigAsym");
   RF->TotalPDF();
-  PDF->CheckIntegralParDep(4);
+  
+  //PDF->CheckIntegralParDep(4);
   RF->SetStudyPDF("SigAsym");
   RF->SetNStudyTrials(5);
   RF->FitSavedBins(1);

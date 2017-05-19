@@ -25,7 +25,6 @@ THSRooFit::THSRooFit() : TNamed(), fWS(0), fID(0),fModel(0), fData(0), fCanvases
 
 THSRooFit::THSRooFit(TString name) : TNamed(name,name), fWS(0),fID(0), fModel(0), fData(0), fCanvases(0),fHists(0),fTree(0),fMCIntTree(0),fMCGenTree(0),fResult(0),fRooFits(0),fInWeights(0),fDataBins(0),fBinnedFit(kFALSE),fFiti(0),fYld("Yld_"),fSingleSp(""){
  fWS = new RooWorkspace("wHS");
- fIDBranchName="DontHaveOneYet";//defualt ID branch name
  fGotID=kFALSE;
  fCanvases=new TList();fCanvases->SetOwner();
  fHists=new TList();fHists->SetOwner();
@@ -493,10 +492,14 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events a
   //create a fit object for a subset of data either by setting cut
   //or by fTree->SetEntryList prior to calling this function 
   //It will be deleted by this object
-  // cout<<fOutDir<<endl;
+  cout<<fOutDir<<endl;
   THSRooFit* RFa=new THSRooFit();
+  cout<<"1"<<" "<<RFa<<endl;
+  cout<<fIDBranchName<<endl;
   RFa->SetIDBranchName(fIDBranchName);
+  cout<<"1b"<<endl;
   RFa->SetName(ctree->GetName());
+  cout<<"2"<<endl;
   if(fBinnedFit)RFa->SetBinnedFit();
   RFa->SetSingleSpecies(fSingleSp);
   RFa->SetBinDir(fBinDir);
@@ -508,8 +511,9 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events a
   
   //Done configuring RF
   fRooFits->Add(RFa);
- 
+  cout<<"3"<<endl;
   RFa->LoadWorkSpace(fWS);
+  cout<<"4"<<endl;
  
   for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
     RFa->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));

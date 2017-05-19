@@ -47,7 +47,7 @@ class THSRooFit : public TNamed {
   TTree* fTree; //!     // tree to be imported, don't save as part of class!
   TTree* fMCIntTree;//! //tree for calculating MC based NormInt
   TTree* fMCGenTree;//! //tree for calculating MC based NormInt
-  TString fIDBranchName;
+  TString fIDBranchName="DontHaveOneYet";
   TString fYld;     //yield variable prepend
   TString fSingleSp;
   TString fOutDir;
@@ -114,8 +114,10 @@ public:
   void AddParameters(RooArgList list){fParameters=list;}
   void AddYields(RooArgList list){fYields=list;}
   void AddGausConstraint(RooGaussian *pdf){if(!pdf) return; fWS->import(*((RooAbsPdf*)pdf->Clone()));fConstraints.add(*(fWS->pdf(pdf->GetName())));};
+  void AddFormulaConstraint(RooFormulaVar *formu){if(!formu) return; fWS->import(*((RooFormulaVar*)formu->Clone()));fConstraints.add(*(fWS->function(formu->GetName())));};
   void SetSingleSpecies(TString ssp){fSingleSp=ssp;};
   void SetIDBranchName(TString str){//Probably just needed for sPlot but keep here
+    if(str==fIDBranchName)return;
     fIDBranchName=str;
     fID=dynamic_cast<RooRealVar*>((fWS->factory(str+"[0,9.99999999999999e14]")));
     fWS->defineSet("ID",RooArgSet(*fID));
