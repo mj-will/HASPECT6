@@ -10,6 +10,7 @@ Int_t THSProject::AddTopology(TString topo){
     Int_t pdg=0;
     if(((TObjString*)OptList->At(i))->String()==TString("Rootino+")) pdg=1E6;
     else if(((TObjString*)OptList->At(i))->String()==TString("Rootino-")) pdg=-1E6;
+    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) pdg=-22;
     else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSProject::AddTopology","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
     else pdg=TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String())->PdgCode();
     detpart.push_back(pdg);
