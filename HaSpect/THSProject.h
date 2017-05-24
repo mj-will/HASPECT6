@@ -78,6 +78,7 @@ class THSProject{
   vector<THSParticle> fVecPlus;
   vector<THSParticle> fVecMinus;
   vector<THSParticle> fVec0;
+  vector<THSParticle> fVecBeams;
   vector<Int_t> fDetTypes;
   // map<Int_t, vector<THSParticle> > fPVecs;
   Bool_t fIsPermutating0=kFALSE;

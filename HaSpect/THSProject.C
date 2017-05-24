@@ -123,6 +123,7 @@ void THSProject::InitParticles(){
   InitDetParts(1E6,&fVecPlus); 
   InitDetParts(-1E6,&fVecMinus);
   InitDetParts(0,&fVec0); 
+  InitDetParts(-22,&fVecBeams); 
 }
 void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
   //Place detected particles in array associated with their pdg type
@@ -169,7 +170,8 @@ Bool_t THSProject::PermutateParticles(){
   if(std::next_permutation(fVecPlus.begin(),fVecPlus.end())) return kTRUE;
   if(std::next_permutation(fVecMinus.begin(),fVecMinus.end())) return kTRUE;
   if(std::next_permutation(fVec0.begin(),fVec0.end())) return kTRUE;
-  
+  if(std::next_permutation(fVecBeams.begin(),fVecBeams.end())) return kTRUE;
+ 
   fIsPermutating0=kFALSE;
   return kFALSE; 
 }
