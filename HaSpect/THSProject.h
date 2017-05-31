@@ -46,6 +46,7 @@ class THSProject{
   Int_t FindTopology(); //For current event
   Int_t FindInclusiveTopology(Int_t incType=-1E9);//Inclusive For current event
   void SetPermutate(){fTryPerm=kTRUE;} //Turn on permuations
+  Bool_t RotatePartVector(vector<THSParticle>* vec,Int_t *Nturns);
 
  protected :
   vector<vector<Int_t> >fTopo; //vector of topologies
@@ -63,6 +64,7 @@ class THSProject{
 
   //Combitorial
   Bool_t fTryPerm=kFALSE;
+  Int_t fNPerm=0;
   void InitParticles(); //Allocate particles to vector for this event
   void InitDetParts(Int_t pdg,vector<THSParticle> *parts); //Fill vector
   Bool_t PermutateParticles(); //Permutate particles in vectors
@@ -83,6 +85,19 @@ class THSProject{
   // map<Int_t, vector<THSParticle> > fPVecs;
   Bool_t fIsPermutating0=kFALSE;
   Bool_t fIsPermutating1=kFALSE;
+  Int_t fNProtTurns=0;
+  Int_t fNPipTurns=0;
+  Int_t fNPimTurns=0;
+  Int_t fNPi0Turns=0;
+  Int_t fNKpTurns=0;
+  Int_t fNKmTurns=0;
+  Int_t fNElTurns=0;
+  Int_t fNPosTurns=0;
+  Int_t fNPlusTurns=0;
+  Int_t fNMinusTurns=0;
+  Int_t fN0Turns=0;
+  Int_t fNBeamTurns=0;
+  Int_t fNGamTurns=0;
 
   TTree* fFinalTree=nullptr;
   //Kinematics calculator

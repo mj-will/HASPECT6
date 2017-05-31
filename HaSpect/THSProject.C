@@ -124,15 +124,29 @@ void THSProject::InitParticles(){
   InitDetParts(1E6,&fVecPlus); 
   InitDetParts(-1E6,&fVecMinus);
   InitDetParts(0,&fVec0); 
-  InitDetParts(-22,&fVecBeams); 
+  InitDetParts(-22,&fVecBeams);
+  //start rotations from 0
+  fNProtTurns=0;
+  fNPipTurns=0;
+  fNPimTurns=0;
+  fNPi0Turns=0;
+  fNKpTurns=0;
+  fNKmTurns=0;
+  fNElTurns=0;
+  fNPosTurns=0;
+  fNPlusTurns=0;
+  fNMinusTurns=0;
+  fN0Turns=0;
+  fNBeamTurns=0;
+  fNGamTurns=0;
 }
 void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
   //Place detected particles in array associated with their pdg type
   //Loop over detected particles
   parts->clear();
   //Comment out line below as it can block inclusive topologies
-  //  if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
-  //   return; //not looking for this particle in this project
+  // if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
+  //  return; //not looking for this particle in this project
   //  for(THSParticle& part:*frDetParts){
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle& part=frDetParts->At(ip);
@@ -144,15 +158,42 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
 }
 void THSProject::ProcessEvent(){
   //Process one input event
+  fNPerm=0;
    do{
      WorkOnEvent();
      if(fFinalTree)
        if(IsGoodEvent())
 	 fFinalTree->Fill(); //fill for first combination
+     fNPerm++;
    }
    
     while(IsPermutating());
  }
+// Bool_t THSProject::PermutateParticles(){
+//   if(!fTryPerm) return kFALSE;
+//   //returns true if another valid permuation to be tried
+//   //returns false when time to move on
+//   //check through particle types
+//   //if more than 1 of a type permutate through all combinations
+//   fIsPermutating0=kTRUE; //Will be set to false when event over
+//   if(std::next_permutation(fVecProtons.begin(),fVecProtons.end())) return kTRUE;
+//   if(std::next_permutation(fVecPiPs.begin(),fVecPiPs.end())) return kTRUE;
+//   if(std::next_permutation(fVecPiMs.begin(),fVecPiMs.end())) return kTRUE;
+//   if(std::next_permutation(fVecPi0s.begin(),fVecPi0s.end())) return kTRUE;
+//   if(std::next_permutation(fVecKPs.begin(),fVecKPs.end())) return kTRUE;
+//   if(std::next_permutation(fVecKMs.begin(),fVecKMs.end())) return kTRUE;
+//   if(std::next_permutation(fVecEls.begin(),fVecEls.end())) return kTRUE;
+//   if(std::next_permutation(fVecPos.begin(),fVecPos.end())) return kTRUE;
+//   if(std::next_permutation(fVecGams.begin(),fVecGams.end())) return kTRUE;
+//   if(std::next_permutation(fVecPlus.begin(),fVecPlus.end())) return kTRUE;
+//   if(std::next_permutation(fVecMinus.begin(),fVecMinus.end())) return kTRUE;
+//   if(std::next_permutation(fVec0.begin(),fVec0.end())) return kTRUE;
+//   if(fVecBeams.size()>0)cout<<fVecBeams.at(0).P4().E()<<endl;
+//   if(std::next_permutation(fVecBeams.begin(),fVecBeams.end())) return kTRUE;
+ 
+//   fIsPermutating0=kFALSE;
+//   return kFALSE; 
+// }
 Bool_t THSProject::PermutateParticles(){
   if(!fTryPerm) return kFALSE;
   //returns true if another valid permuation to be tried
@@ -160,24 +201,34 @@ Bool_t THSProject::PermutateParticles(){
   //check through particle types
   //if more than 1 of a type permutate through all combinations
   fIsPermutating0=kTRUE; //Will be set to false when event over
-  if(std::next_permutation(fVecProtons.begin(),fVecProtons.end())) return kTRUE;
-  if(std::next_permutation(fVecPiPs.begin(),fVecPiPs.end())) return kTRUE;
-  if(std::next_permutation(fVecPiMs.begin(),fVecPiMs.end())) return kTRUE;
-  if(std::next_permutation(fVecPi0s.begin(),fVecPi0s.end())) return kTRUE;
-  if(std::next_permutation(fVecKPs.begin(),fVecKPs.end())) return kTRUE;
-  if(std::next_permutation(fVecKMs.begin(),fVecKMs.end())) return kTRUE;
-  if(std::next_permutation(fVecEls.begin(),fVecEls.end())) return kTRUE;
-  if(std::next_permutation(fVecPos.begin(),fVecPos.end())) return kTRUE;
-  if(std::next_permutation(fVecGams.begin(),fVecGams.end())) return kTRUE;
-  if(std::next_permutation(fVecPlus.begin(),fVecPlus.end())) return kTRUE;
-  if(std::next_permutation(fVecMinus.begin(),fVecMinus.end())) return kTRUE;
-  if(std::next_permutation(fVec0.begin(),fVec0.end())) return kTRUE;
-  if(std::next_permutation(fVecBeams.begin(),fVecBeams.end())) return kTRUE;
- 
+  if(RotatePartVector(&fVecProtons,&fNProtTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPiPs,&fNPipTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPiMs,&fNPimTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPi0s,&fNPi0Turns)) return kTRUE;
+  if(RotatePartVector(&fVecKPs,&fNKpTurns)) return kTRUE;
+  if(RotatePartVector(&fVecKMs,&fNKmTurns)) return kTRUE;
+  if(RotatePartVector(&fVecEls,&fNElTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPos,&fNPosTurns)) return kTRUE;
+  if(RotatePartVector(&fVecGams,&fNGamTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPos,&fNPosTurns)) return kTRUE;
+  if(RotatePartVector(&fVecMinus,&fNMinusTurns)) return kTRUE;
+  if(RotatePartVector(&fVec0,&fN0Turns)) return kTRUE;
+  if(RotatePartVector(&fVecBeams,&fNBeamTurns)) return kTRUE;  
   fIsPermutating0=kFALSE;
   return kFALSE; 
 }
-
+Bool_t THSProject::RotatePartVector(vector<THSParticle>* vec,Int_t *Nturns){
+  //move through vector of particles return false when all done
+  if(vec->empty()) return kFALSE;
+  if(vec->size()==UInt_t(*Nturns)+1) {
+    std::rotate(vec->begin(),vec->begin()+1,vec->end());//rotate back to start	
+    *Nturns=0;
+    return kFALSE;
+  }//Got to the end, ready to start again
+  std::rotate(vec->begin(),vec->begin()+1,vec->end());
+  *Nturns=(*Nturns)+1;
+  return kTRUE;
+}
 void THSProject::MatchWithGen(THSParticle *part){
   //Loop through generated and record momentum distance
   UInt_t match=0;
