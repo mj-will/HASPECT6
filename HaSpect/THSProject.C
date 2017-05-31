@@ -130,8 +130,9 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
   //Place detected particles in array associated with their pdg type
   //Loop over detected particles
   parts->clear();
-  if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
-    return; //not looking for this particle in this project
+  //Comment out line below as it can block inclusive topologies
+  //  if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
+  //   return; //not looking for this particle in this project
   //  for(THSParticle& part:*frDetParts){
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle& part=frDetParts->At(ip);
