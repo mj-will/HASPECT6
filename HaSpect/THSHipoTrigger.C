@@ -1,32 +1,95 @@
 #include "THSHipoTrigger.h"
 
 THSHipoTrigger::THSHipoTrigger(){
-  fHipo->ConfigBank("FTCAL::hits");
-  //Get the necessary items from FT Bank
-  fFTCalBank=fHipo->GetBank("FTCAL::hits");
+  //Example FT based trigger simulation 
+  //From Stefan Diehl, Gessen.
+  
+  fHipo->ConfigBank("FTCAL::clusters");
+  fFTCalBank=fHipo->GetBank("FTCAL::clusters");
 
   fFTCal_E=fFTCalBank->GetItem("energy");
+  fFTCal_Emax=fFTCalBank->GetItem("maxEnergy");
+  fFTCal_Erec=fFTCalBank->GetItem("recEnergy");
+  /// Ft Hodoscope
+
+  fHipo->ConfigBank("FTHODO::clusters");
+  fFTHodoBank=fHipo->GetBank("FTHODO::clusters");
+
+  fFTHodo_E=fFTHodoBank->GetItem("energy");
 }
 void THSHipoTrigger::InitOutput(TString filename){
   THSDataManager::InitOutput(filename);
+  fWriteTree->Branch("FTE_clust",&fFTE_clust,"FTE_clust/F");
+  fWriteTree->Branch("FTEmax_clust",&fFTEmax_clust,"FTEmax_clust/F");
+  fWriteTree->Branch("FTErec_clust",&fFTErec_clust,"FTErec_clust/F");
   fWriteTree->Branch("FTEsum",&fFTEsum,"FTEsum/F");
-  fWriteTree->Branch("PassTrig1",&fPassTrig1,"PassTrig1/B");
+  fWriteTree->Branch("FT_clust_count",&fFT_clust_count,"FT_clust_count/I");
+  fWriteTree->Branch("FT_clust_count_Emax_cond",&fFT_clust_count_Emax_cond,"FT_clust_count_Emax_cond/I");
+  fWriteTree->Branch("FT_clust_count_Erec_cond",&fFT_clust_count_Erec_cond,"FT_clust_count_Erec_cond/I");
+ /// Trigger:
+  fWriteTree->Branch("PassTrig_Esum",&fPassTrig_Esum,"PassTrig_Esum/B");
+  fWriteTree->Branch("PassTrig_cluster_max",&fPassTrig_cluster_max,"PassTrig_cluster_max/B");
+  fWriteTree->Branch("PassTrig_cluster_rec",&fPassTrig_cluster_rec,"PassTrig_cluster_rec/B");
 }
 
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
-  fPassTrig1=kFALSE;
-  fFTEsum=0;
+  /// initalize variables:
+  fPassTrig_Esum=kFALSE;
+  fPassTrig_cluster_max=kFALSE;
+  fPassTrig_cluster_rec=kFALSE;
+
+  fFTE_clust = 0;
+  fFTEmax_clust = 0;
+  fFTErec_clust = 0;
+  fFTEsum= 0;
+  fFTE_hodo=0;
+
+  fFT_clust_count = 0;
+  fFT_clust_count_Emax_cond = 0;
+  fFT_clust_count_Erec_cond = 0;
+  fFT_hodo_count = 0;
   
   if(!THSHipoReader::ReadEvent()) return kFALSE;
 
   //Now do some trigger simulations
+ /// ///////////////////////////////////////////
+  /// Now do some trigger simulations:
+
+  /// FT Cal:
 
   if(fFTCalBank){ //Get FTCAL hits information
     while(fFTCalBank->NextEntry()){ //iterate over hits
+
+      fFTE_clust = fFTCal_E->Val();
+      fFTEmax_clust = fFTCal_Emax->Val();
+      fFTErec_clust = fFTCal_Erec->Val();
+
+
+      fFT_clust_count = fFT_clust_count + 1;
+      if(fFTEmax_clust > 0.075) fFT_clust_count_Emax_cond = fFT_clust_count_Emax_cond + 1;
+      if(fFTErec_clust > 0.075) fFT_clust_count_Erec_cond = fFT_clust_count_Erec_cond + 1;
+
+
       fFTEsum+=fFTCal_E->Val(); //sum energy of each cluster
     }
   }
 
-  if(fFTEsum>1) fPassTrig1=kTRUE;
+  /// FT Hodo:
+
+  if(fFTHodoBank){ //Get FTCAL hits information
+    while(fFTHodoBank->NextEntry()){ //iterate over hits
+
+      fFTE_hodo = fFTHodo_E->Val();
+
+      fFT_hodo_count = fFT_hodo_count + 1;
+
+    }
+  }
+
+
+  if(fFT_hodo_count > 0 && fFTEsum > 0.075) fPassTrig_Esum = kTRUE;
+
+  if(fFT_hodo_count > 0 && fFT_clust_count_Emax_cond >= 2) fPassTrig_cluster_max = kTRUE;
+  if(fFT_hodo_count > 0 && fFT_clust_count_Erec_cond >= 2) fPassTrig_cluster_rec = kTRUE;
   return kTRUE;
 }

@@ -65,7 +65,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 // type is 1 for particles in the detector
   if(!fHipo->NextEvent()) return kFALSE;
   fEntry++;
-  //cout<<fEntry<<endl;
+  //  cout<<fEntry<<endl;
   fParticles.clear();//reset fParticles
   if(fAddGenerated) fGenerated.clear();//reset fGenerated
   
@@ -94,14 +94,14 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
     }
     Int_t ip=0;
     while(fPBank->NextEntry()){
-       THSParticle* particle=fReadParticles->at(ip++);
+      THSParticle* particle=fReadParticles->at(ip++);
       fParticles.push_back(particle);
       particle->SetXYZT(fPx->Val(),fPy->Val(),fPz->Val(),0);
       particle->SetVertex(fVx->Val(),fVy->Val(),fVz->Val());
       particle->SetMeasMass(fMass->Val());
-      if(!fPid->Val()) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown
+      if(!fPid->Val()||!fUsePID) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown
       else  particle->SetPDGcode(fPid->ValI());
-      if(fPid->Val()==22) particle->SetPDGcode(0); //force photons to be Rootino for now
+      //     if(fPid->Val()==22) particle->SetPDGcode(0); //force photons to be Rootino for now
       particle->TakePDGMass();
       particle->SetDetector(100);
      }
