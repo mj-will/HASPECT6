@@ -2,6 +2,7 @@
 {
   THSHipoReader* reader=new THSHipoReader();
   reader->SetWriteGenBranch("Generated");
+  //reader->SetUsePID(kFALSE);
 
   TChain chain("hipo");
   chain.Add(HSin()+"/out*.hipo");

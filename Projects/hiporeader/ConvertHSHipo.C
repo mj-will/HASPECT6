@@ -2,7 +2,8 @@
 {
   THSHipoReader* reader=new THSHipoReader();
   reader->SetWriteGenBranch("Generated");
-
+  //reader->SetUsePID(kFALSE);
+  
   gBenchmark->Start("time");
 
   reader->Init(HSin());

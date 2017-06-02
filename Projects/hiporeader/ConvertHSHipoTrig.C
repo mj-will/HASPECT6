@@ -2,6 +2,7 @@
 {
   THSHipoTrigger* reader=new THSHipoTrigger();
   reader->SetWriteGenBranch("Generated");
+  reader->SetUsePID(kFALSE);
 
   gBenchmark->Start("time");
 
