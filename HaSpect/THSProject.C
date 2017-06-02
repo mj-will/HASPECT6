@@ -210,7 +210,7 @@ Bool_t THSProject::PermutateParticles(){
   if(RotatePartVector(&fVecEls,&fNElTurns)) return kTRUE;
   if(RotatePartVector(&fVecPos,&fNPosTurns)) return kTRUE;
   if(RotatePartVector(&fVecGams,&fNGamTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPos,&fNPosTurns)) return kTRUE;
+  if(RotatePartVector(&fVecPlus,&fNPlusTurns)) return kTRUE;
   if(RotatePartVector(&fVecMinus,&fNMinusTurns)) return kTRUE;
   if(RotatePartVector(&fVec0,&fN0Turns)) return kTRUE;
   if(RotatePartVector(&fVecBeams,&fNBeamTurns)) return kTRUE;  

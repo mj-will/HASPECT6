@@ -36,7 +36,8 @@ class THSProject{
 
   virtual void GetEvent(Long64_t uid){fUID=uid;}//interface to different readers
   virtual Bool_t WorkOnEvent(){return kFALSE;};
-  virtual void FinaliseEvent(){};//inerface to different writers
+  virtual void FinaliseEvent(){};
+  virtual void InitEvent(){};
   
   void SetDetParts(TTreeReaderArray<THSParticle> * dpp){frDetParts=dpp;}
   void SetGenParts(TTreeReaderArray<THSParticle> * dpp){frGenParts=dpp;}
