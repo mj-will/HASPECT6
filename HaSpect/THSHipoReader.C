@@ -98,10 +98,11 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       fParticles.push_back(particle);
       particle->SetXYZT(fPx->Val(),fPy->Val(),fPz->Val(),0);
       particle->SetVertex(fVx->Val(),fVy->Val(),fVz->Val());
-      particle->SetPDGcode(fPid->ValI());
-      particle->TakePDGMass();
       particle->SetMeasMass(fMass->Val());
-      if(!fPid->Val()) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown +ve
+      if(!fPid->Val()) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown
+      else  particle->SetPDGcode(fPid->ValI());
+      if(fPid->Val()==22) particle->SetPDGcode(0); //force photons to be Rootino for now
+      particle->TakePDGMass();
       particle->SetDetector(100);
      }
   }
