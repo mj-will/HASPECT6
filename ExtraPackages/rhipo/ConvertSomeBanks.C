@@ -3,7 +3,7 @@
   //Edit this macro to only convert the banks selected with ConfigBank
   THipo Hipo;
   Hipo.AddCommandLineFiles();
-  Hipo.ConfigBank("RECHB::Particle");
+  Hipo.ConfigBank("REC::Particle");
   //  Hipo.ConfigBank("RECHB::Detector>>time:energy");
 
   Hipo.ToRoot(); //process files given on command line

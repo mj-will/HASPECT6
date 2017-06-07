@@ -23,6 +23,7 @@
     gSystem->AddIncludePath(TString("-I")+rhipo);
   }
 
+  gROOT->LoadMacro("utils.cpp+");
   gROOT->LoadMacro("event.cpp+");
   gROOT->LoadMacro("record.cpp+");
   gROOT->LoadMacro("reader.cpp+");
