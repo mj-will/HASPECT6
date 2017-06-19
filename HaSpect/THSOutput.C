@@ -101,16 +101,17 @@ void THSOutput::HSNotify(TTree* tree){
 }
 void THSOutput::HSProcessStart(Long64_t entry){
   fEntry=entry;
-  if(fSaveID) fgID++;
-  else {
+  //if(fSaveID) fgID++;
+  if(!fSaveID){
     fCurTree->GetBranch("UID")->GetEntry(fEntry); //make sure get ID branch to write to new file
     fgID=fCurTree->GetLeaf("UID")->GetValue();
   }
 }
 void THSOutput::HSProcessFill(){
   //if(fSaveID) fgID=fEntry;
+  if(fSaveID) fgID++;
   if(fOutTree) fOutTree->Fill();
-  if(!fSaveID)fgID+=fgIDoff; //in case multiple calls to fill change ID
+  //if(!fSaveID)fgID+=fgIDoff; //in case multiple calls to fill change ID
 }
 void THSOutput::HSSlaveTerminate(){
   FinishOutput();
@@ -173,8 +174,44 @@ void THSOutput::HSTerminate(){
      }
    }
 
+   //in case of proof must add uid at end as cannot synch fgID in proof
+   if(gProof&&(fSaveID==kTRUE)){
+     cout<<"THSOutput::Terminate going to add UID branch, may take a while"<<endl;
+     TIter next(fSelOutput);
+     TProofOutputFile* elpofile=0;
+     TObject* outo=0;
+     TFile* infile=0; //pointer to input file
+     //iterate over any proof files which are in the ouput list
+     fgID=fgIDoff;
+     while((outo=dynamic_cast<TObject*>(next()))){
+       if((elpofile=dynamic_cast<TProofOutputFile*>(outo))){
+	 TFile* elfile = elpofile->OpenFile("UPDATE");
+	 //First sort tree to regain original ordering
+	 TIter fnext(elfile->GetListOfKeys());
+	 TKey* fkey=0;
+	 //Look for a trees in saved file
+	 while ((fkey = (TKey*)fnext())){
+	   if(TString(fkey->GetClassName())==TString("TTree")){
+	     TTree* tree=dynamic_cast<TTree*>(elfile->Get(fkey->GetName()));
+	     if(tree->GetBranch("UID")) continue; //aready exists
+	     TBranch* branch=tree->Branch("UID",&fgID,"UID/D");
+	     if(!branch) continue;
+	     Long64_t id=(Long64_t)fgID;
+	     fgID=id;
+	     for(Long64_t i=0;i<tree->GetEntries();i++){
+	       branch->Fill();
+	       id++;
+	       fgID=id;   
+	     }
+	     tree->Write(tree->GetName(),TObject::kOverwrite);
+	     elfile->Close();
+	   }
+	 }
+       }
+     }
+   }
 
-   //   OrganiseSavedHists(fSelOutput);
+  //   OrganiseSavedHists(fSelOutput);
    
    return;
  
@@ -284,7 +321,7 @@ void THSOutput::InitOutTree(){
    if(fOutTree&&fFile){
      fOutTree->SetDirectory(fFile);
      fOutTree->AutoSave();
-     if(!fOutTree->GetBranch("UID"))fOutTree->Branch("UID", &fgID, "UID/D");
+     if(!fOutTree->GetBranch("UID")&&!gProof)fOutTree->Branch("UID", &fgID, "UID/D");
      //if(!fSaveID)//copy existing global ID
        // fOutTree->SetBranchAddress("UID",fCurTree->GetBranch("UID")->GetAddress());
    }

@@ -44,7 +44,7 @@ class THSOutput :  public THSHisto{
   Long64_t fEntry; //current entry number in Chain
   TObject fMessages; //For access to Info,Error,...
   Bool_t fSort; //option to reorder events back to inital order in PROOF (which will randomise tree order)
-  
+ 
   Bool_t fSaveID; //Ony save ID if this is the first THSOutput tree, subsequent trees will aready contain this branch
   Double_t fgID; //global event ID number, should be set in first instance of THSOutput and preserved through further steps. Required to synchornise differnt trees as PROOF does not preserve event ordering
   Long64_t fgIDoff; //starting offset for ID number

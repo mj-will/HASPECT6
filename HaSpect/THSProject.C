@@ -159,6 +159,7 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
 void THSProject::ProcessEvent(){
   //Process one input event
   fNPerm=0;
+  InitEvent();
    do{
      WorkOnEvent();
      if(fFinalTree)
@@ -168,7 +169,8 @@ void THSProject::ProcessEvent(){
    }
    
     while(IsPermutating());
- }
+   FinaliseEvent();
+}
 // Bool_t THSProject::PermutateParticles(){
 //   if(!fTryPerm) return kFALSE;
 //   //returns true if another valid permuation to be tried
@@ -196,6 +198,7 @@ void THSProject::ProcessEvent(){
 // }
 Bool_t THSProject::PermutateParticles(){
   if(!fTryPerm) return kFALSE;
+  if(fIsPermutating1) return kTRUE;
   //returns true if another valid permuation to be tried
   //returns false when time to move on
   //check through particle types

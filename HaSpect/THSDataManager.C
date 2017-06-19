@@ -136,7 +136,7 @@ void THSDataManager::InitOutput(TString filename){
   //fReadParticles=&fParticles;
   fWriteTree->Branch(fReadBName,&fParticles);
   if(fAddGenerated)fWriteTree->Branch(fWriteGName,&fGenerated);
-  Info("THSDataManager::InitOutput","Saving %d particles",(Int_t)fParticles.size());
+  Info("THSDataManager::InitOutput","Saving particles to %s",filename.Data());
 }
 void THSDataManager::CloseOutput(){
   fWriteFile->cd();

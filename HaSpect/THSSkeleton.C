@@ -1,3 +1,4 @@
+
 #include "THSSkeleton.h"
 #include <RooClassFactory.h>
 #include <TSystem.h>
@@ -327,7 +328,7 @@ void THSSkeleton::HSProject(){
     AddLineAfter("fReader.SetLocalEntry(entry);","   fgIDoff=1E10;//offset in >1 permutation of particles");	       
     ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
     ContinueLineAfter(TString("     ")+fProjName+"::WorkOnEvent();");
-    ContinueLineAfter("     if(!fGoodEvent) return kTRUE;//Don't fill anything,User should determine value for fGoodEvent in their project");
+    ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
 
     AddLineAfter("THSOutput::HSProcessFill();","   }");
     ContinueLineAfter(TString("   while(IsPermutating());"));
@@ -349,13 +350,19 @@ void THSSkeleton::HSProject(){
   ReplaceMacroText("public THSOutput",TString("public THSOutput, public ")+fProjName);
   TString branch=FindNextLineLike("TTreeReaderArray<THSParticle>");
   if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetDetParts(&Particles);");
-  if(branch.Contains("\"Generated\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetGenParts(&Generated);");
-  fPlace=1; //move bakc to start
+  if(branch.Contains("\"Generated\"")){
+    AddLineAfter("   fReader.SetTree(tree);","   if(!tree->GetBranchStatus(\"Generated\"))Generated.~TTreeReaderArray();//Not sim remove Generated branch");
+    ContinueLineAfter("   else THSProject::SetGenParts(&Generated);");
+  }
+   fPlace=1; //move bakc to start
   branch=FindNextLineLike("TTreeReaderArray<THSParticle>");
   fPlace++;
   branch=FindNextLineLike("TTreeReaderArray<THSParticle>"); //Not good coding! but need oto fin the second one
   if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetDetParts(&Particles);");
-  if(branch.Contains("\"Generated\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetGenParts(&Generated);");
+  if(branch.Contains("\"Generated\"")){
+    AddLineAfter("   fReader.SetTree(tree);","   if(!tree->GetBranchStatus(\"Generated\"))Generated.~TTreeReaderArray();//Not sim remove Generated branch");
+    ContinueLineAfter("   else THSProject::SetGenParts(&Generated);");
+  }
 
   
   fCurMacro.SaveSource(fSelName+".h");

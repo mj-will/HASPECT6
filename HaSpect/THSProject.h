@@ -34,7 +34,7 @@ class THSProject{
   // THSProject(TString name,TString title):TNamed(name,title){};
   virtual ~THSProject(){};
 
-  virtual void GetEvent(Long64_t uid){fUID=uid;}//interface to different readers
+  virtual void GetEvent(Long64_t uid){}//interface to different readers
   virtual Bool_t WorkOnEvent(){return kFALSE;};
   virtual void FinaliseEvent(){};
   virtual void InitEvent(){};

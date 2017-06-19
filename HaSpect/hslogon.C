@@ -15,6 +15,7 @@ void HSMacPath(TString opt);
 #include <TProof.h> //MAke sure gProof can be seen here
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
+TString THSPARTICLE("THSParticle.0.C");
 
 void hslogon(){
   //Execute system .rootlogon.C script 
@@ -33,6 +34,10 @@ void hslogon(){
     if((opt.Contains("--macrodir"))){
       HSMacPath(TString(opt(11,opt.Sizeof())));
     }
+    if((opt.Contains("--particle"))){
+      THSPARTICLE=(TString(opt(11,opt.Sizeof()))).Data();
+      cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
+    }
   }
 
   
@@ -43,6 +48,13 @@ void hslogon(){
     if((opt.Contains("--proof"))) startproof(TString(opt(8,opt.Sizeof())).Atoi());
     
   }
+  
+   //get command line options first check if rootbeer
+  for(Int_t i=1;i<gApplication->Argc();i++){
+    TString opt=gApplication->Argv(i);
+    if((opt.Contains("--rootbeer"))) gROOT->ProcessLine(".L $ROOTBEER/RootBeerSetup.cxx");
+  }
+
    //get command line options first check if farm job
   for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
@@ -80,9 +92,13 @@ void hslogon(){
     if((opt==TString("--hsdata"))) HSdata(); //Load data classes
     if((opt==TString("--hssel"))) HSselector(); //Load selector classes
     if((opt.Contains("--hsproj"))) HSproject(TString(opt(9,opt.Sizeof()))); //Load project classes
-    if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
-    if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
-  }
+
+    //don't load alter --particle option
+    if(!(opt.Contains("--particle"))){
+      if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+      if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+    }
+  }	
   
 }
 void MakeAll(){
@@ -96,7 +112,8 @@ void MakeAll(){
   gROOT->LoadMacro("THSWeights.C++");
   gROOT->LoadMacro("THSRooFit.C++");
   gROOT->LoadMacro("THSsPlot.C++");
-  gROOT->LoadMacro("THSParticle.C++");
+  //  gROOT->LoadMacro("THSParticle.C++");
+  gROOT->LoadMacro(THSPARTICLE+"++");
   gROOT->LoadMacro("THSHisto.C++");
   gROOT->LoadMacro("THSOutput.C++");
   gROOT->LoadMacro("THSPartOutput.C++");
@@ -131,9 +148,10 @@ void HSselector(){
   LoadMacro("THSBins.C");
   LoadMacro("THSWeights.C");
   LoadMacro("THSParticle.C");
+  LoadMacro(THSPARTICLE);
   LoadMacro("THSHisto.C");
   LoadMacro("THSOutput.C");
-  LoadMacro("THSPartOutput.C");
+  // LoadMacro("THSPartOutput.C");
   LoadMacro("THSSkeleton.C");
   LoadMacro("THSKinematics.C");
 
@@ -145,7 +163,8 @@ void HSselector(){
 
 void HSproject(TString pname){
   HSproj(pname);
-  LoadMacro("THSParticle.C");
+  LoadMacro(THSPARTICLE);
+  // LoadMacro("THSParticle.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSProject.C");
   LoadMacro(pname+".C");
@@ -154,9 +173,11 @@ void HSproject(TString pname){
 void HSdata(){
   if(gSystem->Getenv("RHIPO"))
     gROOT->ProcessLine(TString(".x ")+gSystem->Getenv("RHIPO")+"/Hipo2Root.C");
-
+     cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
+ 
   LoadMacro("THSWeights.C");
-  LoadMacro("THSParticle.C");
+  LoadMacro(THSPARTICLE);
+  //  LoadMacro("THSParticle.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
   LoadMacro("THSRADSReader.C");
@@ -182,6 +203,7 @@ void startproof(Int_t Nw){
 void LoadMacro(TString macro){
   //Different methods depending on whether proof or not
   TString HSANA=gSystem->Getenv("HSANA");
+  cout<<"Loading hsmacoro "<<macro<<endl;
   if(gProof) {
     gProof->Load(HSANA+"/"+macro+"+");
     if(gProof->GetLoadedMacros()){
@@ -209,5 +231,5 @@ void HSMacPath(TString opt){
   cout<<"Adding Macro Path "<<opt<<endl;
   MACPATH=opt;
   gROOT->SetMacroPath(Form("%s:%s",gROOT->GetMacroPath(),MACPATH.Data()));
-   gSystem->AddIncludePath(TString("-I")+MACPATH);
+  gSystem->AddIncludePath(TString("-I")+MACPATH);
 }
