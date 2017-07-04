@@ -29,7 +29,9 @@ THSRooFit::THSRooFit(TString name) : TNamed(name,name), fWS(0),fID(0), fModel(0)
  fCanvases=new TList();fCanvases->SetOwner();
  fHists=new TList();fHists->SetOwner();
  fRooFits=new TList();fRooFits->SetOwner();
-
+ RooFit::Minimizer("Minuit2");
+ RooFit::PrintLevel(1) ;
+ 
 }
 THSRooFit::THSRooFit(THSRooFit* rf): fWS(0), fID(0),fModel(0), fData(0), fCanvases(0),fHists(0),fTree(0),fMCIntTree(0),fMCGenTree(0),fResult(0),fRooFits(0),fInWeights(0),fDataBins(0),fBinnedFit(kFALSE),fFiti(0),fYld("Yld_"),fSingleSp(""){
   //  THSRooFit();
@@ -169,6 +171,19 @@ void THSRooFit::DefineSets(){
   fWS->defineSet("Constraints",fConstraints);
   // fWS->defineSet("FitOptions",fFitOptions);
 }
+void THSRooFit::SetParVals(RooFitResult *res){
+  SetParVals(res->floatParsFinal());
+}
+void THSRooFit::SetParVals(RooArgList pars){
+  for(Int_t ip=0;ip<pars.getSize();ip++){
+    cout<<ip<<" "<<pars.at(ip)->GetName()<<endl;
+    Int_t ind=fParameters.index(pars.at(ip)->GetName());
+    if(ind==-1) continue;
+    RooRealVar* realpar=nullptr;
+    if((realpar=dynamic_cast<RooRealVar*>(pars.at(ip))))
+      ((RooRealVar*)fParameters.at(ind))->setVal(realpar->getVal());
+  }
+}
 void THSRooFit::LoadWeights(TString wfile,TString wname){
   //GetWeights object 
   cout<<"void THSRooFit::LoadWeights "<<wfile<<" "<<wname<<endl;
@@ -180,6 +195,7 @@ void THSRooFit::LoadWeights(TString wfile,TString wname){
   fInWeights->PrintWeight();
 }
 void THSRooFit::SetDataWeight(){
+  cout<<"KKKKKKKKKKKKKKK "<<fInWeights<<" "<<fWeightName<<endl;
   if(!fInWeights) return;
   if(fInWeights->GetSpeciesID(fWeightName)<0) return;
   RooArgList setWeights;
@@ -235,8 +251,8 @@ void THSRooFit::SetDataWeightFast(){
   else if(!(fDataBins))fWS->import(*fData); //or no databins to confuse it 
 }
 void THSRooFit::SetWeightName(TString WName){
-  if(!fInWeights) return;
-  if(fInWeights->GetSpeciesID(WName)<0) return;
+  if(!fInWeights) {Warning("THSRooFit::SetWeightName","Need to SetInweights first");return;}
+  if(fInWeights->GetSpeciesID(WName)<0) {Warning("THSRooFit::SetWeightName","Weight %s does not exist in InWeights",WName.Data());return;}
   fWeightName=WName;
 }
 void THSRooFit::LoadVariable(TString opt){
@@ -414,7 +430,8 @@ void THSRooFit::PlotDataModel(){
     fCanvases->Add(canvas=new TCanvas(TString(GetName())+fVariables[idr].GetName()+Form("%d",fFiti),TString(GetName())+fVariables[idr].GetName()));//create new canvas for drawing on
     RooPlot* frame = var->frame(); // RooFit frame 
     fData->plotOn(frame, DataError(RooAbsData::SumW2) ) ; //plot the data
-    fModel->plotOn(frame,LineColor(kRed),Precision(1E-2)) ; //model = signal + back fit result 
+    fModel->plotOn(frame,LineColor(kRed),Precision(4E-2)) ; //model = signal + back fit result 
+    //    fModel->plotOn(frame,LineColor(kRed),Precision(1E-2)) ; //model = signal + back fit result 
     //Get the chi2
     fChi2=frame->chiSquare();
     cout<<fFiti<<" THSRooFit::PlotDataModel() chi2 = "<<fChi2<<endl;
@@ -623,6 +640,7 @@ void THSRooFit::FitWithBins(Int_t Nfits){
 void THSRooFit::FitSavedBins(Int_t Nfits){
   if(!fDataBins->GetN()) return;
   Info("THSRooFit::FitSaved","Goint to run %d fits from %s",Nfits,fBinDir.Data());
+  cout<<"FFFFFFFFFFFFFFFFFFFFF "<<fInWeights<<" "<<fWeightName<<endl;
   if(!fWS->set("PDFs"))DefineSets();
   TDirectory *saveDir=gDirectory;
   //Loop over bins

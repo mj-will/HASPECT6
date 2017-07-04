@@ -32,6 +32,7 @@ public:
    }
   Double_t GetSWeight(Long64_t event,TString species);
   void ExportWeights(TString wmname="WeightMap");
+  void ExportWeights1(TString wmname="WeightMap");
   void ExportTreeWeights(TString wmname="WeightMap");
   void ExportWeightsToFile(TString filename);
   void AddWeightMap(THSWeights* Wts);

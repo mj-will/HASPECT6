@@ -27,6 +27,9 @@ class THSKinematics{
   
   Double_t fCosTh=0;
   Double_t fPhi=0;
+  Double_t fCosx=0;
+  Double_t fCosy=0;
+  Double_t fCosz=0;
   
  public :
   THSKinematics(){};
@@ -79,12 +82,17 @@ class THSKinematics{
   }
   Double_t t0(){return t0(fGamma,fMes);}//default gamma-meson
   Double_t t0(TLorentzVector p0,TLorentzVector p1);
-  
+
+  Double_t Cosx(){return fCosx;}  
+  Double_t Cosy(){return fCosy;}  
+  Double_t Cosz(){return fCosz;}  
   //Decay angles
   void MesonDecayHelicity();
   void MesonDecayGJ();
   void ElectroCMDecay();
   void PhotoCMDecay();
+  void LambdaDecay();
+
 };
 
 inline Double_t THSKinematics::t0(TLorentzVector p0,TLorentzVector p1){   
@@ -165,6 +173,24 @@ inline void THSKinematics::MesonDecayGJ(){
   TVector3 angles(decD1.Vect().Dot(xV),decD1.Vect().Dot(yV),decD1.Vect().Dot(zV));
   fCosTh=angles.CosTheta();
   fPhi=angles.Phi();
+}
+inline void THSKinematics::LambdaDecay(){
+  //z-axis along gamma direction in meson decay frame
+  TLorentzRotation decBoost(-fBar.BoostVector());
+  TLorentzVector decGamma=decBoost*fGamma;
+  TLorentzVector decBar=decBoost*fMes;
+  TVector3 zV=decGamma.Vect().Unit();
+  TVector3 yV=decBar.Vect().Cross(decGamma.Vect()).Unit();
+  TVector3 xV=yV.Cross(zV).Unit();
+
+  TLorentzVector decD1=decBoost*fBar_d1;
+  fCosx=decD1.Vect().Angle(xV);
+  fCosy=decD1.Vect().Angle(yV);
+  fCosz=decD1.Vect().Angle(zV);
+  fCosx=TMath::Cos(fCosx);
+  fCosy=TMath::Cos(fCosy);
+  fCosz=TMath::Cos(fCosz);
+   
 }
 
 #endif //ifdef THKinematics

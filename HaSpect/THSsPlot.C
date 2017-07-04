@@ -179,6 +179,22 @@ void THSsPlot::ExportWeights(TString wmname){
     else fWeights->FillWeights(ev,eventW);
   }
 }
+void THSsPlot::ExportWeights1(TString wmname){
+  cout<<"THSsPlot:ExportWeights1 no sPlot fit done as only 1 species left"<<endl;
+  Int_t NSpecies=fYields.getSize();
+  TVectorD eventW(NSpecies); //initialise weights vector
+  for(Int_t iw=0;iw<NSpecies;iw++)//set name for each species, remove leading Yld_	
+    fWeights->SetSpecies(TString(fYields.at(iw)->GetName()).Remove(0,4));
+  for(Long64_t ev=0;ev<fData->numEntries();ev++){//loop over events
+    for(Int_t iw=0;iw<NSpecies;iw++)//loop over species
+      eventW[iw]=1;//get weight for this species
+    if(fGotID){//use ID from initial tree
+      const RooArgSet* vars=fData->get(ev);
+      fWeights->FillWeights((Long64_t)vars->getRealValue(fIDBranchName),eventW);
+      } //ID not defined just use entry number on tree
+    else fWeights->FillWeights(ev,eventW);
+  }
+}
 void THSsPlot::ExportTreeWeights(TString wmname){
   //This function would give a weight for each entry in the tree
   //=0 if event not in fit (outside llimits)
@@ -325,7 +341,7 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events al
  
   TDirectory *saveDir=gDirectory;
   ctree->GetDirectory()->cd();
-  cout<<"WWWWWWWWWWWWWWWWWWWWW "<<ctree->GetEntries()<<endl;
+  cout<<"WWWWWWWWWWWWWWWWWWWWW "<<ctree->GetEntries()<<" "<<fInWeights<<" "<<fWeightName<<endl;
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(""));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree
   saveDir->cd();
@@ -418,6 +434,28 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   FitMany(Nfits);
   //Fit the model to data with only species yields as free pars
   //calculate weights and import to WeightMap
+  //Fix any zero yield to be constant to help fit converge
+  for(Int_t iy=0;iy<fYields.getSize();iy++){
+    Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();
+    if(thisYield<1E-2){
+      //Need to remove this pdf all weights weights will not be written for this species
+      RooRealVar* yield0=(RooRealVar*)&fYields[iy];
+      GetPDFsp()->remove(GetPDFs()[iy]);
+      GetYieldsp()->remove(*(GetWorkSpace()->var(yield0->GetName())));
+      GetWorkSpace()->removeSet("Yields");
+      GetWorkSpace()->removeSet("PDFs");
+      GetWorkSpace()->defineSet("Yields",GetYields());
+      GetWorkSpace()->defineSet("PDFs",GetPDFs());	
+      
+    }
+    }
+      
+    //   if(fYields.getSize()==1){//Only 1 species all weights==1
+    //   fWeights=new THSWeights("HSsWeights");//initialise weights
+    //   fWeights->SetTitle(GetName());
+    //   fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
+    //   ExportWeights1();
+    // }
   sPlot();
   //save any canvases produced
   Info("THSsPlot::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetName()).Data());

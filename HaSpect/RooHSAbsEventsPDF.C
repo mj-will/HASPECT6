@@ -243,7 +243,8 @@ Double_t RooHSAbsEventsPDF::analyticalIntegral(Int_t code,const char* rangeName)
     Double_t vval=*(fProxSet[code-2]);
     Double_t vrange=rmax-rmin;
     Int_t nbins=((RooRealVar*)(&(fProxSet[code-2]->arg())))->getBins();
-    Double_t delta=vrange/nbins/2;
+    //Double_t delta=vrange/nbins/2;
+    Double_t delta=vrange/nbins*2;
     for(Int_t ie=0;ie<NEv;ie++){
       fEvTree->GetEntry(ie);
       if(!CheckRange(rangeName)) continue;

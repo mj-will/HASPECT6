@@ -27,6 +27,9 @@ void hslogon(){
     if((opt.Contains("--makeall"))) MakeAll();
     
   }
+  //Make a soft link to THSParticle.0.h, if another particle class is given this will be replaced
+  gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
+  gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
   //check if additional macro dir given
    for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
@@ -37,6 +40,10 @@ void hslogon(){
     if((opt.Contains("--particle"))){
       THSPARTICLE=(TString(opt(11,opt.Sizeof()))).Data();
       cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
+      gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
+      TString THSPARTICLEH=THSPARTICLE;
+      THSPARTICLEH.ReplaceAll(".C",".h");
+      // gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h %s",THSPARTICLEH.Data()));     
     }
   }
 

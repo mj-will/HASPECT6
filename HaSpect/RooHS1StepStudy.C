@@ -110,6 +110,7 @@ Bool_t RooHS1StepStudy::execute()
   PDF->initIntegrator(); //move back to reconstruced branches
   //get generated tree, this will be flat
   TTree* tree=PDF->GetGenTree();
+  cout<<"TREE "<<tree->GetEntries()<<endl;
   fHSRooFit->LoadDataSet(tree);
   if(PDF->UseWeightsGen()){  //weight generated tree with model
     //If this is not set events will just be accept or reject
