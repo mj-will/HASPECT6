@@ -152,27 +152,27 @@ void THSOutput::HSTerminate(){
    outfile->Close();
    SafeDelete(outfile);
    //make sure new tree events are back in fgID order
-   if(gProof&&(fSort==kTRUE)){
-     TIter next(fSelOutput);
-     TProofOutputFile* elpofile=0;
-     TObject* outo=0;
-     TFile* infile=0; //pointer to input file
-     //iterate over any proof files which are in the ouput list
-     while((outo=dynamic_cast<TObject*>(next()))){
-       if((elpofile=dynamic_cast<TProofOutputFile*>(outo))){
-	 TFile* elfile = elpofile->OpenFile("UPDATE");
-	 //First sort tree to regain original ordering
-	 TIter fnext(elfile->GetListOfKeys());
-	 TKey* fkey=0;
-	 //Look for a trees in saved file
-	 while ((fkey = (TKey*)fnext())){
-	   if(TString(fkey->GetClassName())==TString("TTree")){
-	     SortTree(dynamic_cast<TTree*>(elfile->Get(fkey->GetName())));
-	   }
-	 }
-       }
-     }
-   }
+   // if(gProof&&(fSort==kTRUE)){
+   //   TIter next(fSelOutput);
+   //   TProofOutputFile* elpofile=0;
+   //   TObject* outo=0;
+   //   TFile* infile=0; //pointer to input file
+   //   //iterate over any proof files which are in the ouput list
+   //   while((outo=dynamic_cast<TObject*>(next()))){
+   //     if((elpofile=dynamic_cast<TProofOutputFile*>(outo))){
+   // 	 TFile* elfile = elpofile->OpenFile("UPDATE");
+   // 	 //First sort tree to regain original ordering
+   // 	 TIter fnext(elfile->GetListOfKeys());
+   // 	 TKey* fkey=0;
+   // 	 //Look for a trees in saved file
+   // 	 while ((fkey = (TKey*)fnext())){
+   // 	   if(TString(fkey->GetClassName())==TString("TTree")){
+   // 	     SortTree(dynamic_cast<TTree*>(elfile->Get(fkey->GetName())));
+   // 	   }
+   // 	 }
+   //     }
+   //   }
+   // }
 
    //in case of proof must add uid at end as cannot synch fgID in proof
    if(gProof&&(fSaveID==kTRUE)){

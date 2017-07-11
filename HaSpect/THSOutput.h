@@ -28,28 +28,29 @@ class THSHisto;
 
 class THSOutput :  public THSHisto{
  protected :
-  TFile            *fFile;      //Output file
-  TProofOutputFile *fProofFile; // For optimized merging of the ntuple
-  TTree            *fOutTree;  //Output tree
-  TTree            *fCurTree;  //Current input tree
-  TEntryList* fEntryList; //Entry List prooduced during selector Process
+  TFile            *fFile=nullptr;      //Output file
+  TProofOutputFile *fProofFile=nullptr; // For optimized merging of the ntuple
+  TTree            *fOutTree=nullptr;  //Output tree
+  TTree            *fCurTree=nullptr;  //Current input tree
+  TEntryList* fEntryList=nullptr; //Entry List prooduced during selector Process
   TString fOutName;   //name of ouput file or directory
   TString fStrParticles; //string containing detected particles name
   TString fStepName; //Name of directory in fFile to write source code to
-  TList* fStepDir; //Directory containing source code
-  TList* fSelInput;  //pointers to the selector input
-  TList* fSelOutput;  //pointer to the selector ouput
-  TList* fCodeList;  //pointer to the list of source code
-  TList* fListOfFiles; //list of analysed file names
-  Long64_t fEntry; //current entry number in Chain
+  TList* fStepDir=nullptr; //Directory containing source code
+  TList* fSelInput=nullptr;  //pointers to the selector input
+  TList* fSelOutput=nullptr;  //pointer to the selector ouput
+  TList* fCodeList=nullptr;  //pointer to the list of source code
+  TList* fListOfFiles=nullptr; //list of analysed file names
+  Long64_t fEntry=0; //current entry number in Chain
   TObject fMessages; //For access to Info,Error,...
-  Bool_t fSort; //option to reorder events back to inital order in PROOF (which will randomise tree order)
+  Bool_t fSort=kFALSE; //option to reorder events back to inital order in PROOF (which will randomise tree order)
  
-  Bool_t fSaveID; //Ony save ID if this is the first THSOutput tree, subsequent trees will aready contain this branch
-  Double_t fgID; //global event ID number, should be set in first instance of THSOutput and preserved through further steps. Required to synchornise differnt trees as PROOF does not preserve event ordering
-  Long64_t fgIDoff; //starting offset for ID number
+  Bool_t fSaveID=kFALSE; //Ony save ID if this is the first THSOutput tree, subsequent trees will aready contain this branch
+  Double_t fgID=0; //global event ID number, should be set in first instance of THSOutput and preserved through further steps. Required to synchornise differnt trees as PROOF does not preserve event ordering
+  Long64_t fgIDoff=0; //starting offset for ID number
  public :
- THSOutput() : fFile(0), fProofFile(0), fOutTree(0),fCurTree(0), fEntryList(0),fStepDir(0),fSelInput(0),fSelOutput(0), fCodeList(0),fListOfFiles(0) {fSort=kFALSE;fSaveID=kFALSE;fgID=0;fgIDoff=0;}   
+ THSOutput() {}   
+  //THSOutput() : fFile(0), fProofFile(0), fOutTree(0),fCurTree(0), fEntryList(0),fStepDir(0),fSelInput(0),fSelOutput(0), fCodeList(0),fListOfFiles(0) {fSort=kFALSE;fSaveID=kFALSE;fgID=0;fgIDoff=0;}   
   virtual ~THSOutput();
 
   // virtual void InitOutput(); //Configure the output file and tree 

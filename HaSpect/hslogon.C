@@ -12,6 +12,7 @@ void HSout(TString hsout){gSystem->Setenv("HSOUT",hsout);} //set out file
 void HSproj(TString hsproj){gSystem->Setenv("HSPROJ",hsproj);} //set out file
 void MakeAll();
 void HSMacPath(TString opt);
+void HSUserPath(TString opt);
 #include <TProof.h> //MAke sure gProof can be seen here
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
@@ -20,16 +21,33 @@ TString THSPARTICLE("THSParticle.0.C");
 void hslogon(){
   //Execute system .rootlogon.C script 
   if(gSystem->AccessPathName("~/.rootlogon.C")){};
-   //get command line options first check if makeall
+
+  //Check if user source code directory defined
+  TString HSANA=gSystem->Getenv("HSANA");
+  TString HSUSER=gSystem->Getenv("HSUSER");
+  //remove default link to THSParticle.0.h in case user defined THSParticle
+  if(gSystem->Which(HSANA,"THSParticle.h"))
+    gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
+
+  if(gSystem->Getenv("HSUSER")){
+    gROOT->SetMacroPath(Form("%s:%s",HSUSER.Data(),gROOT->GetMacroPath()));
+    gSystem->AddIncludePath(TString("-I")+HSUSER);
+    //See if there is a user THSParticle class
+    if(gSystem->Which(HSUSER,"THSParticle.C"))
+      THSPARTICLE="THSParticle.C";
+  }
+  else{
+    //Make a soft link to THSParticle.0.h, if another particle class is given this will be replaced
+    gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
+  }
+
+  //get command line options first check if makeall
   for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
     //look for --proof=Nworkers optionif Nworkers not given all cores will be used
     if((opt.Contains("--makeall"))) MakeAll();
     
   }
-  //Make a soft link to THSParticle.0.h, if another particle class is given this will be replaced
-  gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
-  gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
   //check if additional macro dir given
    for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
@@ -43,7 +61,6 @@ void hslogon(){
       gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
       TString THSPARTICLEH=THSPARTICLE;
       THSPARTICLEH.ReplaceAll(".C",".h");
-      // gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h %s",THSPARTICLEH.Data()));     
     }
   }
 
@@ -68,7 +85,6 @@ void hslogon(){
     //look for --farm and copy all hsroot files to local hsana directory
     if((opt.Contains("--farm"))){
       gISFARM=kTRUE;
-      TString HSANA=gSystem->Getenv("HSANA");
       gSystem->Exec(Form("mkdir hsana"));
       gSystem->Exec(Form("cp %s/*.h hsana/.",HSANA.Data()));
       gSystem->Exec(Form("cp %s/*.C hsana/.",HSANA.Data()));
@@ -155,7 +171,7 @@ void HSselector(){
   LoadMacro("THSBins.C");
   LoadMacro("THSWeights.C");
   LoadMacro("THSParticle.C");
-  LoadMacro(THSPARTICLE);
+  if(!TClass::GetClass("THSParticle"))LoadMacro(THSPARTICLE);
   LoadMacro("THSHisto.C");
   LoadMacro("THSOutput.C");
   // LoadMacro("THSPartOutput.C");
@@ -170,8 +186,8 @@ void HSselector(){
 
 void HSproject(TString pname){
   HSproj(pname);
+  if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
-  // LoadMacro("THSParticle.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSProject.C");
   LoadMacro(pname+".C");
@@ -180,11 +196,11 @@ void HSproject(TString pname){
 void HSdata(){
   if(gSystem->Getenv("RHIPO"))
     gROOT->ProcessLine(TString(".x ")+gSystem->Getenv("RHIPO")+"/Hipo2Root.C");
-     cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
+  cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
  
   LoadMacro("THSWeights.C");
+  if(!TClass::GetClass("THSParticle"))   LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
-  //  LoadMacro("THSParticle.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
   LoadMacro("THSRADSReader.C");
@@ -210,13 +226,24 @@ void startproof(Int_t Nw){
 void LoadMacro(TString macro){
   //Different methods depending on whether proof or not
   TString HSANA=gSystem->Getenv("HSANA");
-  cout<<"Loading hsmacoro "<<macro<<endl;
+  TString HSUSER=gSystem->Getenv("HSUSER");
+
+  cout<<"Loading hsmacro "<<macro<<endl;
   if(gProof) {
-    gProof->Load(HSANA+"/"+macro+"+");
-    if(gProof->GetLoadedMacros()){
-      if(!gProof->GetLoadedMacros()->Contains(HSANA+"/"+macro+"+"))  gProof->Load(MACPATH+"/"+macro+"+"); }//proof needs full path, as does not see macro path
-    else gProof->Load(MACPATH+"/"+macro+"+");
-    // gProof->Load(MACPATH+"/"+macro+"+");
+    if(gSystem->Which("./",macro)){
+      macro=macro;
+    }	
+    else if(gSystem->Which(HSUSER,macro)){
+      macro=HSUSER+"/"+macro;
+    }
+    else  if(gSystem->Which(MACPATH,macro)){
+      macro=MACPATH+"/"+macro;
+    }
+    else  if(gSystem->Which(HSANA,macro)){
+      macro=HSANA+"/"+macro;
+    }
+    else {cout<<"Can't find macro "<<macro<<endl; return;}
+    gProof->Load(macro+"+");
   }
   else gROOT->LoadMacro(macro+"+");//don't use HSANA in case wnat to overwrite with macro in current directory
   
