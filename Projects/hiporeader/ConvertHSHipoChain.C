@@ -2,10 +2,10 @@
 {
   THSHipoReader* reader=new THSHipoReader();
   reader->SetWriteGenBranch("Generated");
-  reader->SetUsePID(kFALSE);
+  //reader->SetUsePID(kFALSE);
 
   TChain chain("hipo");
-  chain.Add(HSin()+"/out*.hipo");
+  chain.Add(HSin()+"/*.hipo");
   
   gBenchmark->Start("time");
 
