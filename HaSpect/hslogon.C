@@ -131,20 +131,20 @@ void MakeAll(){
   gSystem->Exec(Form("cd %s",HSANA.Data()));
   gSystem->Exec("rm *.so");
 
-  gROOT->LoadMacro("THSBins.C++");
-  gROOT->LoadMacro("THSWeights.C++");
-  gROOT->LoadMacro("THSRooFit.C++");
-  gROOT->LoadMacro("THSsPlot.C++");
-  //  gROOT->LoadMacro("THSParticle.C++");
-  gROOT->LoadMacro(THSPARTICLE+"++");
-  gROOT->LoadMacro("THSHisto.C++");
-  gROOT->LoadMacro("THSOutput.C++");
-  gROOT->LoadMacro("THSPartOutput.C++");
-  gROOT->LoadMacro("THSSkeleton.C++");
-  gROOT->LoadMacro("THSKinematics.C++");
-  gROOT->LoadMacro("THSProject.C++");
-  gROOT->LoadMacro("THSDataManager.C++");
-  gROOT->LoadMacro("THSLundReader.C++");
+  // gROOT->LoadMacro("THSBins.C++");
+  // gROOT->LoadMacro("THSWeights.C++");
+  // gROOT->LoadMacro("THSRooFit.C++");
+  // gROOT->LoadMacro("THSsPlot.C++");
+  // //  gROOT->LoadMacro("THSParticle.C++");
+  // gROOT->LoadMacro(THSPARTICLE+"++");
+  // gROOT->LoadMacro("THSHisto.C++");
+  // gROOT->LoadMacro("THSOutput.C++");
+  // gROOT->LoadMacro("THSPartOutput.C++");
+  // gROOT->LoadMacro("THSSkeleton.C++");
+  // gROOT->LoadMacro("THSKinematics.C++");
+  // gROOT->LoadMacro("THSProject.C++");
+  // gROOT->LoadMacro("THSDataManager.C++");
+  // gROOT->LoadMacro("THSLundReader.C++");
 
   gSystem->Exec(Form("cd %s",CurDir.Data()));
 }
@@ -153,7 +153,7 @@ void HSfit(){
   //set prompt
   if(!gProof)((TRint*)gROOT->GetApplication())->SetPrompt("hsroot [%d] ");
   //Load extra classes for roofit
-  LoadMacro("THSBins.C");
+  LoadMacro("THSBins.C"); 
   LoadMacro("THSWeights.C");
   LoadMacro("RooHSAbsEventsPDF.C");
   LoadMacro("RooHSEventsHistPDF.C");
@@ -170,8 +170,9 @@ void HSselector(){
   //particle container class
   LoadMacro("THSBins.C");
   LoadMacro("THSWeights.C");
-  LoadMacro("THSParticle.C");
-  if(!TClass::GetClass("THSParticle"))LoadMacro(THSPARTICLE);
+  // LoadMacro("THSParticle.C");
+  //if(!TClass::GetClass("THSParticle"))LoadMacro(THSPARTICLE);
+  LoadMacro(THSPARTICLE);
   LoadMacro("THSHisto.C");
   LoadMacro("THSOutput.C");
   // LoadMacro("THSPartOutput.C");
@@ -199,7 +200,7 @@ void HSdata(){
   cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
  
   LoadMacro("THSWeights.C");
-  if(!TClass::GetClass("THSParticle"))   LoadMacro("THSParticle.C");
+  //if(!TClass::GetClass("THSParticle"))   LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
