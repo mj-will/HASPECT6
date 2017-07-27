@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "THSParticle.h"
+#include "THSCLAS12Particle.h"
 #include "THSDataManager.h"
 #include "THipo.h"
 
@@ -25,6 +25,7 @@ class THSHipoReader: public THSDataManager{
   
   THipo *fHipo=nullptr;
   THipoBank *fPBank=nullptr;
+  THipoBank *fDBank=nullptr;
   THipoBank *fMCBank=nullptr;
   THipoBank *fFTBank=nullptr;
 
@@ -38,6 +39,12 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fMass=nullptr;
   THipoItem* fCharge=nullptr;
   
+  THipoItem* fDPindex=nullptr;
+  THipoItem* fDTime=nullptr;
+  THipoItem* fDEnergy=nullptr;
+  THipoItem* fDdet=nullptr;
+  THipoItem* fDPath=nullptr;
+
   THipoItem* fFTPid=nullptr;
   THipoItem* fFTTime=nullptr;
   THipoItem* fFTPx=nullptr;

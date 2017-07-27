@@ -8,7 +8,7 @@
 #define ROOHSSPHHARMOMENTS
 
 #include "RooAbsPdf.h"
-#include "RooHSAbsEventsPDF.h"
+#include "RooHSEventsPDF.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
@@ -17,7 +17,7 @@
 #include "RooListProxy.h"
 #include <vector> 
 
-class RooHSSphHarMoments : public RooHSAbsEventsPDF {
+class RooHSSphHarMoments : public RooHSEventsPDF {
 public:
   RooHSSphHarMoments() {} ; 
   RooHSSphHarMoments(const char *name, const char *title,

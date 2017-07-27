@@ -82,7 +82,7 @@ class THSSkeleton :public TObject  {
   TString FindNextLineLike(TString linelike);
   void ReplaceMacroText(TString text0,TString text1);
   void ReplaceAllMacroText(TString text0,TString text1);
-  
+  void ReplaceInCurrLine(TString text0,TString text1);
 };
 
 

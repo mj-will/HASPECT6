@@ -191,7 +191,7 @@ void THSsPlot::ExportWeights1(TString wmname){
     if(fGotID){//use ID from initial tree
       const RooArgSet* vars=fData->get(ev);
       fWeights->FillWeights((Long64_t)vars->getRealValue(fIDBranchName),eventW);
-      } //ID not defined just use entry number on tree
+    } //ID not defined just use entry number on tree
     else fWeights->FillWeights(ev,eventW);
   }
 }
@@ -341,7 +341,6 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events al
  
   TDirectory *saveDir=gDirectory;
   ctree->GetDirectory()->cd();
-  cout<<"WWWWWWWWWWWWWWWWWWWWW "<<ctree->GetEntries()<<" "<<fInWeights<<" "<<fWeightName<<endl;
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(""));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree
   saveDir->cd();
@@ -434,7 +433,7 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   FitMany(Nfits);
   //Fit the model to data with only species yields as free pars
   //calculate weights and import to WeightMap
-  //Fix any zero yield to be constant to help fit converge
+  //Remove any zero yield to be constant to help fit converge
   for(Int_t iy=0;iy<fYields.getSize();iy++){
     Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();
     if(thisYield<1E-2){
@@ -448,24 +447,28 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
       GetWorkSpace()->defineSet("PDFs",GetPDFs());	
       
     }
-    }
-      
-    //   if(fYields.getSize()==1){//Only 1 species all weights==1
-    //   fWeights=new THSWeights("HSsWeights");//initialise weights
-    //   fWeights->SetTitle(GetName());
-    //   fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
-    //   ExportWeights1();
-    // }
+  }
+  
+  if(fYields.getSize()==1){//Only 1 species all weights==1
+    fWeights=new THSWeights("HSsWeights");//initialise weights
+    fWeights->SetTitle(GetName());
+    fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
+    ExportWeights1();
+    GetWeights()->PrintWeight();
+    GetWeights()->SortWeights();
+    GetWeights()->Save();//don't save if single bin so we can draw
+    return;
+  }
   sPlot();
   //save any canvases produced
   Info("THSsPlot::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetName()).Data());
   SavePlots(fOutDir+TString("Results")+GetName()+".root");
   StudyFit();
-    //save weights to file
+  //save weights to file
   if(GetWeights()){
     GetWeights()->PrintWeight();
     GetWeights()->SortWeights();
     GetWeights()->Save();//don't save if single bin so we can draw
   }
-
+  
 }

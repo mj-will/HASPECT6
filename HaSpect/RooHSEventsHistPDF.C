@@ -23,7 +23,7 @@ ClassImp(RooHSEventsHistPDF)
 			RooAbsReal& _alpha,	
                         RooAbsReal& _offset,
                         RooAbsReal& _scale) :
-   RooHSAbsEventsPDF(name,title),
+   RooHSEventsPDF(name,title),
    x("x","x",this,_x),
    offset("offset","offset",this,_offset),
    scale("scale","scale",this,_scale),
@@ -83,7 +83,7 @@ ClassImp(RooHSEventsHistPDF)
 
 
  RooHSEventsHistPDF::RooHSEventsHistPDF(const RooHSEventsHistPDF& other, const char* name) :  
-   RooHSAbsEventsPDF(other,name),
+   RooHSEventsPDF(other,name),
    x("x",this,other.x),
    offset("offset",this,other.offset),
    scale("scale",this,other.scale),
@@ -104,6 +104,7 @@ ClassImp(RooHSEventsHistPDF)
    if(other.fScaleConstr)fScaleConstr=(RooGaussian*)other.fScaleConstr->Clone();
    fVarMax=other.fVarMax;
    if(fEvTree) SetEvTree(fEvTree);//Needs fProxSet filled first
+   
    MakeSets();
     
  }
@@ -144,7 +145,7 @@ void RooHSEventsHistPDF::MakeSets(){
 
 Double_t RooHSEventsHistPDF::evaluateMC() const {
 // ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
-  Double_t mcx=fMCVar.at(0);
+  Double_t mcx=fMCVar[0];
  
   return evaluateMC(mcx);  
 }
@@ -161,7 +162,11 @@ Double_t RooHSEventsHistPDF::evaluateMC(Double_t mcx) const {
 
 Bool_t RooHSEventsHistPDF::SetEvTree(TChain* tree,Long64_t ngen){
 
-  Bool_t OK=RooHSAbsEventsPDF::SetEvTree(tree,ngen); //standard intilisation
+  return RooHSEventsHistPDF::SetEvTree(tree->CloneTree(),ngen); //standard intilisation
+}
+Bool_t RooHSEventsHistPDF::SetEvTree(TTree* tree,Long64_t ngen){
+
+  Bool_t OK=RooHSEventsPDF::SetEvTree(tree,ngen); //standard intilisation
   //Now also need to create underlying HistPdf
   if(!fHist)CreateHistPdf();
   if(OK&&fHist) return kTRUE;
@@ -222,7 +227,7 @@ void RooHSEventsHistPDF::CreateHistPdf(){
 Int_t RooHSEventsHistPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const
 {
   
-  return RooHSAbsEventsPDF::getAnalyticalIntegral(allVars,analVars,rangeName);
+  return RooHSEventsPDF::getAnalyticalIntegral(allVars,analVars,rangeName);
 }
 Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName) const
 {

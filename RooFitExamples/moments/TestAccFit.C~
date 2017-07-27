@@ -47,7 +47,7 @@
   //Make a plot for every study fit (remove if doing lots of fits)
   RF->SetStudyPlot();
   //Set the number of trials you would like
-  RF->SetNStudyTrials(10);
+  RF->SetNStudyTrials(2);
   //Run :
   //Generate events and fit for given number of trials
   RF->StudyFit();

@@ -388,19 +388,34 @@ void THSSkeleton::HSProject(){
 // }
 ////////////////////////////////////////////////////////
 void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString parNames){
+  TObjArray* obss=obsNames.Tokenize(",");
+  TObjArray* pars=parNames.Tokenize(",");
+  //Check for categories
+  vector<Bool_t> is_cat;
+  for(Int_t io=0;io<obss->GetEntries();io++)
+    if(TString(obss->At(io)->GetName()).Contains("CAT:")){
+      TString newstr=obss->At(io)->GetName();
+      is_cat.push_back(kTRUE);
+      newstr.ReplaceAll("CAT:","");
+      dynamic_cast<TObjString*>(obss->At(io))->SetString(newstr); //Get rid of CAT:
+      obsNames.ReplaceAll(TString("CAT:")+newstr,newstr);
+    }
+    else is_cat.push_back(kFALSE);
+
   TString varNames=obsNames+","+parNames;
   //Make standard RooFit Pdf
   RooClassFactory::makePdf(pdfName,varNames) ;
-  //Open code to add RooHSAbsEventsPDF parts
+  //Open code to add RooHSEventsPDF parts
   fCurMacro=TMacro(pdfName+".cxx");
   FindNextLineLike("RooAbsPdf(name,title)");
-  ((TObjString*)fCurMacro.GetListOfLines()->At(fPlace))->SetString("   RooHSAbsEventsPDF(name,title),");
+  ((TObjString*)fCurMacro.GetListOfLines()->At(fPlace))->SetString("   RooHSEventsPDF(name,title),");
   FindNextLineLike("RooAbsPdf(other,name)");
-  ((TObjString*)fCurMacro.GetListOfLines()->At(fPlace))->SetString("   RooHSAbsEventsPDF(other,name),");
+  ((TObjString*)fCurMacro.GetListOfLines()->At(fPlace))->SetString("   RooHSEventsPDF(other,name),");
   //Now add observables to ProxSet
   AddLineAfter("{","   MakeSets();");
-  TObjArray* obss=obsNames.Tokenize(",");
-  TObjArray* pars=parNames.Tokenize(",");
+
+ 
+  //Edit text
   for(Int_t io=0;io<obss->GetEntries();io++)
     ContinueLineAfter(TString("   ")+obss->At(io)->GetName()+".SetName(_"+obss->At(io)->GetName()+".GetName());");
   for(Int_t ip=0;ip<pars->GetEntries();ip++)
@@ -417,7 +432,8 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   FindNextLineLike("}");
   ContinueLineAfter("void "+pdfName+"::MakeSets(){");
   for(Int_t io=0;io<obss->GetEntries();io++)
-    ContinueLineAfter(TString("   fProxSet.push_back(&")+obss->At(io)->GetName()+");");
+    if(!is_cat[io])ContinueLineAfter(TString("   fProxSet.push_back(&")+obss->At(io)->GetName()+");");
+    else ContinueLineAfter(TString("   fCatSet.push_back(&")+obss->At(io)->GetName()+");");
   for(Int_t ip=0;ip<pars->GetEntries();ip++)
     ContinueLineAfter(TString("   fParSet.push_back(&")+pars->At(ip)->GetName()+");");
   // ContinueLineAfter("   fVarSet.push_back(RooArgList(\"AllVars\"));");
@@ -429,8 +445,11 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   FindNextLineLike("}");
   ContinueLineAfter("Double_t "+pdfName+"::evaluateMC() const {",1);
   ContinueLineAfter("// ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE");
+  Int_t nv=0;
+  Int_t nc=0;
   for(Int_t io=0;io<obss->GetEntries();io++)
-    ContinueLineAfter(TString("  Double_t mc")+obss->At(io)->GetName()+Form("=fMCVar.at(%d);",io));
+    if(!is_cat[io]) ContinueLineAfter(TString("  Double_t mc")+obss->At(io)->GetName()+Form("=fMCVar[%d];",nv++));
+    else ContinueLineAfter(TString("  Int_t mc")+obss->At(io)->GetName()+Form("=fMCCat[%d];",nc++));
 
   ContinueLineAfter("   return 1.0;");
   ContinueLineAfter("}");
@@ -441,18 +460,48 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   // ContinueLineAfter("");
   
   //Done .C file
+
+  //fix categories
+  for(Int_t io=0;io<obss->GetEntries();io++)
+    if(is_cat[io]){
+      fPlace=0;
+      FindNextLineLike(obss->At(io)->GetName());
+      ReplaceInCurrLine("RooAbsReal","RooAbsCategory");
+
+    }
+  fPlace=0;
+
   fCurMacro.SaveSource(pdfName+".cxx");
 
 
   ////////////////////////////////////////////////////////////////////  
   //Now with .h
   fCurMacro=TMacro(pdfName+".h");
-  AddLineAfter("RooAbsPdf.h","#include \"RooHSAbsEventsPDF.h\"");
+  AddLineAfter("RooAbsPdf.h","#include \"RooHSEventsPDF.h\"");
 
-  ReplaceMacroText("public RooAbsPdf","public RooHSAbsEventsPDF");
-  AddLineAfter("protected",TString("  Double_t fMC")+obss->At(0)->GetName()+";");
+  ReplaceMacroText("public RooAbsPdf","public RooHSEventsPDF");
+
+    //fix categories
+  for(Int_t io=0;io<obss->GetEntries();io++)
+    if(is_cat[io]){
+      fPlace=0;
+      FindNextLineLike(obss->At(io)->GetName());
+      ReplaceInCurrLine("RooAbsReal","RooAbsCategory");
+      fPlace++;
+      FindNextLineLike(obss->At(io)->GetName());
+      ReplaceInCurrLine("RooRealProxy","RooCategoryProxy");
+
+    }
+  fPlace=0;
+
+  if(!is_cat[0]) AddLineAfter("protected",TString("  Double_t fMC")+obss->At(0)->GetName()+";");
+  else AddLineAfter("protected",TString("  Int_t fMC")+obss->At(0)->GetName()+";");
+  for(Int_t io=1;io<obss->GetEntries();io++)
+    if(!is_cat[io]) ContinueLineAfter(TString("  Double_t fMC")+obss->At(io)->GetName()+";");
+    else  ContinueLineAfter(TString("  Int_t fMC")+obss->At(io)->GetName()+";");
   
   AddLineAfter("Double_t evaluate()","  Double_t evaluateMC() const ;");
+
 
   // AddLineAfter("inline virtual ~","  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const;");
   ContinueLineAfter("  void MakeSets();");
@@ -567,6 +616,13 @@ TString THSSkeleton::FindNextLineLike(TString linelike){
   if(count==lines->GetEntries()) {fPlace=count; return "";} //didn't find line go to end
   else fPlace=count; //get line number
   return thisline->String();
+}
+void THSSkeleton::ReplaceInCurrLine(TString text0,TString text1){
+  // TString strline=fCurMacro.GetLineWith(text0)->GetString();
+  TList *lines=fCurMacro.GetListOfLines();
+  TObjString*  thisline=dynamic_cast<TObjString*>(lines->At(fPlace));
+  if(!thisline->String().Contains(text0)) cout<<"Warning : ReplaceInCurrLine text not found "<<text0<<" in line "<<thisline->String()<<endl;
+  thisline->String().ReplaceAll(text0,text1);
 }
 void THSSkeleton::ReplaceMacroText(TString text0,TString text1){
   TString strline=fCurMacro.GetLineWith(text0)->GetString();

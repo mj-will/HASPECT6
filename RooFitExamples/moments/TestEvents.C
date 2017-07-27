@@ -29,7 +29,7 @@
   ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
   RF->FitAndStudy(1);
 
-    new TCanvas();
+  new TCanvas();
   ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
 
 }

@@ -122,6 +122,7 @@ public:
     fID=dynamic_cast<RooRealVar*>((fWS->factory(str+"[0,9.99999999999999e14]")));
     fWS->defineSet("ID",RooArgSet(*fID));
    }
+  void CheckRange();
   void SetParVals(RooFitResult *res);
   void SetParVals(RooArgList pars);
   void RemoveDataSet();

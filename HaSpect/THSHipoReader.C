@@ -5,7 +5,7 @@
 THSHipoReader::THSHipoReader(){
   fHipo = new THipo();
   fHipo->ConfigBank("REC::Particle");
-  //fHipo->ConfigBank("REC::Detector");
+  fHipo->ConfigBank("REC::Detector");
   fHipo->ConfigBank("FT::particles");
   //Get the necessary items from Particle Bank
   fPBank=fHipo->GetBank("REC::Particle");
@@ -18,6 +18,15 @@ THSHipoReader::THSHipoReader(){
   fPid=fPBank->GetItem("pid");
   fMass=fPBank->GetItem("mass");
   fCharge=fPBank->GetItem("charge");
+  //Get the necessary items from Detector Bank
+  fDBank=fHipo->GetBank("REC::Detector");
+  //  THipoItem *d_index=bank2->GetItem("index");
+  fDPindex=fDBank->GetItem("pindex");
+  fDTime=fDBank->GetItem("time");
+  fDEnergy=fDBank->GetItem("energy");
+  fDPath=fDBank->GetItem("path");
+  fDdet=fDBank->GetItem("detector");
+
   //Get the necessary items from FT Bank
   fFTBank=fHipo->GetBank("FT::particles");
   fFTPx=fFTBank->GetItem("cx");
@@ -104,6 +113,25 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       //     if(fPid->Val()==22) particle->SetPDGcode(0); //force photons to be Rootino for now
       particle->TakePDGMass();
       particle->SetDetector(100);
+
+      //Now look for the associated detector info
+      //we must match the detector pindex to the index of this particle entry
+	while(fDPindex->FindEntry(fPBank->GetEntry())){
+	  //Do something if find a particular detector
+	  if(fDdet->Val()==17){
+	    particle->SetTime(fDTime->Val());
+	    particle->SetEdep(fDEnergy->Val());
+	    particle->SetPath(fDPath->Val()/100);
+	  }
+	  else{
+	    particle->SetTime(0);
+	    particle->SetEdep(0);
+	    particle->SetPath(0);
+
+	  }
+	}
+
+      
      }
   }
   //FT particle bank

@@ -4,7 +4,7 @@
 #include "Riostream.h"
 
 #include "RooHS1StepStudy.h"
-#include "RooHSAbsEventsPDF.h"
+#include "RooHSEventsPDF.h"
 #include "RooRandom.h"
 #include "RooWorkspace.h"
 #include "RooMsgService.h" 
@@ -98,7 +98,7 @@ Bool_t RooHS1StepStudy::execute()
   //generate pseudo data set
   fWS->loadSnapshot("initial");//load initial parameters
 
-  RooHSAbsEventsPDF* PDF=dynamic_cast<RooHSAbsEventsPDF*>(fWS->pdf(fPDFName));
+  RooHSEventsPDF* PDF=dynamic_cast<RooHSEventsPDF*>(fWS->pdf(fPDFName));
 
   PDF->SetGeni(fGeni);
   //genereate n events from poisson

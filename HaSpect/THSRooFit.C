@@ -12,7 +12,7 @@
 #include <RooAbsData.h>
 #include <RooChi2Var.h>
 #include <RooConstVar.h>
-#include "RooHSAbsEventsPDF.h"
+#include "RooHSEventsPDF.h"
 #include "RooHS1StepStudy.h"
 #include <RooStudyManager.h>
 #include <algorithm>      // std::sort
@@ -131,7 +131,6 @@ void THSRooFit::LoadDataSet(RooAbsData* data,Bool_t toWS){
   cout<<"THSRooFit::LoadDataSet Print dataset for "<<fData->GetName()<<endl;
   fData->Print();
 }
-
 void THSRooFit::LoadWorkSpaceData(RooWorkspace* ws){
   LoadWorkSpace(ws);
   LoadDataSet(ws->allData().front());//assumes only 1 data set!!
@@ -195,7 +194,6 @@ void THSRooFit::LoadWeights(TString wfile,TString wname){
   fInWeights->PrintWeight();
 }
 void THSRooFit::SetDataWeight(){
-  cout<<"KKKKKKKKKKKKKKK "<<fInWeights<<" "<<fWeightName<<endl;
   if(!fInWeights) return;
   if(fInWeights->GetSpeciesID(fWeightName)<0) return;
   RooArgList setWeights;
@@ -281,6 +279,24 @@ void THSRooFit::LoadBinVars(TString opt,Int_t nbins,Double_t* xbins){
   fBinVars.add(*(fWS->factory(opt+Form("[%lf,%lf]",xbins[0],xbins[nbins-1]))));
   fDataBins->AddAxis(opt,nbins,xbins);
 
+}
+void THSRooFit::CheckRange(){
+  //check over fit variables to find max and min values in datastore
+  //change range accordingly. Seems to help weighted fits
+  for(Int_t iy=0;iy<fVariables.getSize();iy++){
+    Double_t high,low;
+    RooRealVar *var=((RooRealVar*)&fVariables[iy]);
+    fData->getRange(*var,low,high);
+    if(low>var->getMin()){
+      Info("THSRooFit::CheckRange()","changing min for %s from %f to %f",var->GetName(),var->getMin(),low);
+      var->setMin(low);
+    }
+    if(high<var->getMax()){
+      Info("THSRooFit::CheckRange()","changing min for %s from %f to %f",var->GetName(),var->getMax(),high);
+      var->setMax(high);
+    }
+    
+  }
 }
 RooRealVar* THSRooFit::GetVar(TString name){
   RooRealVar* var=0;
@@ -423,8 +439,7 @@ void THSRooFit::PlotDataModel(){
   if(!fCanvases){fCanvases=new TList();fCanvases->SetOwner();fCanvases->SetName(TString("RFPlots")+GetName());}
   //Loop over variables
   for(Int_t idr=0;idr<fVariables.getSize();idr++){
-    cout<<"Plotting versus "<<fVariables[idr].GetName()<<endl;
-    RooRealVar* var=fWS->var(fVariables[idr].GetName());//get variable
+    RooRealVar* var=dynamic_cast<RooRealVar*>(fWS->var(fVariables[idr].GetName()));//get variable
     
     if(!var) continue;
     fCanvases->Add(canvas=new TCanvas(TString(GetName())+fVariables[idr].GetName()+Form("%d",fFiti),TString(GetName())+fVariables[idr].GetName()));//create new canvas for drawing on
@@ -640,7 +655,6 @@ void THSRooFit::FitWithBins(Int_t Nfits){
 void THSRooFit::FitSavedBins(Int_t Nfits){
   if(!fDataBins->GetN()) return;
   Info("THSRooFit::FitSaved","Goint to run %d fits from %s",Nfits,fBinDir.Data());
-  cout<<"FFFFFFFFFFFFFFFFFFFFF "<<fInWeights<<" "<<fWeightName<<endl;
   if(!fWS->set("PDFs"))DefineSets();
   TDirectory *saveDir=gDirectory;
   //Loop over bins
@@ -654,8 +668,8 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
     //look for RooHSEventsPDFs to get MC events trees
     for(Int_t ip=0;ip<fPDFs.getSize();ip++){
       RooAbsPdf* pdf=rf->GetWorkSpace()->pdf(fPDFs[ip].GetName());
-      RooHSAbsEventsPDF* hspdf=0;
-      if((hspdf=dynamic_cast<RooHSAbsEventsPDF*>(pdf))){    
+      RooHSEventsPDF* hspdf=0;
+      if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
 	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
 	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
 	TChain *chainMC=new TChain("BinnedTree");
@@ -688,16 +702,20 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
   //look for RooHSEventsPDFs to get MC events trees
   for(Int_t ip=0;ip<fPDFs.getSize();ip++){
     RooAbsPdf* pdf=fWS->pdf(fPDFs[ip].GetName());
-    RooHSAbsEventsPDF* hspdf=0;
-    if((hspdf=dynamic_cast<RooHSAbsEventsPDF*>(pdf))){    
+    RooHSEventsPDF* hspdf=0;
+    if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
       Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
       cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
       TChain *chainMC=new TChain("BinnedTree");
       //pdf has ownership of chain when set
       chainMC->Add(GetBinDir()+TString("/Tree")+hspdf->GetName()+".root");
-      if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+      hspdf->SetEvTree(chainMC);
+      hspdf->AddProtoData(GetDataSet());
+      //      if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
     }
-  } 
+  }
+  SetDataWeight();//if defined weights use them for this dataset
+  //CheckRange();
   //Configured the fir for this bin now do it
   //if(fModel) TotalPDF();//total PDF defined in parent so also for child
   FitAndStudy(Nfits);
@@ -709,7 +727,7 @@ void THSRooFit::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree
   if(!fWS->set("PDFs"))DefineSets();
   FitMany(Nfits);
-  Info("THSRooFit::Fit1SavedBin","Save to %s",(fOutDir+TString("Results")+GetName()).Data());
+  Info("THSRooFit::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetName()).Data());
   SavePlots(fOutDir+TString("Results")+GetName()+".root");
   StudyFit();
   

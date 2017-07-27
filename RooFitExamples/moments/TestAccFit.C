@@ -1,4 +1,4 @@
-//To run : root --hsfit --RooHSSphHarMoments.cxx TestAccStudy.C
+//To run : root --hsfit --RooHSSphHarMoments.cxx TestAccFit.C
 //Note you need $HSANA set to the HASPECT6 code dir
 {
 
@@ -20,11 +20,11 @@
 
   //Construct Moments PDF for generating/Fitting with
   RooHSSphHarMoments* pdf=new RooHSSphHarMoments("YLM","YLM",*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),LMAX,MMAX,*RF->GetWorkSpace()->set("Moments"));
-  //Add data (see MakeEventsRes.C
+  //Add data (see MakeEventsRes.C)
   TChain chain("decayAngles");
   chain.Add("accepted_res.root");
   pdf->SetEvTree(&chain);
-  pdf->SetNInt(10000);//Number of events to use in integration calc.
+  pdf->SetNInt(100000);//Number of events to use in integration calc.
   pdf->SetUseWeightsGen(kFALSE); //Use accept/reject not weights
   RF->GetWorkSpace()->import(*pdf); //import pdf into workspace
 
@@ -42,15 +42,15 @@
   //Justr draw the PDF with given moments
   new TCanvas();
   ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
-  //Set to to fit study 
-  RF->SetStudyPDF("YLM");
-  //Make a plot for every study fit (remove if doing lots of fits)
-  RF->SetStudyPlot();
-  //Set the number of trials you would like
-  RF->SetNStudyTrials(10);
   //Run :
-  //Generate events and fit for given number of trials
-  RF->StudyFit();
+  //Generate events
+  RooDataSet *ds1=RF->GetModel()->generate(RF->GetVariables(),1000);
+  RF->LoadDataSet(ds1);
+  new TCanvas();
+  ds1->createHistogram(*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),50,50)->Draw("col1");					  
+
+  //Try 1 fit with different starting paramters
+  RF->FitAndStudy(1);
 
   //Plot the PDF for the last fit result
   new TCanvas();

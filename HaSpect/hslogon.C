@@ -30,6 +30,9 @@ void hslogon(){
     gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
 
   if(gSystem->Getenv("HSUSER")){
+    //Option to include a THSParticle.C defintion in your own code
+    //This should not be used with --particle which looks specifically
+    //for a file in $HSANA
     gROOT->SetMacroPath(Form("%s:%s",HSUSER.Data(),gROOT->GetMacroPath()));
     gSystem->AddIncludePath(TString("-I")+HSUSER);
     //See if there is a user THSParticle class
@@ -61,7 +64,8 @@ void hslogon(){
       gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
       TString THSPARTICLEH=THSPARTICLE;
       THSPARTICLEH.ReplaceAll(".C",".h");
-    }
+      gSystem->Exec(Form("ln -s $HSANA/%s $HSANA/THSParticle.h",THSPARTICLEH.Data()));
+   }
   }
 
   
@@ -155,7 +159,7 @@ void HSfit(){
   //Load extra classes for roofit
   LoadMacro("THSBins.C"); 
   LoadMacro("THSWeights.C");
-  LoadMacro("RooHSAbsEventsPDF.C");
+  LoadMacro("RooHSEventsPDF.C");
   LoadMacro("RooHSEventsHistPDF.C");
   LoadMacro("THSRooFit.C");
   LoadMacro("THSsPlot.C");
@@ -189,7 +193,9 @@ void HSproject(TString pname){
   HSproj(pname);
   if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
+  LoadMacro("THSWeights.C");
   LoadMacro("THSDataManager.C");
+  LoadMacro("THSKinematics.C");
   LoadMacro("THSProject.C");
   LoadMacro(pname+".C");
 
