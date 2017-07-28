@@ -39,6 +39,7 @@ class RooHSEventsPDF : public RooAbsPdf {
   Bool_t fIsClone=kFALSE;
   Bool_t fForceConstInt=kFALSE;
   Bool_t fUseWeightsGen=kTRUE;
+  Int_t fCheckInt=0;
   Double_t fConstInt=1;
   THSWeights* fWeights=0;
   

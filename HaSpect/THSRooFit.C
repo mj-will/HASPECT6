@@ -675,7 +675,9 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
 	TChain *chainMC=new TChain("BinnedTree");
 	//pdf has ownership of chain when set
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
-	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+      hspdf->SetEvTree(chainMC);
+      hspdf->AddProtoData(rf->GetDataSet());
       }
     } 
     //Configured the fir for this bin now do it

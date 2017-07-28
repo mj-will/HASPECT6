@@ -30,6 +30,7 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     if(other.fEntryList)fEntryList=(TEntryList*)other.fEntryList->Clone();
     fForceConstInt=other.fForceConstInt;
     fConstInt=other.fConstInt;
+    fCheckInt=other.fCheckInt;
     fUseWeightsGen=other.fUseWeightsGen;
   }
 RooHSEventsPDF::~RooHSEventsPDF(){
@@ -352,10 +353,16 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
   }
   // cout<<"CHECK TREE "<<endl;
   fEvTree->GetEntry(0);
-  cout<<"SetEvTree "<<fMCVar[0]<<" "<<endl;
+  cout<<"SetEvTree "<<fMCVar[0]<<" "<<fBranchStatus<<" "<<fConstInt<<endl;
+
+  if(fCheckInt) CheckIntegralParDep(fCheckInt);
   return fBranchStatus;
 }
 void  RooHSEventsPDF::CheckIntegralParDep(Int_t Ntests){
+  fCheckInt=Ntests;
+  if(!fEvTree) return; //will check later when tree is set
+  if(!fBranchStatus) return; //missing branches may need to add protodata
+  
   Long64_t saveNint=fNInt;
   // fNInt=nint;//REOMVE FOR NOW nint is not used
   fNInt=fEvTree->GetEntries();//just use all entries
@@ -428,7 +435,7 @@ void  RooHSEventsPDF::CheckIntegralParDep(Int_t Ntests){
     RooRealVar* par=((RooRealVar*)(&(fParSet[ip]->arg())));
     par->setVal(SavedPars[ip]);
   }
-
+  fCheckInt=kFALSE; //only do once
 }
 Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   //merge the current tree with data from another dataset
@@ -479,6 +486,7 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
 
   //Loop over data in random order and fill new branches
   Long64_t idata=0;
+  if(!(NI+ND)) return kTRUE;
   for(Long64_t id=0;id<fEvTree->GetEntries();id++){
     dataVars=data->get(vrandom[idata]);
     Int_t nd=0;
@@ -492,15 +500,17 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
 	brI[ni]=dataVars->getCatIndex(branches[ib]->GetName());
 	ni++;
       }
- 
+      
       ((TBranch*)branches[ib])->Fill();
     }
-     if(idata==(Long64_t)vrandom.size()-1){//Need to reuse data until done all MC events
+    if(idata==(Long64_t)vrandom.size()-1){//Need to reuse data until done all MC events
       std::random_shuffle(vrandom.begin(),vrandom.end());
       idata=0;
     }
     idata++;
   }
+  
+  
   SetEvTree(fEvTree);
   fEvTree->Print();
   fEvTree->GetEntry(0);

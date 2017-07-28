@@ -14,7 +14,7 @@
   /////////////////////////////Make asymmetry model A and B are fit parameters
   RF->Factory("MyNewPDF::SigAsym( Phi,Pol,A[0.4,-1,1],B[-0.6,-1,1] )");
   RF->LoadSpeciesPDF("SigAsym");
-  RooHSAbsEventsPDF* PDF=dynamic_cast<RooHSAbsEventsPDF*>(RF->GetWorkSpace()->pdf("SigAsym"));
+  RooHSEventsPDF* PDF=dynamic_cast<RooHSEventsPDF*>(RF->GetWorkSpace()->pdf("SigAsym"));
   TChain *chainMC=new TChain("MyModel");
   chainMC->Add("SimDataSymRes10.root");
   if(!PDF->SetEvTree(chainMC)) exit(0);

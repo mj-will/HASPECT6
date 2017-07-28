@@ -92,6 +92,9 @@ void hslogon(){
       gSystem->Exec(Form("mkdir hsana"));
       gSystem->Exec(Form("cp %s/*.h hsana/.",HSANA.Data()));
       gSystem->Exec(Form("cp %s/*.C hsana/.",HSANA.Data()));
+      gSystem->Exec(Form("cp %s/*.h hsana/.",HSUSER.Data()));
+      gSystem->Exec(Form("cp %s/*.C hsana/.",HSUSER.Data()));
+      gSystem->Exec(Form("cp %s/*.cxx hsana/.",HSUSER.Data()));
       gSystem->Setenv("HSANA","./");
       if(gSystem->Getenv("RHIPO")){
 	TString RHIPO=gSystem->Getenv("RHIPO");

@@ -151,6 +151,8 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       particle->SetPDGcode(fFTCharge->ValI()*1E6); //unknown PID
       particle->SetDetector(300);
       particle->SetTime(fFTTime->Val());
+      particle->SetEdep(0);
+      particle->SetPath(0);
      }
   }
 
