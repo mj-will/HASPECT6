@@ -1,5 +1,5 @@
 //Run with 
-//root --hsfit FitHSAsymmetry.C --SKProtoPDF.cxx
+//root --hsfit FitHSAsymmetry.C --SKNewPDF.cxx
 {
   //Create THSRooFit manager 
   THSRooFit* RF=new THSRooFit("AFit");
@@ -17,16 +17,16 @@
   RF->Factory("SKNewPDF::SigAsym( Phi,Pol,PolState, A[0.1,-1,1],B[0.6,-1,1] )");
   RooHSEventsPDF* PDF=dynamic_cast<RooHSEventsPDF*>(RF->GetWorkSpace()->pdf("SigAsym"));
   TChain *chainMC=new TChain("MyModel");
-  chainMC->Add("SimSymRes10.root");
+  chainMC->Add("SimASymRes10.root");
   cout<<"PDF "<<PDF<<endl;
-  PDF->SetEvTree(chainMC);
+  //  PDF->SetEvTree(chainMC);
   RF->LoadSpeciesPDF("SigAsym");
   //  PDF->SetNInt(1E4);
   //PDF->CheckIntegralParDep(4);
   //  PDF->SetConstInt();
   RF->TotalPDF();
   TChain *chainData=new TChain("MyModel");
-  chainData->Add("DataSymRes10PS02.root");
+  chainData->Add("DataASymRes10PS02.root");
   RF->LoadDataSet(chainData);
   gBenchmark->Start("Binned");
   PDF->AddProtoData(RF->GetDataSet());

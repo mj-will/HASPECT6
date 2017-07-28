@@ -205,16 +205,17 @@ void RooHSEventsPDF::generateEvent(Int_t code){
 }
 Int_t RooHSEventsPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const
 { //return 0; //might be good to check numerical integral sometimes
+   if(!fEvTree&&!fForceConstInt) return 0; //no MC events to integrate over
 
-  if(!fEvTree) return 0; //no MC events to integrate over
   if(fProxSet.size()==1){//special case 1 variable
     if (matchArgs(allVars,analVars,VarSet(0))) return 1 ;
   }
   else{//For variables
-    //    for(UInt_t i=0;i<1+fProxSet.size();i++){
+     //    for(UInt_t i=0;i<1+fProxSet.size();i++){
     for(UInt_t i=0;i<1+fProxSet.size();i++){
-       if (matchArgs(allVars,analVars,VarSet(i))) return i+1 ;
-      
+      if(!fEvTree&&fForceConstInt&&i==0) return 1; //no tree, but const int
+      else if(!fEvTree) return 0; //no const integral for projections
+      if (matchArgs(allVars,analVars,VarSet(i))) return i+1 ;
     }
   }
   //Note not implemented for cats
@@ -223,8 +224,10 @@ Int_t RooHSEventsPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) const
 {
+  if(code==1&&fForceConstInt&&!fEvTree) {fLast[0]=1;return fLast[0];}
   //sort number of events first in case forced
   Long64_t NEv=0;
+  
   if(fNInt>-1) NEv=fNInt;
   else NEv=fEvTree->GetEntries(); 
   if(NEv>fEvTree->GetEntries()) NEv=fEvTree->GetEntries();
@@ -232,7 +235,6 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
   // Info("RooHSEventsPDF::analyticalIntegral","calcing my own integral");
   // return 1;
   //only recalculate if a par changes when all variables included (ie code=1)
-  if(code==1&&fForceConstInt) {fLast[0]=fConstInt/NEv;return fLast[0];}
   if(code==1)
     if(!CheckChange()) return fLast[0];
   // if(fNInt)fEvTree->SetEntries(fNInt);
@@ -307,9 +309,11 @@ Bool_t RooHSEventsPDF::CheckChange() const{
   return hasChanged;
 }
 Bool_t RooHSEventsPDF::SetEvTree(TChain* tree,Long64_t ngen){
+  if(!tree->GetEntries()) return kFALSE;
   return SetEvTree(tree->CloneTree());
 }
 Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
+  if(!tree->GetEntries())return kFALSE;
   Info("RooHSEventsPDF::SetEvTree"," with name %s",tree->GetName());
   fEvTree=tree;
   fNMCGen=ngen;
@@ -441,6 +445,9 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   //merge the current tree with data from another dataset
   //Default it will add any branches in data not in fEvTree
   cout<<"RooHSEventsPDF::AddProtoData "<<data<<" "<<fEvTree<<endl;
+  if(!fEvTree) return kFALSE;
+  if(!fEvTree->GetEntries()) return kFALSE;
+  
   //Loop over data branches and check if any missing
   const RooArgSet *dataVars=data->get();
   RooArgSet thisVars =VarSet(0);
