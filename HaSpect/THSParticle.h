@@ -1,0 +1,1 @@
+/work/clas12/mesonex/HASPECT6/HaSpect//THSParticle.0.h
