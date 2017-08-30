@@ -28,6 +28,7 @@ class THSHipoReader: public THSDataManager{
   THipoBank *fSBank=nullptr;
   THipoBank *fMCBank=nullptr;
   THipoBank *fFTBank=nullptr;
+  THipoBank *fEvBank=nullptr;
   //  THipoBank *fCVTBank=nullptr;
 
   THipoItem* fPid=nullptr;
@@ -52,6 +53,7 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fFTDet=nullptr;
   THipoItem* fFTPath=nullptr;
 
+  THipoItem* fEvTime=nullptr;
   /* THipoItem* fFTPid=nullptr; */
   /* THipoItem* fFTTime=nullptr; */
   /* THipoItem* fFTPx=nullptr; */

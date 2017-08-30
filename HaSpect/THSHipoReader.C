@@ -7,6 +7,7 @@ THSHipoReader::THSHipoReader(){
   fHipo->ConfigBank("REC::Particle");
   fHipo->ConfigBank("REC::Scintillator");
   fHipo->ConfigBank("REC::ForwardTagger");
+  fHipo->ConfigBank("REC::Event");
   //fHipo->ConfigBank("CVTRec::Tracks");
   //Get the necessary items from Particle Bank
   fPBank=fHipo->GetBank("REC::Particle");
@@ -34,6 +35,9 @@ THSHipoReader::THSHipoReader(){
   fFTPath=fFTBank->GetItem("path");
   fFTDet=fFTBank->GetItem("detector");
 
+  fEvBank=fHipo->GetBank("REC::Event");
+  fEvTime=fFTBank->GetItem("STTime");
+ 
   //Get the necessary items from FT Bank
   // fFTBank=fHipo->GetBank("FT::particles");
   // fFTPx=fFTBank->GetItem("cx");
@@ -139,7 +143,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fSPindex->FindEntry(fPBank->GetEntry())){
 	  //Do something if find a particular detector
 	//if(fDdet->Val()==17){
-	particle->SetTime(fSTime->Val());
+	particle->SetTime(fSTime->Val()-fEvTime->Val());
 	particle->SetEdep(fSEnergy->Val());
 	particle->SetPath(fSPath->Val()/100);
 	particle->SetDetector(fSDet->Val());
@@ -153,14 +157,14 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	  // }
       }
       //FT
-      //Not in event builder
+      //Not currently in event builder
       if(particle->P4p()->Theta()*TMath::RadToDeg()<5)
 	particle->SetDetector(9);
 	
       while(fFTPindex->FindEntry(fPBank->GetEntry())){
 	  //Do something if find a particular detector
 	//if(fDdet->Val()==17){
-	particle->SetTime(fFTTime->Val());
+	particle->SetTime(fFTTime->Val()-fEvTime->Val());
 	particle->SetEdep(fFTEnergy->Val());
 	particle->SetPath(fFTPath->Val()/100);
 	particle->SetDetector(fFTDet->Val());

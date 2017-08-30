@@ -1,22 +1,22 @@
 void HSfit();//Load hsfit classes
 void HSdata();//Load hsdata classes
 void HSselector(); //load hsselctor classes
-void HSproject(TString pname); //load hsproject classes
+void HSFinal(TString pname); //load hsfinal classes
 void startproof(Int_t Nw); //intialise proof for hsselector classes
 void LoadMacro(TString macro); //Load class via its source code
 TString HSin(); //return inout void HSMacPath(TString opt)files directory
 TString HSout(); //return inout files directory
-TString HSproj(); //return project classname
+TString HSfinal(); //return finalstate classname
 void HSin(TString hsin){gSystem->Setenv("HSIN",hsin);} //set in files directory
 void HSout(TString hsout){gSystem->Setenv("HSOUT",hsout);} //set out file
-void HSproj(TString hsproj){gSystem->Setenv("HSPROJ",hsproj);} //set out file
+void HSfinal(TString hsfinal){gSystem->Setenv("HSFINAL",hsfinal);} //set out file
 void MakeAll();
 void HSMacPath(TString opt);
 void HSUserPath(TString opt);
 #include <TProof.h> //MAke sure gProof can be seen here
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
-TString THSPARTICLE("THSParticle.0.C");
+TString THSPARTICLE("THSParticle.C");
 
 void hslogon(){
   //Execute system .rootlogon.C script 
@@ -26,8 +26,8 @@ void hslogon(){
   TString HSANA=gSystem->Getenv("HSANA");
   TString HSUSER=gSystem->Getenv("HSUSER");
   //remove default link to THSParticle.0.h in case user defined THSParticle
-  if(gSystem->Which(HSANA,"THSParticle.h"))
-    gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
+  // if(gSystem->Which(HSANA,"THSParticle.h"))
+  //   gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
 
   if(gSystem->Getenv("HSUSER")){
     //Option to include a THSParticle.C defintion in your own code
@@ -36,12 +36,12 @@ void hslogon(){
     gROOT->SetMacroPath(Form("%s:%s",HSUSER.Data(),gROOT->GetMacroPath()));
     gSystem->AddIncludePath(TString("-I")+HSUSER);
     //See if there is a user THSParticle class
-    if(gSystem->Which(HSUSER,"THSParticle.C"))
-      THSPARTICLE="THSParticle.C";
+    // if(gSystem->Which(HSUSER,"THSParticle.C"))
+    //   THSPARTICLE="THSParticle.C";
   }
   else{
     //Make a soft link to THSParticle.0.h, if another particle class is given this will be replaced
-    gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
+    //  gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
   }
 
   //get command line options first check if makeall
@@ -121,7 +121,7 @@ void hslogon(){
     if((opt==TString("--hsfit"))) HSfit(); //Load fit classes
     if((opt==TString("--hsdata"))) HSdata(); //Load data classes
     if((opt==TString("--hssel"))) HSselector(); //Load selector classes
-    if((opt.Contains("--hsproj"))) HSproject(TString(opt(9,opt.Sizeof()))); //Load project classes
+    if((opt.Contains("--hsfinal"))) HSFinal(TString(opt(10,opt.Sizeof()))); //Load final state classes
 
     //don't load alter --particle option
     if(!(opt.Contains("--particle"))){
@@ -192,15 +192,15 @@ void HSselector(){
   //gROOT->LoadMacro("THSLongPS.C+");
 }
 
-void HSproject(TString pname){
-  HSproj(pname);
+void HSFinal(TString pname){
+  HSfinal(pname);
   if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
   cout  <<THSPARTICLE<<endl;
   LoadMacro(THSPARTICLE);
   LoadMacro("THSWeights.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSKinematics.C");
-  LoadMacro("THSProject.C");
+  LoadMacro("THSFinalState.C");
   LoadMacro(pname+".C");
 
 }
@@ -259,9 +259,9 @@ void LoadMacro(TString macro){
   else gROOT->LoadMacro(macro+"+");//don't use HSANA in case wnat to overwrite with macro in current directory
   
 }
-TString HSproj(){
-  if(!gSystem->Getenv("HSPROJ")) cout<<"Warning no HSPROJ env variable defined but hsproj() called..."<<endl;
-  return TString(gSystem->Getenv("HSPROJ"));
+TString HSfinal(){
+  if(!gSystem->Getenv("HSFINAL")) cout<<"Warning no HSFINAL env variable defined but hsfinal() called..."<<endl;
+  return TString(gSystem->Getenv("HSFINAL"));
 }
 TString HSin(){
   if(!gSystem->Getenv("HSIN")) cout<<"Warning no HSIN env variable defined but hsin() called..."<<endl;

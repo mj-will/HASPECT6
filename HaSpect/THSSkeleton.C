@@ -44,7 +44,7 @@ void THSSkeleton::AddHSOutput(){
   if(fIsNewTree) HSNewTree();
   if(fIsWeights) HSWeights();
   if(fNLPS) HSLPS();
-  if(fIsProject) HSProject();
+  if(fIsFinalState) HSFinalState();
   // AddLineAfter(,,1);
   // AddLineAfter(,,1);
   // AddLineAfter(,,1);
@@ -320,75 +320,75 @@ void THSSkeleton::HSLPS(){
 
 
 }
-void THSSkeleton::HSProject(){
+void THSSkeleton::HSFinalState(){
   fPlace=0;
   //////////////////////////////////////////////////////////////////  
   //First deal with .C
   fCurMacro=TMacro(fSelName+".C");
-  if(fIsProjectPerm){
+  if(fIsFinalStatePerm){
     AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
     AddLineAfter("// The return value is currently not used.","   fgIDoff=1E10;//offset in >1 permutation of particles");
     ContinueLineAfter("   InitEvent();");
     ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
-    ContinueLineAfter(TString("     ")+fProjName+"::WorkOnEvent();");
+    ContinueLineAfter(TString("     ")+fFinalName+"::WorkOnEvent();");
     ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
 
     AddLineAfter("THSOutput::HSProcessFill();","   }");
     ContinueLineAfter(TString("   while(IsPermutating());"));
   }
   else{
-    AddLineAfter("// The return value is currently not used.",TString("   ")+fProjName+"::WorkOnEvent();");
+    AddLineAfter("// The return value is currently not used.",TString("   ")+fFinalName+"::WorkOnEvent();");
     ContinueLineAfter("   if(!fGoodEvent) return kTRUE;//Don't fill anything,User should determine value for fGoodEvent in their project");
   }
   //If newtree need to link project tree
   if(fIsNewTree){
-    AddLineAfter("fOutTree=new TTree",TString("   ")+fProjName+"::ProjectOutTree(fOutTree);");
+    AddLineAfter("fOutTree=new TTree",TString("   ")+fFinalName+"::FinalStateOutTree(fOutTree);");
   }
-  // if(fIsProjectPerm){
+  // if(fIsFinalStatePerm){
   //   AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
   //   AddLineAfter("fReader.SetLocalEntry(entry);","   fgIDoff=1E10;//offset in >1 permutation of particles");	       
   //   ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
-  //   ContinueLineAfter(TString("     ")+fProjName+"::WorkOnEvent();");
+  //   ContinueLineAfter(TString("     ")+fFinalName+"::WorkOnEvent();");
   //   ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
 
   //   AddLineAfter("THSOutput::HSProcessFill();","   }");
   //   ContinueLineAfter(TString("   while(IsPermutating());"));
   // }
   // else{
-  //   AddLineAfter("fReader.SetLocalEntry(entry);",TString("   ")+fProjName+"::WorkOnEvent();");
+  //   AddLineAfter("fReader.SetLocalEntry(entry);",TString("   ")+fFinalName+"::WorkOnEvent();");
   //   ContinueLineAfter("   if(!fGoodEvent) return kTRUE;//Don't fill anything,User should determine value for fGoodEvent in their project");
   // }
   // //If newtree need to link project tree
   // if(fIsNewTree){
-  //   AddLineAfter("fOutTree=new TTree",TString("   ")+fProjName+"::ProjectOutTree(fOutTree);");
+  //   AddLineAfter("fOutTree=new TTree",TString("   ")+fFinalName+"::FinalStateOutTree(fOutTree);");
   // }
     
   fCurMacro.SaveSource(fSelName+".C");
   //////////////////////////////////////////////////////////////////  
   //Now with .h
   fCurMacro=TMacro(fSelName+".h");
-  AddLineAfter("#include \"THSOutput.h\"",TString("#include \"")+fProjName+".h\"");
-  ReplaceMacroText("public THSOutput",TString("public THSOutput, public ")+fProjName);
+  AddLineAfter("#include \"THSOutput.h\"",TString("#include \"")+fFinalName+".h\"");
+  ReplaceMacroText("public THSOutput",TString("public THSOutput, public ")+fFinalName);
   // TString branch=FindNextLineLike("TTreeReaderArray<THSParticle>");
-  // if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetDetParts(&Particles);");
+  // if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSFinalState::SetDetParts(&Particles);");
   // if(branch.Contains("\"Generated\"")){
   //   AddLineAfter("   fReader.SetTree(tree);","   if(!tree->GetBranchStatus(\"Generated\"))Generated.~TTreeReaderArray();//Not sim remove Generated branch");
-  //   ContinueLineAfter("   else THSProject::SetGenParts(&Generated);");
+  //   ContinueLineAfter("   else THSFinalState::SetGenParts(&Generated);");
   // }
   //  fPlace=1; //move bakc to start
   // branch=FindNextLineLike("TTreeReaderArray<THSParticle>");
   // fPlace++;
   // branch=FindNextLineLike("TTreeReaderArray<THSParticle>"); //Not good coding! but need oto fin the second one
-  // if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSProject::SetDetParts(&Particles);");
+  // if(branch.Contains("\"Particles\"")) AddLineAfter("   fReader.SetTree(tree);","   THSFinalState::SetDetParts(&Particles);");
   // if(branch.Contains("\"Generated\"")){
   //   AddLineAfter("   fReader.SetTree(tree);","   if(!tree->GetBranchStatus(\"Generated\"))Generated.~TTreeReaderArray();//Not sim remove Generated branch");
-  //   ContinueLineAfter("   else THSProject::SetGenParts(&Generated);");
+  //   ContinueLineAfter("   else THSFinalState::SetGenParts(&Generated);");
   // }
   TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
-  ContinueLineAfter("	THSProject::SetDetParts(Particles);");
+  ContinueLineAfter("	THSFinalState::SetDetParts(Particles);");
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
-    ContinueLineAfter("	  if(fChain->GetBranch(\"Generated\"))THSProject::SetDetParts(Generated);");
+    ContinueLineAfter("	  if(fChain->GetBranch(\"Generated\"))THSFinalState::SetDetParts(Generated);");
   }
 
   fCurMacro.SaveSource(fSelName+".h");
@@ -396,7 +396,7 @@ void THSSkeleton::HSProject(){
   //Now with Control
   fCurMacro=TMacro(TString("Control_")+fSelName+".C");
   AddLineAfter("HSout(","  HSMacPath(\"ADDITIONALMACROPATH_WHEREPROJECTIS\");");
-  ContinueLineAfter("  HSproject(\""+fProjName+"\");");
+  ContinueLineAfter("  HSproject(\""+fFinalName+"\");");
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
 // void THSSkeleton::HSHisto(){
@@ -534,28 +534,28 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   fCurMacro.SaveSource(pdfName+".h");
 
 }
-void THSSkeleton::CreateMyProject(){
+void THSSkeleton::CreateMyFinalState(){
 
   TObjArray* topos=0;
-  if(fProjTopo==TString(""))cout<<"Warning No project topologies set, you will have to edit the files yourself"<<endl;
+  if(fFinalTopo==TString(""))cout<<"Warning No finalstate topologies set, you will have to edit the files yourself"<<endl;
   else{
-    topos=fProjTopo.Tokenize(",");
+    topos=fFinalTopo.Tokenize(",");
   }
   TObjArray* finals=0;
-  if(fProjFinal==TString(""))cout<<"Warning No project final state set, you will have to edit the files yourself"<<endl;
+  if(fFinalParts==TString(""))cout<<"Warning No finalstate final state set, you will have to edit the files yourself"<<endl;
   else{
-    finals=fProjFinal.Tokenize(",");
+    finals=fFinalParts.Tokenize(",");
   }
   TString HSANA=gSystem->Getenv("HSANA");
-  gSystem->Exec(Form("cp %s/THSProjTemp.h THS%s.h",HSANA.Data(),fProjName.Data()));
-  //gSystem->Exec(Form("cp %s/THSProjTemp.h THS%s.h",".",fProjName.Data()));
-  fCurMacro=TMacro(TString("THS")+fProjName+".h");
-  ReplaceAllMacroText("ProjTemp",fProjName);
-  TString UpperProjName=fProjName;
-  UpperProjName.ToUpper();
-  ReplaceAllMacroText("PROJTEMP",UpperProjName);
+  gSystem->Exec(Form("cp %s/THSFinalTemp.h THS%s.h",HSANA.Data(),fFinalName.Data()));
+  //gSystem->Exec(Form("cp %s/THSFinalTemp.h THS%s.h",".",fFinalName.Data()));
+  fCurMacro=TMacro(TString("THS")+fFinalName+".h");
+  ReplaceAllMacroText("FinalTemp",fFinalName);
+  TString UpperFinalName=fFinalName;
+  UpperFinalName.ToUpper();
+  ReplaceAllMacroText("PROJTEMP",UpperFinalName);
 
-  FindNextLineLike("//Topology flags for this project");
+  FindNextLineLike("//Topology flags for this");
   for(Int_t io=0;io<topos->GetEntries();io++)
     ContinueLineAfter(Form("  Int_t fTID_%d=-1;",io));
 
@@ -571,13 +571,13 @@ void THSSkeleton::CreateMyProject(){
     ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.Sizeof())).Data()));
   }
   
-  fCurMacro.SaveSource(TString("THS")+fProjName+".h");
+  fCurMacro.SaveSource(TString("THS")+fFinalName+".h");
   ///////////////////////////////////////////////////////
   
-  gSystem->Exec(Form("cp %s/THSProjTemp.C THS%s.C",HSANA.Data(),fProjName.Data()));
-  fCurMacro=TMacro(TString("THS")+fProjName+".C");
+  gSystem->Exec(Form("cp %s/THSFinalTemp.C THS%s.C",HSANA.Data(),fFinalName.Data()));
+  fCurMacro=TMacro(TString("THS")+fFinalName+".C");
   fPlace=0;
-  ReplaceAllMacroText("ProjTemp",fProjName);
+  ReplaceAllMacroText("FinalTemp",fFinalName);
   fPlace=0;
   FindNextLineLike("//include topology for analysis");
   for(Int_t io=0;io<topos->GetEntries();io++)
@@ -591,7 +591,7 @@ void THSSkeleton::CreateMyProject(){
   fPlace=0;
   FindNextLineLike("//Define topology Init functions");
   for(Int_t io=0;io<topos->GetEntries();io++){
-    ContinueLineAfter(Form("void THS%s::Init_%d(){",fProjName.Data(),io));
+    ContinueLineAfter(Form("void THS%s::Init_%d(){",fFinalName.Data(),io));
     ContinueLineAfter(TString("  //define init for detected ")+topos->At(io)->GetName());
     ContinueLineAfter("  //Set detected particles");
     ContinueLineAfter("");
@@ -607,7 +607,7 @@ void THSSkeleton::CreateMyProject(){
     ContinueLineAfter(Form("  fFinal.push_back(&f%s);",TString(sparticle(0,sparticle.First(":"))).Data()));
   }
   
-  fCurMacro.SaveSource(TString("THS")+fProjName+".C");
+  fCurMacro.SaveSource(TString("THS")+fFinalName+".C");
 
 }
 
