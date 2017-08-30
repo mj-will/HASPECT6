@@ -25,9 +25,10 @@ class THSHipoReader: public THSDataManager{
   
   THipo *fHipo=nullptr;
   THipoBank *fPBank=nullptr;
-  THipoBank *fDBank=nullptr;
+  THipoBank *fSBank=nullptr;
   THipoBank *fMCBank=nullptr;
   THipoBank *fFTBank=nullptr;
+  //  THipoBank *fCVTBank=nullptr;
 
   THipoItem* fPid=nullptr;
   THipoItem* fPx=nullptr;
@@ -36,23 +37,35 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fVx=nullptr;
   THipoItem* fVy=nullptr;
   THipoItem* fVz=nullptr;
-  THipoItem* fMass=nullptr;
+  THipoItem* fBeta=nullptr;
   THipoItem* fCharge=nullptr;
   
-  THipoItem* fDPindex=nullptr;
-  THipoItem* fDTime=nullptr;
-  THipoItem* fDEnergy=nullptr;
-  THipoItem* fDdet=nullptr;
-  THipoItem* fDPath=nullptr;
+  THipoItem* fSPindex=nullptr;
+  THipoItem* fSTime=nullptr;
+  THipoItem* fSEnergy=nullptr;
+  THipoItem* fSDet=nullptr;
+  THipoItem* fSPath=nullptr;
 
-  THipoItem* fFTPid=nullptr;
+  THipoItem* fFTPindex=nullptr;
   THipoItem* fFTTime=nullptr;
-  THipoItem* fFTPx=nullptr;
-  THipoItem* fFTPy=nullptr;
-  THipoItem* fFTPz=nullptr;
-  THipoItem* fFTCharge=nullptr;
   THipoItem* fFTEnergy=nullptr;
+  THipoItem* fFTDet=nullptr;
+  THipoItem* fFTPath=nullptr;
+
+  /* THipoItem* fFTPid=nullptr; */
+  /* THipoItem* fFTTime=nullptr; */
+  /* THipoItem* fFTPx=nullptr; */
+  /* THipoItem* fFTPy=nullptr; */
+  /* THipoItem* fFTPz=nullptr; */
+  /* THipoItem* fFTCharge=nullptr; */
+  /* THipoItem* fFTEnergy=nullptr; */
   
+  /* THipoItem* fCVTPx=nullptr; */
+  /* THipoItem* fCVTPy=nullptr; */
+  /* THipoItem* fCVTPz=nullptr; */
+  /* THipoItem* fCVTCharge=nullptr; */
+  /* THipoItem* fCVTP=nullptr; */
+
   THipoItem* fMCPid=nullptr;
   THipoItem* fMCPx=nullptr;
   THipoItem* fMCPy=nullptr;

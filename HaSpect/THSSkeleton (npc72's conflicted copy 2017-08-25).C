@@ -68,7 +68,7 @@ void THSSkeleton::HSOut_C(){
   //End bug fix
   //second bug fix
   //TTreeReader should call SetEntryLocal for chains
- if(!fOption.Contains("legacy"))  ReplaceMacroText("fReader.SetEntry","fReader.SetLocalEntry");
+  //  ReplaceMacroText("fReader.SetEntry","fReader.SetLocalEntry");
   //
   //First add shadow Selector function calls
   AddLineAfter("::Begin(TTree * /*tree*/)","   THSOutput::HSBegin(fInput,fOutput);",1);//off=1 to get past { line
@@ -82,9 +82,6 @@ void THSSkeleton::HSOut_C(){
   MoveToLine("::Process(Long64_t entry)");
   FindNextLineLike("return kTRUE;");
   ContinueLineAfter("   THSOutput::HSProcessFill();",-1);
-
-  if(fOption.Contains("legacy"))AddLineAfter("HSProcessStart","   fChain->GetEntry(entry);",1);
-
   fCurMacro.SaveSource(fSelName+".C");
 }
 void THSSkeleton::HSOut_h(){
@@ -299,7 +296,7 @@ void THSSkeleton::HSLPS(){
   ContinueLineAfter(Form("   fLPS=new THSLongPS(%d);",fNLPS));
 
   AddLineAfter("THSOutput::HSProcessStart(entry)","   fLPS->Reset();");
-  ContinueLineAfter("   //below you need to give the final state TLorentzVectors to fLPS. Replace ? by the TLorentzVector object. The order gives the particle indice for the sectors");
+  AddLineAfter("fReader.SetLocalEntry(entry);","   //below you need to give the final state TLorentzVectors to fLPS. Replace ? by the TLorentzVector object. The order gives the particle indice for the sectors");
   for(Int_t ii=0;ii<fNLPS;ii++)
     ContinueLineAfter("   fLPS->AddParticle(?);");
   
@@ -325,10 +322,10 @@ void THSSkeleton::HSProject(){
   //////////////////////////////////////////////////////////////////  
   //First deal with .C
   fCurMacro=TMacro(fSelName+".C");
+  // AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);",TString("   ")+fProjName+"::SetDetParts(&Particles);");
   if(fIsProjectPerm){
     AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
-    AddLineAfter("// The return value is currently not used.","   fgIDoff=1E10;//offset in >1 permutation of particles");
-    ContinueLineAfter("   InitEvent();");
+    AddLineAfter("fReader.SetLocalEntry(entry);","   fgIDoff=1E10;//offset in >1 permutation of particles");	       
     ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
     ContinueLineAfter(TString("     ")+fProjName+"::WorkOnEvent();");
     ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
@@ -337,31 +334,13 @@ void THSSkeleton::HSProject(){
     ContinueLineAfter(TString("   while(IsPermutating());"));
   }
   else{
-    AddLineAfter("// The return value is currently not used.",TString("   ")+fProjName+"::WorkOnEvent();");
+    AddLineAfter("fReader.SetLocalEntry(entry);",TString("   ")+fProjName+"::WorkOnEvent();");
     ContinueLineAfter("   if(!fGoodEvent) return kTRUE;//Don't fill anything,User should determine value for fGoodEvent in their project");
   }
   //If newtree need to link project tree
   if(fIsNewTree){
     AddLineAfter("fOutTree=new TTree",TString("   ")+fProjName+"::ProjectOutTree(fOutTree);");
   }
-  // if(fIsProjectPerm){
-  //   AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
-  //   AddLineAfter("fReader.SetLocalEntry(entry);","   fgIDoff=1E10;//offset in >1 permutation of particles");	       
-  //   ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
-  //   ContinueLineAfter(TString("     ")+fProjName+"::WorkOnEvent();");
-  //   ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
-
-  //   AddLineAfter("THSOutput::HSProcessFill();","   }");
-  //   ContinueLineAfter(TString("   while(IsPermutating());"));
-  // }
-  // else{
-  //   AddLineAfter("fReader.SetLocalEntry(entry);",TString("   ")+fProjName+"::WorkOnEvent();");
-  //   ContinueLineAfter("   if(!fGoodEvent) return kTRUE;//Don't fill anything,User should determine value for fGoodEvent in their project");
-  // }
-  // //If newtree need to link project tree
-  // if(fIsNewTree){
-  //   AddLineAfter("fOutTree=new TTree",TString("   ")+fProjName+"::ProjectOutTree(fOutTree);");
-  // }
     
   fCurMacro.SaveSource(fSelName+".C");
   //////////////////////////////////////////////////////////////////  
@@ -385,10 +364,10 @@ void THSSkeleton::HSProject(){
   //   ContinueLineAfter("   else THSProject::SetGenParts(&Generated);");
   // }
   TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
-  ContinueLineAfter("	THSProject::SetDetParts(Particles);");
+  ContinueLineAfter("THSProject::SetDetParts(Particles);");
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
-    ContinueLineAfter("	  if(fChain->GetBranch(\"Generated\"))THSProject::SetDetParts(Generated);");
+    ContinueLineAfter("if(fChain->GetBranch(\"Generated\"))THSProject::SetDetParts(Generated);");
   }
 
   fCurMacro.SaveSource(fSelName+".h");

@@ -195,6 +195,7 @@ void HSselector(){
 void HSproject(TString pname){
   HSproj(pname);
   if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
+  cout  <<THSPARTICLE<<endl;
   LoadMacro(THSPARTICLE);
   LoadMacro("THSWeights.C");
   LoadMacro("THSDataManager.C");

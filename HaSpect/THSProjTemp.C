@@ -46,7 +46,7 @@ void THSProjTemp::Init_Generated(){
   //User is responsible for indicing right
   //comes from order in generated file (e.g LUND)
   if(fIsGenerated){
-    //fElectron=frGenParts->At(0);
+    //fElectron=*frGenParts->At(0);
   }
   else{//Just assign truth values
     //fElectron.SetTruth(frGenParts->At(0));
@@ -56,6 +56,9 @@ void THSProjTemp::Init_Generated(){
 // void THSProjTemp::Init_(){
 //   //Fill data member particles
 //   //Particle vectors will be permutated over
+//   //fElectron=*fVecMinus.at(0);
+//   //(OR if PID) fElectron=*fVecEls.at(0);
+
 // }
 
 void THSProjTemp::Kinematics(){

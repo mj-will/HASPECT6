@@ -26,6 +26,10 @@ class THSParticle {
   Double_t fPDGMass;
   Double_t fMeasMass; //Or other PID info
   Double_t fTime;
+  Double_t fPath;
+  Double_t fDoca;
+  Double_t fEdep;
+
   //TMatrixD fCovarianceMatrix;
   Int_t fDetector=0; //detector code
   
@@ -58,6 +62,9 @@ class THSParticle {
   //void SetPol(TVector3 p){fPol=p;}
   //void SetPol(Double_t X,Double_t Y,Double_t Z){fPol.SetXYZ(X,Y,Z);}
   void SetTime(Double_t time){fTime=time;};
+  void SetPath(Double_t path){fPath=path;};
+  void SetDoca(Double_t doca){fDoca=doca;};
+  void SetEdep(Double_t edep){fEdep=edep;};
   void SetDetector(Int_t det){fDetector=det;};
   void SetMeasMass(Double_t mass){fMeasMass=mass;};
   void TakePDGMass(){SetVectPDG(fP4);}; //Preserves momentum
@@ -75,8 +82,16 @@ class THSParticle {
   Int_t PDG(){return fPDGCode;}
   Double_t PDGMass(){return fPDGMass;}
   Double_t MeasMass(){return fMeasMass;}
-  Double_t MassDiff(){return fPDGMass-fMeasMass;}
   Double_t Time(){return fTime;}
+  Double_t MassDiff(){return fPDGMass-fMeasMass;}
+  Double_t Edep(){return fEdep;}
+  Double_t Doca(){return fDoca;}
+  Double_t Path(){return fPath;}
+  Double_t Beta(){return fPath/fTime/2.99792e+08*1E9;}//time ns, path m
+  Double_t HypBeta(){Double_t pp=fP4.Rho();return pp/sqrt(pp*pp+fPDGMass*fPDGMass);}
+  Double_t HypTime(){return fPath/HypBeta()/2.99792e+08*1E9  ;} //in ns
+  Double_t DeltaTime(){return HypTime()-fTime;};
+  
   Int_t Detector(){return fDetector;}
   
   TLorentzVector* TruthP4p(){return &fTruthP4;};
@@ -85,10 +100,19 @@ class THSParticle {
   Int_t TruthPDG(){return fPDGCode;};
   
   Bool_t TruthOnly(){return fTruthOnly;}
+
   
   void CopyParticle(THSParticle* part);
   //Utility functions
   virtual void Print(Option_t *option="") const;
+
+  //Add 4-vectors, doca vertices, fix pdg(optional)
+  void Add(THSParticle *hsp1, THSParticle *hsp2,Int_t pdg=0);
+
+  //DOCA routines
+  Double_t MakeVirtualVertex(THSParticle* p1,THSParticle *p2);
+  Double_t Calc_dtfDOCA( TVector3 locVertex1, TVector3 locUnitDir1, TVector3 locVertex2, TVector3 locUnitDir2, TVector3 *result);
+  void Calc_dtfInterDOCA( TVector3 locUnitDir1, TVector3 locUnitDir2, TVector3 locVertex1,  TVector3 locVertex2, TVector3 *locInterDOCA1, TVector3 *locInterDOCA2);
 
  public:
   //need to permutate class

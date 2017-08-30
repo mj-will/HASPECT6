@@ -5,8 +5,9 @@
 THSHipoReader::THSHipoReader(){
   fHipo = new THipo();
   fHipo->ConfigBank("REC::Particle");
-  fHipo->ConfigBank("REC::Detector");
-  fHipo->ConfigBank("FT::particles");
+  fHipo->ConfigBank("REC::Scintillator");
+  fHipo->ConfigBank("REC::ForwardTagger");
+  //fHipo->ConfigBank("CVTRec::Tracks");
   //Get the necessary items from Particle Bank
   fPBank=fHipo->GetBank("REC::Particle");
   fPx=fPBank->GetItem("px");
@@ -16,27 +17,42 @@ THSHipoReader::THSHipoReader(){
   fVy=fPBank->GetItem("vy");
   fVz=fPBank->GetItem("vz");
   fPid=fPBank->GetItem("pid");
-  fMass=fPBank->GetItem("mass");
+  fBeta=fPBank->GetItem("beta");
   fCharge=fPBank->GetItem("charge");
-  //Get the necessary items from Detector Bank
-  fDBank=fHipo->GetBank("REC::Detector");
-  //  THipoItem *d_index=bank2->GetItem("index");
-  fDPindex=fDBank->GetItem("pindex");
-  fDTime=fDBank->GetItem("time");
-  fDEnergy=fDBank->GetItem("energy");
-  fDPath=fDBank->GetItem("path");
-  fDdet=fDBank->GetItem("detector");
-
-  //Get the necessary items from FT Bank
-  fFTBank=fHipo->GetBank("FT::particles");
-  fFTPx=fFTBank->GetItem("cx");
-  fFTPy=fFTBank->GetItem("cy");
-  fFTPz=fFTBank->GetItem("cz");
-  fFTPid=fFTBank->GetItem("id");
+  //Get the necessary items from REC::Scintillator Bank
+  fSBank=fHipo->GetBank("REC::Scintillator");
+  fSPindex=fSBank->GetItem("pindex");
+  fSTime=fSBank->GetItem("time");
+  fSEnergy=fSBank->GetItem("energy");
+  fSPath=fSBank->GetItem("path");
+  fSDet=fSBank->GetItem("detector");
+  //Get the necessary items from REC::FT Bank
+  fFTBank=fHipo->GetBank("REC::ForwardTagger");
+  fFTPindex=fFTBank->GetItem("pindex");
   fFTTime=fFTBank->GetItem("time");
   fFTEnergy=fFTBank->GetItem("energy");
-  fFTCharge=fFTBank->GetItem("charge");
+  fFTPath=fFTBank->GetItem("path");
+  fFTDet=fFTBank->GetItem("detector");
 
+  //Get the necessary items from FT Bank
+  // fFTBank=fHipo->GetBank("FT::particles");
+  // fFTPx=fFTBank->GetItem("cx");
+  // fFTPy=fFTBank->GetItem("cy");
+  // fFTPz=fFTBank->GetItem("cz");
+  // fFTPid=fFTBank->GetItem("id");
+  // fFTTime=fFTBank->GetItem("time");
+  // fFTEnergy=fFTBank->GetItem("energy");
+  // fFTCharge=fFTBank->GetItem("charge");
+
+  //Get the necessary items from CVT Bank
+  // fCVTBank=fHipo->GetBank("CVTRec:Tracks");
+  // fCVTPx=fCVTBank->GetItem("c_ux");
+  // fCVTPy=fCVTBank->GetItem("c_uy");
+  // fCVTPz=fCVTBank->GetItem("c_uz");
+  // fCVTP=fCVTBank->GetItem("p");
+  // fCVTCharge=fCVTBank->GetItem("q");
+
+  
   //Make vectors to hold pointers to THSParticles
   //These are just used for speed, new THSParticles
   //will be added when required by that event.
@@ -107,54 +123,96 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       fParticles.push_back(particle);
       particle->SetXYZT(fPx->Val(),fPy->Val(),fPz->Val(),0);
       particle->SetVertex(fVx->Val(),fVy->Val(),fVz->Val());
-      particle->SetMeasMass(fMass->Val());
+      if(fBeta->Val())particle->SetMeasMass(particle->P4p()->Rho()/fBeta->Val());
       if(!fPid->Val()||!fUsePID) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown
       else  particle->SetPDGcode(fPid->ValI());
       //     if(fPid->Val()==22) particle->SetPDGcode(0); //force photons to be Rootino for now
-      particle->TakePDGMass();
       particle->SetDetector(100);
 
       //Now look for the associated detector info
       //we must match the detector pindex to the index of this particle entry
-	while(fDPindex->FindEntry(fPBank->GetEntry())){
-	  //Do something if find a particular detector
-	  if(fDdet->Val()==17){
-	    particle->SetTime(fDTime->Val());
-	    particle->SetEdep(fDEnergy->Val());
-	    particle->SetPath(fDPath->Val()/100);
-	  }
-	  else{
-	    particle->SetTime(0);
-	    particle->SetEdep(0);
-	    particle->SetPath(0);
-
-	  }
-	}
-
-      
-     }
-  }
-  //FT particle bank
-  if(fFTBank){ //Filling FT fParticles
-    UInt_t Nin=fFTPid->Size()+fParticles.size();
-    //in case some events have more particles
-    while(Nin>fReadParticles->size()){
-      fReadParticles->push_back(new THSParticle());
-    }
-    Int_t ip=fParticles.size();
-    while(fFTBank->NextEntry()){
-      THSParticle* particle=fReadParticles->at(ip++);
-      fParticles.push_back(particle);
-      particle->SetXYZT(fFTPx->Val(),fFTPy->Val(),fFTPz->Val(),fFTEnergy->Val());
-      //  particle->SetPDGcode(fFTPid->Val());
-      particle->SetPDGcode(0);
-      particle->SetPDGcode(fFTCharge->ValI()*1E6); //unknown PID
-      particle->SetDetector(300);
-      particle->SetTime(fFTTime->Val());
+      particle->SetTime(0);
       particle->SetEdep(0);
       particle->SetPath(0);
-     }
+
+
+      while(fSPindex->FindEntry(fPBank->GetEntry())){
+	  //Do something if find a particular detector
+	//if(fDdet->Val()==17){
+	particle->SetTime(fSTime->Val());
+	particle->SetEdep(fSEnergy->Val());
+	particle->SetPath(fSPath->Val()/100);
+	particle->SetDetector(fSDet->Val());
+	particle->TakePDGMass(); //Use p to calculate E
+	// }
+	// else{
+	//   particle->SetTime(0);
+	  //   particle->SetEdep(0);
+	  //   particle->SetPath(0);
+	
+	  // }
+      }
+      //FT
+      //Not in event builder
+      if(particle->P4p()->Theta()*TMath::RadToDeg()<5)
+	particle->SetDetector(9);
+	
+      while(fFTPindex->FindEntry(fPBank->GetEntry())){
+	  //Do something if find a particular detector
+	//if(fDdet->Val()==17){
+	particle->SetTime(fFTTime->Val());
+	particle->SetEdep(fFTEnergy->Val());
+	particle->SetPath(fFTPath->Val()/100);
+	particle->SetDetector(fFTDet->Val());
+	particle->TakePDGMassFromE(); //Use E to calc p
+	
+      }
+      
+      
+    }
   }
+  //FT particle bank
+  // if(fFTBank){ //Filling FT fParticles
+  //   UInt_t Nin=fFTPid->Size()+fParticles.size();
+  //   //in case some events have more particles
+  //   while(Nin>fReadParticles->size()){
+  //     fReadParticles->push_back(new THSParticle());
+  //   }
+  //   Int_t ip=fParticles.size();
+  //   while(fFTBank->NextEntry()){
+  //     THSParticle* particle=fReadParticles->at(ip++);
+  //     fParticles.push_back(particle);
+  //     particle->SetXYZT(fFTPx->Val(),fFTPy->Val(),fFTPz->Val(),fFTEnergy->Val());
+  //     //  particle->SetPDGcode(fFTPid->Val());
+  //     particle->SetPDGcode(0);
+  //     particle->SetPDGcode(fFTCharge->ValI()*1E6); //unknown PID
+  //     particle->SetDetector(300);
+  //     particle->SetTime(fFTTime->Val());
+  //     particle->SetEdep(0);
+  //     particle->SetPath(0);
+  //    }
+  // }
+  // //CVT particle bank
+  // if(fCVTBank){ //Filling FT fParticles
+  //   UInt_t Nin=fCVTCharge->Size()+fParticles.size();
+  //   //in case some events have more particles
+  //   while(Nin>fReadParticles->size()){
+  //     fReadParticles->push_back(new THSParticle());
+  //   }
+  //   Int_t ip=fParticles.size();
+  //   while(fCVTBank->NextEntry()){
+  //     THSParticle* particle=fReadParticles->at(ip++);
+  //     fParticles.push_back(particle);
+  //     particle->SetXYZT(fCVTPx->Val(),fCVTPy->Val(),fCVTPz->Val(),0);
+  //     //  particle->SetPDGcode(fFTPid->Val());
+  //     particle->SetPDGcode(0);
+  //     particle->SetPDGcode(fCVTCharge->ValI()*1E6); //unknown PID
+  //     particle->SetDetector(200);
+  //     particle->SetTime(0);
+  //     particle->SetEdep(0);
+  //     particle->SetPath(0);
+  //    }
+  // }
 
   
   return kTRUE;

@@ -34,9 +34,9 @@ Int_t THSProject::FindTopology(){
   //in final state check
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   vector<Int_t> thisTopo;
-  for(UInt_t ip=0;ip<frDetParts->GetSize();ip++){
+  for(UInt_t ip=0;ip<frDetParts->size();ip++){
     //    if((frDetParts->At(ip).TruthOnly())==kFALSE)thisTopo.push_back(frDetParts->At(ip).PDG());
-    thisTopo.push_back(frDetParts->At(ip).PDG());
+    thisTopo.push_back(frDetParts->at(ip)->PDG());
   }
   std::sort(thisTopo.begin(),thisTopo.begin()+thisTopo.size());
   // cout<<"ThisTopology ";
@@ -64,8 +64,8 @@ Int_t THSProject::FindInclusiveTopology(Int_t incType){
   //in final state check
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   vector<Int_t> thisTopo;
-  for(UInt_t ip=0;ip<frDetParts->GetSize();ip++){
-    thisTopo.push_back(frDetParts->At(ip).PDG());
+  for(UInt_t ip=0;ip<frDetParts->size();ip++){
+    thisTopo.push_back(frDetParts->at(ip)->PDG());
   }
   std::sort(thisTopo.begin(),thisTopo.begin()+thisTopo.size());
  
@@ -140,7 +140,7 @@ void THSProject::InitParticles(){
   fNBeamTurns=0;
   fNGamTurns=0;
 }
-void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
+void THSProject::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
   //Place detected particles in array associated with their pdg type
   //Loop over detected particles
   parts->clear();
@@ -149,8 +149,8 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
   //  return; //not looking for this particle in this project
   //  for(THSParticle& part:*frDetParts){
   for(UInt_t ip=0;ip<fNParts;ip++){
-    THSParticle& part=frDetParts->At(ip);
-    if(part.PDG()==pdg) parts->push_back(part);
+    THSParticle* part=frDetParts->at(ip);
+    if(part->PDG()==pdg) parts->push_back(part);
   }
   //order particles in momentum, uses THSParticle::operator<
   std::sort(parts->begin(),parts->end());
@@ -159,6 +159,7 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle> *parts){
 void THSProject::ProcessEvent(){
   //Process one input event
   fNPerm=0;
+  fGotCorrectOne=kFALSE;
   InitEvent();
    do{
      WorkOnEvent();
@@ -220,7 +221,7 @@ Bool_t THSProject::PermutateParticles(){
   fIsPermutating0=kFALSE;
   return kFALSE; 
 }
-Bool_t THSProject::RotatePartVector(vector<THSParticle>* vec,Int_t *Nturns){
+Bool_t THSProject::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
   //move through vector of particles return false when all done
   if(vec->empty()) return kFALSE;
   if(vec->size()==UInt_t(*Nturns)+1) {
@@ -236,40 +237,48 @@ void THSProject::MatchWithGen(THSParticle *part){
   //Loop through generated and record momentum distance
   UInt_t match=0;
   Double_t mindist=1E10;
-  for(UInt_t ip=0;ip<frGenParts->GetSize();ip++){
-    THSParticle& gen=frGenParts->At(ip);
-    Double_t dist=part->p3Distance(gen.P4p()->Vect());
+  for(UInt_t ip=0;ip<frGenParts->size();ip++){
+    THSParticle* gen=frGenParts->at(ip);
+    Double_t dist=part->p3Distance(gen->P4p()->Vect());
     if(dist<mindist){
       mindist=dist;
       match=ip;
     }
   }
-  part->SetTruth(frGenParts->At(match).P4(),frGenParts->At(match).Vertex(),frGenParts->At(match).PDG());
+  part->SetTruth(frGenParts->at(match)->P4(),frGenParts->at(match)->Vertex(),frGenParts->at(match)->PDG());
 
 }
 Bool_t THSProject::IsCorrectTruth(THSParticle *part){
   if(!frGenParts) return kFALSE;
-  if(!frGenParts->GetSize())return kFALSE;
+  if(!frGenParts->size())return kFALSE;
   //Loop through generated and record momentum distance 
   //if the nearest generated track is the same as the TRUTH return true
   UInt_t match=0;
   Double_t mindist=1E10;
-  for(UInt_t ip=0;ip<frGenParts->GetSize();ip++){
-    THSParticle& gen=frGenParts->At(ip);
-    Double_t dist=part->p3Distance(gen.P4p()->Vect());
+  for(UInt_t ip=0;ip<frGenParts->size();ip++){
+    THSParticle* gen=frGenParts->at(ip);
+    Double_t dist=part->p3Distance(gen->P4p()->Vect());
     if(dist<mindist){
       mindist=dist;
       match=ip;
     }
   }
-  if(part->TruthP4()==frGenParts->At(match).P4()&&part->TruthPDG()==frGenParts->At(match).PDG())
+  if(part->TruthP4()==frGenParts->at(match)->P4()&&part->TruthPDG()==frGenParts->at(match)->PDG())
     return kTRUE;
   return kFALSE;
 }
 void THSProject::CheckTruth(){
   if(fIsGenerated) return;
-   //Check if our final vectors match with truth
+  //Already got one for this event
+  //If we set this correct it would be double counting
+  //This can happen when using inclusivetopologies
+  //And rotate particles that are not in the defined topology
+  fCorrect=0;
+  if(fGotCorrectOne) return;
+  //Check if our final vectors match with truth
   fCorrect=1;
   for(UInt_t ip=0;ip<fFinal.size();ip++)
     fCorrect*=IsCorrectTruth(fFinal[ip]);
+  
+  if(fCorrect) fGotCorrectOne=kTRUE;
 }

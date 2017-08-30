@@ -37,17 +37,17 @@ class THSProject{
   virtual void GetEvent(Long64_t uid){}//interface to different readers
   virtual Bool_t WorkOnEvent(){return kFALSE;};
   virtual void FinaliseEvent(){};
-  virtual void InitEvent(){};
+  virtual void InitEvent(){fGotCorrectOne=kFALSE;};
   
-  void SetDetParts(TTreeReaderArray<THSParticle> * dpp){frDetParts=dpp;}
-  void SetGenParts(TTreeReaderArray<THSParticle> * dpp){frGenParts=dpp;}
+  void SetDetParts(vector<THSParticle*> * dpp){frDetParts=dpp;}
+  void SetGenParts(vector<THSParticle*> * dpp){frGenParts=dpp;}
 
   Int_t AddTopology(TString topo);
   vector<Int_t> GetTopology(Int_t i){return fTopo.at(i);};
   Int_t FindTopology(); //For current event
   Int_t FindInclusiveTopology(Int_t incType=-1E9);//Inclusive For current event
   void SetPermutate(){fTryPerm=kTRUE;} //Turn on permuations
-  Bool_t RotatePartVector(vector<THSParticle>* vec,Int_t *Nturns);
+  Bool_t RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns);
 
  protected :
   vector<vector<Int_t> >fTopo; //vector of topologies
@@ -62,26 +62,27 @@ class THSProject{
   virtual void InitGenerated(){}
  //For simulated events flag with correct permutation
   Int_t fCorrect=kTRUE;
-
+  Bool_t fGotCorrectOne=kFALSE;
+  
   //Combitorial
   Bool_t fTryPerm=kFALSE;
   Int_t fNPerm=0;
   void InitParticles(); //Allocate particles to vector for this event
-  void InitDetParts(Int_t pdg,vector<THSParticle> *parts); //Fill vector
+  void InitDetParts(Int_t pdg,vector<THSParticle*> *parts); //Fill vector
   Bool_t PermutateParticles(); //Permutate particles in vectors
-  vector<THSParticle> fVecProtons;
-  vector<THSParticle> fVecPiPs;
-  vector<THSParticle> fVecPiMs;
-  vector<THSParticle> fVecKPs;
-  vector<THSParticle> fVecKMs;
-  vector<THSParticle> fVecEls;
-  vector<THSParticle> fVecPos;
-  vector<THSParticle> fVecPi0s;
-  vector<THSParticle> fVecGams;
-  vector<THSParticle> fVecPlus;
-  vector<THSParticle> fVecMinus;
-  vector<THSParticle> fVec0;
-  vector<THSParticle> fVecBeams;
+  vector<THSParticle*> fVecProtons;
+  vector<THSParticle*> fVecPiPs;
+  vector<THSParticle*> fVecPiMs;
+  vector<THSParticle*> fVecKPs;
+  vector<THSParticle*> fVecKMs;
+  vector<THSParticle*> fVecEls;
+  vector<THSParticle*> fVecPos;
+  vector<THSParticle*> fVecPi0s;
+  vector<THSParticle*> fVecGams;
+  vector<THSParticle*> fVecPlus;
+  vector<THSParticle*> fVecMinus;
+  vector<THSParticle*> fVec0;
+  vector<THSParticle*> fVecBeams;
   vector<Int_t> fDetTypes;
   // map<Int_t, vector<THSParticle> > fPVecs;
   Bool_t fIsPermutating0=kFALSE;
@@ -107,9 +108,10 @@ class THSProject{
   //Unique event ID
   Double_t fUID=0;
   //Detected Particles
-  //vector<THSParticle* >* fDetParts=nullptr;
-  TTreeReaderArray<THSParticle> *frDetParts=nullptr;
-  TTreeReaderArray<THSParticle> *frGenParts=nullptr;
+  vector<THSParticle* >* frDetParts=nullptr;
+  vector<THSParticle* >* frGenParts=nullptr;
+  //TTreeReaderArray<THSParticle> *frDetParts=nullptr;
+  //TTreeReaderArray<THSParticle> *frGenParts=nullptr;
 
   //Final Particles vector for saving in output tree
   vector<THSParticle*> fFinal;

@@ -17,6 +17,7 @@ class THSLundReader: public THSDataManager{
 
   virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
+  virtual Bool_t ReadGenerated(Long64_t entry=0);
 
 
  private :
