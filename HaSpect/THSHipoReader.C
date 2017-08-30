@@ -115,6 +115,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 
   }
   //eventbuilder particle bank
+  if(fEvBank) fEvBank->NextEntry();
   if(fPBank){ //Filling reconstructed fParticles
     UInt_t Nin=fPid->Size();
     //in case some events have more particles
