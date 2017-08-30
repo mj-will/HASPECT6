@@ -36,7 +36,7 @@ THSHipoReader::THSHipoReader(){
   fFTDet=fFTBank->GetItem("detector");
 
   fEvBank=fHipo->GetBank("REC::Event");
-  fEvTime=fFTBank->GetItem("STTime");
+  fEvTime=fEvBank->GetItem("STTime");
  
   //Get the necessary items from FT Bank
   // fFTBank=fHipo->GetBank("FT::particles");

@@ -25,6 +25,7 @@ void THSSkeleton::CreateSelector(TString selname,TString filename,TString treena
   if(gSystem->FindFile("./",selfile)){Info("THSSkeleton::THSkeleton(TString filename,TString treename)","Selector Code already exists to exit type y");cin>>sOverwrite;};
   if(sOverwrite==TString("y")) exit(0);
   //fTree->MakeSelector(fSelName);
+  if(fIsFinalState)fOption+="=legacy";
   fTree->MakeSelector(fSelName,fOption);
   fMadeSelector=kTRUE;
 
@@ -327,7 +328,7 @@ void THSSkeleton::HSFinalState(){
   fCurMacro=TMacro(fSelName+".C");
   if(fIsFinalStatePerm){
     AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
-    AddLineAfter("// The return value is currently not used.","   fgIDoff=1E10;//offset in >1 permutation of particles");
+    // AddLineAfter("// The return value is currently not used.","   fgIDoff=1E10;//offset in >1 permutation of particles");
     ContinueLineAfter("   InitEvent();");
     ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
     ContinueLineAfter(TString("     ")+fFinalName+"::WorkOnEvent();");
@@ -385,10 +386,10 @@ void THSSkeleton::HSFinalState(){
   //   ContinueLineAfter("   else THSFinalState::SetGenParts(&Generated);");
   // }
   TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
-  ContinueLineAfter("	THSFinalState::SetDetParts(Particles);");
+  ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
-    ContinueLineAfter("	  if(fChain->GetBranch(\"Generated\"))THSFinalState::SetDetParts(Generated);");
+    ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetDetParts(Generated);");
   }
 
   fCurMacro.SaveSource(fSelName+".h");
@@ -396,7 +397,7 @@ void THSSkeleton::HSFinalState(){
   //Now with Control
   fCurMacro=TMacro(TString("Control_")+fSelName+".C");
   AddLineAfter("HSout(","  HSMacPath(\"ADDITIONALMACROPATH_WHEREPROJECTIS\");");
-  ContinueLineAfter("  HSproject(\""+fFinalName+"\");");
+  ContinueLineAfter("  HSfinal(\""+fFinalName+"\");");
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
 // void THSSkeleton::HSHisto(){
