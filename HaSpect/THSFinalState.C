@@ -158,21 +158,19 @@ void THSFinalState::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
 }
 void THSFinalState::ProcessEvent(){
   //Process one input event
-  fNPerm=0;
-  fGotCorrectOne=kFALSE;
   InitEvent();
    do{
      WorkOnEvent();
      if(fFinalTree)
        if(IsGoodEvent())
 	 fFinalTree->Fill(); //fill for first combination
-     fNPerm++;
    }
    
     while(IsPermutating());
    FinaliseEvent();
 }
 Bool_t THSFinalState::PermutateParticles(){
+  fNPerm++;
   if(!fTryPerm) return kFALSE;
   if(fIsPermutating1) return kTRUE;
   //returns true if another valid permuation to be tried

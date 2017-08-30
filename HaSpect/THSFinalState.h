@@ -37,7 +37,7 @@ class THSFinalState{
   virtual void GetEvent(Long64_t uid){}//interface to different readers
   virtual Bool_t WorkOnEvent(){return kFALSE;};
   virtual void FinaliseEvent(){};
-  virtual void InitEvent(){fGotCorrectOne=kFALSE;};
+  virtual void InitEvent(){fGotCorrectOne=kFALSE;  fNPerm=0;};
   
   void SetDetParts(vector<THSParticle*> * dpp){frDetParts=dpp;}
   void SetGenParts(vector<THSParticle*> * dpp){frGenParts=dpp;}

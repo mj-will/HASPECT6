@@ -84,7 +84,7 @@ void THSSkeleton::HSOut_C(){
   FindNextLineLike("return kTRUE;");
   ContinueLineAfter("   THSOutput::HSProcessFill();",-1);
 
-  if(fOption.Contains("legacy"))AddLineAfter("HSProcessStart","   fChain->GetEntry(entry);",1);
+  if(fOption.Contains("legacy"))AddLineAfter("HSProcessStart","   GetEntry(entry);",1);
 
   fCurMacro.SaveSource(fSelName+".C");
 }
@@ -389,7 +389,7 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
-    ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetDetParts(Generated);");
+    ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetGenParts(Generated);");
   }
 
   fCurMacro.SaveSource(fSelName+".h");

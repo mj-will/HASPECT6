@@ -62,7 +62,9 @@ void THSFinalTemp::Init_Generated(){
 // }
 
 void THSFinalTemp::Kinematics(){
- 
+  if(!fGoodEvent) return;//don't do calculations
+  //Do calculations if Good Event
+
 }
 
 void THSFinalTemp::FinalStateOutTree(TTree* tree){
