@@ -329,7 +329,7 @@ void THSSkeleton::HSFinalState(){
   if(fIsFinalStatePerm){
     AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetPermutate();//will permutate like particles");
     // AddLineAfter("// The return value is currently not used.","   fgIDoff=1E10;//offset in >1 permutation of particles");
-    ContinueLineAfter("   InitEvent();");
+    AddLineAfter("// The return value is currently not used.","   InitEvent();");
     ContinueLineAfter(TString("   do{//In case there is a permutation of particles"));
     ContinueLineAfter(TString("     ")+fFinalName+"::WorkOnEvent();");
     ContinueLineAfter("     if(!fGoodEvent) continue;//Don't fill anything,User should determine value for fGoodEvent in their project");
