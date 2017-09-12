@@ -37,7 +37,7 @@ void PseudoData(TString filename,Long64_t Nev=10000,Double_t res=0,Int_t acc=1,B
   fM1s->SetParameters(1,3,0.5,0.5,7,2,0.1);
   TF1* fM2s=new TF1("m2s","gaus(0)+[3]*x",0,10);
   fM2s->SetParameters(1,5,0.1,0.1);
-  fMmisss=new TF1("mmisss","gaus(0)",0,10);
+  TF1* fMmisss=new TF1("mmisss","gaus(0)",0,10);
   //fMmisss->SetParameters(1,0.1,1);
   fMmisss->SetParameters(1,5,0.7);
   TF1* fPhip=new TF1("phip","1+[2]*([0]*cos(2*TMath::DegToRad()*x)+[1]*sin(2*TMath::DegToRad()*x))",-180,180); 

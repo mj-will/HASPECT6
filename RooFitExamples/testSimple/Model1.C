@@ -21,7 +21,7 @@ void Model1(TString filename){
   fM1s->SetParameters(1,3,0.5,0.5,7,2,0.1);
   TF1* fM2s=new TF1("m2s","gaus(0)+[3]*x",0,10);
   fM2s->SetParameters(1,5,0.1,0.1);
-  fMmisss=new TF1("mmisss","gaus(0)",0,10);
+  TF1* fMmisss=new TF1("mmisss","gaus(0)",0,10);
   fMmisss->SetParameters(1,0.1,1);
 
   //bakcground
@@ -29,7 +29,7 @@ void Model1(TString filename){
   fM1b->SetParameter(0,0.1);
   TF1* fM2b=new TF1("m2b","2-[0]*x",0,10);
   fM2b->SetParameter(0,0.05);
-  fMmissb=new TF1("mmissb","[0]*(x-4)+2",0,10);
+  TF1* fMmissb=new TF1("mmissb","[0]*(x-4)+2",0,10);
   fMmissb->SetParameter(0,0);
   Int_t Nev=100000;
   for(Int_t i=0;i<Nev;i++){
