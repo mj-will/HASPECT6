@@ -41,3 +41,7 @@ ExtraPackages/rhipo/chipo/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Data #
+########
+*.root
