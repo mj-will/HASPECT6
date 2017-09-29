@@ -154,6 +154,7 @@ void THSRooFit::LoadWorkSpaceData(RooWorkspace* ws,TString rfname){
   LoadDataSet(ws->allData().front());//assumes only 1 data set!!
 }
 void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
+  fOwnWorkSpace=kFALSE;
   if(rfname==TString("")){
     //if no name given take name of this RF
     //i.e. for reloading a workspace into a previous defined RF
@@ -163,13 +164,10 @@ void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
   //else the given name is used
   //this is useful for creating subfits when binning etc
   //and the new RF has a different name to the RF which created the workspace
-    
   //load model from workspace, does not load data
   //This allows to create a new THSRooFit object for different trees
   if(!ws) {cout<<"Warning void THSRooFit::LoadWorkSpace NULL workspace supplied returning"<<endl; return;}
-  //  if(fWS) delete fWS;
-  if(fWS) return;
-  // fWS=new RooWorkspace(*ws);
+  if(fWS){ delete fWS;fWS=nullptr;} //replace the one made in constructor
   fWS=ws;
   if(fWS->pdf(rfname+"TotalPDF0")){fModel=fWS->pdf(rfname+"TotalPDF0");fModel->SetName(TString(GetName())+"TotalPDF0");}
   //  if(fWS->set(rfname+"Variables")){fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables);}

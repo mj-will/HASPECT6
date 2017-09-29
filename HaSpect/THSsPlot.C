@@ -331,15 +331,19 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
   RFa->SetSingleSpecies(fSingleSp);
   RFa->SetBinDir(fBinDir);
   RFa->SetOutDir(fOutDir);
-  RFa->SetInWeights(fInWeights);
-  RFa->SetWeightName(fWeightName);
+  if(fInWeights){
+    RFa->SetInWeights(fInWeights);
+    RFa->SetWeightName(fWeightName);
+  }
   RFa->SetNStudyTrials(fNStudyTrials);
   RFa->SetStudyPDF(fStudyPDF);
   RFa->SetSPlotRange(fSRange[0],fSRange[1]);//Extra to THSRooFit
    //Done configuring RF
   fRooFits->Add(RFa);
- 
-  RFa->LoadWorkSpace(fWS);
+  fWS->Print();
+  cout<<"LOADED "<<GetName()<<endl;
+  RFa->LoadWorkSpace(fWS,GetName());
+  RFa->GetVariables().Print();
   //  RFa->SetIDBranchName(fIDBranchName);
 
   for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
@@ -360,78 +364,7 @@ void THSsPlot::SaveHists(TString filename){
   delete file;
 }
 
-// void THSsPlot::RunWeights(Int_t Nfits){
-  
-//   if(!fDataBins) return RunSingleWeights(Nfits);
-  
-//   DefineSets();
-//   MakeBins();
-//   cout<<"THSsPlot::RunWeights(); number of bins "<<fDataBins->GetN()<<endl;
-//   TDirectory *saveDir=gDirectory;
-//   THSBins* savedBins=new THSBins("HSDataBins",fOutDir+"DataEntries.root");
-//   fTree->SetBranchStatus("*",0);
-//   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//     fTree->SetBranchStatus(fVariables[i].GetName(),1);
-//   }
-//   //but always need ID branch
-//   if(fTree->GetBranch(fIDBranchName)){
-//    fTree->SetBranchStatus(fIDBranchName,1);
-//   }
-//   for(Int_t i=0;i<fDataBins->GetN();i++){
-//     THSsPlot* rf=static_cast<THSsPlot*>(CreateSubFitBins(savedBins->GetBinnedTree(fTree,i),kFALSE));
-  
-//     rf->RunSingleWeights(Nfits);
-//     //Add sub weights to total weights for this sPlot
-//     if(rf->GetWeights()){
-//       rf->GetWeights()->PrintWeight();
-//       AddWeightMap(rf->GetWeights());
-//     }
-//     rf->RemoveDataSet();//save memory
-//     delete rf;
-//   }
-//   cout<<"THSsPlot::RunWeights() Done all Fits "<<endl;
-//   delete savedBins;
-  
-//   if(fWeights)GetWeights()->PrintWeight();
-//   if(fWeights)GetWeights()->SortWeights();
-//   if(fSingleSp!=TString("")) MergeModelSpecies(); //to be consistent with sub fits
-// }
-// void THSsPlot::RunSingleWeights(Int_t Nfits){
-//   //Run this if just 1 bin flr all events and not used LoadBinVar
-//   //Do a sWeights fit
-//   //Maybe new fit so construct PDF if not laready loaded
-//   if(!fWS->set("PDFs"))DefineSets();
-//   //if(!fModel)TotalPDF();
-//   if(!InitialiseFit()) return;
-//   cout<<fModel<<endl;
-//   //Fit the model to data with all paramters free
-//   FitMany(Nfits);
-//   //Fit the model to data with only species yields as free pars
-//   //calculate weights and import to WeightMap
-//   sPlot();
-//   //save any canvases produced
-//   SavePlots(fOutDir+TString("Plots")+GetName()+".root");
-//   //save weights to file
-//   if(GetWeights()){
-//     GetWeights()->PrintWeight();
-//     GetWeights()->SortWeights();
-//     if(fDataBins)GetWeights()->Save();//don't save if single bin so we can draw
-//   }
-//   // 
-// }
 
-
-// Bool_t THSsPlot::InitialiseFit(){
-//   cout<<"Initialise "<<GetDataSet()<<" "<<GetDataSet()->numEntries()<<" "<<GetPDFs().getSize()<<endl;
-//   if(GetDataSet()->numEntries()<2) {return kFALSE;}
-//   if(GetPDFs().getSize()) TotalPDF();
-//   else {
-//     cout<<" THSsPlot::InitialiseFit() no model found for "<<GetName()<<" probably no events kinmatically allowed in this bin" <<endl;
-//     return kFALSE;
-//   }
-//   return kTRUE;
-    
-// }
 void THSsPlot::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
