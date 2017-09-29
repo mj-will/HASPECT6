@@ -6,11 +6,11 @@
 #include "TLorentzVector.h"
 #include <vector>
 
-class THSProjTemp : public THSFinalState{
+class THSFinalTemp : public THSFinalState{
 
  public :
-  THSProjTemp();
-  ~THSProjTemp(){};
+  THSFinalTemp();
+  ~THSFinalTemp(){};
 
   virtual Bool_t WorkOnEvent();
 

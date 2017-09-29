@@ -140,22 +140,23 @@ void RooHSEventsHistPDF::MakeSets(){
   arg=arg-offset;
   fx_off->setVal(arg);
   falpha->setVal(Double_t(alpha));
-  return  fHist->weight(RooArgSet(*fx_off,*falpha),1,kTRUE);
+  if(fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE)<0)   cout<<fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE)<<" "<<arg<<" "<<x<<endl;
+
+  return  fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE);
  } 
 
 Double_t RooHSEventsHistPDF::evaluateMC() const {
-// ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
   Double_t mcx=fMCVar[0];
  
   return evaluateMC(mcx);  
 }
 Double_t RooHSEventsHistPDF::evaluateMC(Double_t mcx) const {
-// ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
   Double_t arg=(mcx-fVarMax)*scale+fVarMax;
   arg=arg-offset;
   fx_off->setVal(arg);
   falpha->setVal(Double_t(alpha));
-  return  fHist->weight(RooArgSet(*fx_off,*falpha),1,kTRUE);
+  //  cout<<fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE)<<" "<<arg<<" "<<mcx<<endl;
+  return  fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE);
 
   
 }
@@ -190,6 +191,7 @@ void RooHSEventsHistPDF::CreateHistPdf(){
     Double_t tvar=fMCVar[0];
     his1->Fill(tvar,weight);
   }
+  his1->Smooth();
   //Fill first y bin of 2D hist (no smearing)
   for(Int_t jtemp=1;jtemp<=fRHist->GetNbinsX();jtemp++)//First alpha bin, no semaring!
     fRHist->Fill(fRHist->GetXaxis()->GetBinCenter(jtemp),fRHist->GetYaxis()->GetBinCenter(1),his1->GetBinContent(jtemp));
@@ -209,10 +211,22 @@ void RooHSEventsHistPDF::CreateHistPdf(){
 	Double_t varj=fRHist->GetXaxis()->GetBinCenter(jtemp);
 	fRHist->Fill(varj,vAlphb,gausnX.Eval(varj));
       }
+     }
+    //Cannot calculate covaraince if pdf==0 for some events
+    //Set every empty bin with very small value to prvent this
+    Double_t max_cont=0;
+    for(Int_t jtemp=1;jtemp<=fRHist->GetNbinsX();jtemp++){
+      Double_t cont=fRHist->GetBinContent(jtemp,ia);
+      if(cont>max_cont)max_cont=cont;
     }
+    for(Int_t jtemp=1;jtemp<=fRHist->GetNbinsX();jtemp++){
+      Double_t cont=fRHist->GetBinContent(jtemp,ia);
+      if(cont==0) fRHist->SetBinContent(jtemp,ia,1E-10*max_cont);
+    }
+    
   }
-
   fRHist->Smooth();//some additional smoothing
+
   //Store max value of distributions for scaling around
   // fMean=fRHist->GetMean();
   Int_t bx,by,bz;
@@ -231,10 +245,10 @@ Int_t RooHSEventsHistPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& a
 }
 Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName) const
 {
-  if(code==1){//sum over 1000 samples of the PDF
+  if(code==1){//sum over 5000 samples of the PDF
     if(!CheckChange()) return fLast[0];
     Double_t integral=0;
-    Int_t Nbins=1000;
+    Int_t Nbins=5000;
     Double_t min=fRHist->GetXaxis()->GetXmin();
     Double_t max=fRHist->GetXaxis()->GetXmax();
     Double_t delta=(max-min)/Nbins;
@@ -242,7 +256,7 @@ Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName
     for(Int_t ie=1;ie<=Nbins;ie++){
       Double_t val=min+delta*ie;
       if(!(var->inRange(val,rangeName))) continue;
-      integral+=evaluateMC(val);
+      integral+=evaluateMC(val)*GetIntegralWeight();
     }
     fLast[0]=integral*delta;
     

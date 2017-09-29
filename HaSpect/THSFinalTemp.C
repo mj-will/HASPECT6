@@ -41,15 +41,15 @@ Bool_t THSFinalTemp::WorkOnEvent(){
 }
 void THSFinalTemp::Init_Generated(){
   if(!frGenParts) return;
-  //  if(frGenParts->GetSize()!=4) {fGoodEvent=kFALSE;return;}
+  if(frGenParts->size()!=REPLACE_WITH_N_GENERATED_PARTICLES) {fGoodEvent=kFALSE;return;}
   //Fill our data member particles
   //User is responsible for indicing right
   //comes from order in generated file (e.g LUND)
   if(fIsGenerated){
-    //fElectron=*frGenParts->At(0);
+    //fElectron=*frGenParts->at(0);
   }
   else{//Just assign truth values
-    //fElectron.SetTruth(frGenParts->At(0));
+    //fElectron.SetTruth(frGenParts->at(0));
   }
 }
 //Define topology Init functions

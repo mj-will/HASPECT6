@@ -38,10 +38,12 @@ class RooHSEventsPDF : public RooAbsPdf {
   Bool_t fIsIntegrating=kFALSE;
   Bool_t fIsClone=kFALSE;
   Bool_t fForceConstInt=kFALSE;
+  Bool_t fForceNumInt=kFALSE;
   Bool_t fUseWeightsGen=kTRUE;
   Int_t fCheckInt=0;
   Double_t fConstInt=1;
-  THSWeights* fWeights=0;
+  THSWeights* fWeights=nullptr;  //weights for event generator
+  THSWeights* fInWeights=nullptr; //weights for shaping the events tree
   
   vector< RooArgSet* > fVarSet;//set of variables for which integral defined
   vector< RooRealProxy* > fProxSet; //double observbles
@@ -91,8 +93,10 @@ class RooHSEventsPDF : public RooAbsPdf {
   void SetGeni(Long64_t gi){fGeni=gi;};
   Long64_t GetGeni(){return fGeni;}
   void SetConstInt(Bool_t force=kTRUE){fForceConstInt=force;}
+  void SetNumInt(Bool_t force=kTRUE){fForceNumInt=force;}
   void  CheckIntegralParDep(Int_t Ntests);
 
+  virtual Double_t GetIntegralWeight() const {return 1;} ;
   Bool_t AddProtoData(RooDataSet* data);
   ClassDef(RooHSEventsPDF,1) // Yor description goes here...
 };

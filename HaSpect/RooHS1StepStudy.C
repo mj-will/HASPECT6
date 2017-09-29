@@ -40,6 +40,7 @@ RooHS1StepStudy::RooHS1StepStudy(const RooHS1StepStudy& other) :
   fWS=fHSRooFit->GetWorkSpace();
   fOutDir=other.fOutDir;
   fIsPlot=other.fIsPlot;
+  fUseAll=other.fUseAll;
 }
 
 
@@ -73,6 +74,7 @@ Bool_t RooHS1StepStudy::initialize()
   
   _params = new RooArgSet(fHSRooFit->GetParameters()) ;
   RooArgSet modelParams(*_params) ;
+  modelParams.add(fHSRooFit->GetYields());
   fWS->saveSnapshot("initial",modelParams,kTRUE);
   _initParams = (RooArgSet*) _params->snapshot() ;
   _params->add(*_nllVar) ;
@@ -83,7 +85,7 @@ Bool_t RooHS1StepStudy::initialize()
   // fHSRooFit->DefaultFitOptions();
   // fHSRooFit->AddFitOption(RooFit::Extended());
   // fHSRooFit->AddFitOption(RooFit::DataError(RooAbsData::SumW2));
-  // fHSRooFit->AddFitOption(RooFit::SumW2Error(kTRUE));
+  fHSRooFit->AddFitOption(RooFit::SumW2Error(kTRUE));
   // fHSRooFit->AddFitOption(RooFit::Silence());
  
   return kFALSE ;
@@ -91,7 +93,10 @@ Bool_t RooHS1StepStudy::initialize()
 
 //_____________________________________________________________________________
 Bool_t RooHS1StepStudy::execute() 
-{ 
+{
+  cout<<fPDFName<<endl;
+  
+  cout<<fHSRooFit<<endl;
   fHSRooFit->RemoveDataSet();
   fHSRooFit->CleanWSDataSets();
 
@@ -99,18 +104,27 @@ Bool_t RooHS1StepStudy::execute()
   fWS->loadSnapshot("initial");//load initial parameters
 
   RooHSEventsPDF* PDF=dynamic_cast<RooHSEventsPDF*>(fWS->pdf(fPDFName));
+  cout<<PDF<<endl;
 
-  PDF->SetGeni(fGeni);
-  //genereate n events from poisson
-  Long64_t nexp=RooRandom::randomGenerator()->Poisson(fHSRooFit->GetModel()->expectedEvents(fHSRooFit->GetVariables()));
-  //generate data from  model
+  TTree* tree=PDF->GetGenTree();
+  Long64_t nexp=0;
+  if(fUseAll){//Just use all event in the simulated tree
+    PDF->SetUseWeightsGen(kTRUE); //must use weights for this
+    PDF->SetGeni(0);
+    nexp=tree->GetEntries();
+  }
+  else{ //Use yield parameter to decide how many events to generate
+    PDF->SetGeni(fGeni);
+    //genereate n events from poisson
+    nexp=RooRandom::randomGenerator()->Poisson(fHSRooFit->GetModel()->expectedEvents(fHSRooFit->GetVariables()));
+  }
+  
   RooDataSet* DS=fHSRooFit->GetModel()->generate(fHSRooFit->GetVariables(),nexp);
+  tree=PDF->GetGenTree(); //this tree should have model imposed
   Info("RooHS1StepStudy::execute() ","generated pseudo data :");
   DS->Print();
   PDF->initIntegrator(); //move back to reconstruced branches
-  //get generated tree, this will be flat
-  TTree* tree=PDF->GetGenTree();
-  cout<<"TREE "<<tree->GetEntries()<<endl;
+  //get generated tree, this will be flat if using weights
   fHSRooFit->LoadDataSet(tree);
   if(PDF->UseWeightsGen()){  //weight generated tree with model
     //If this is not set events will just be accept or reject
@@ -118,6 +132,7 @@ Bool_t RooHS1StepStudy::execute()
     fHSRooFit->SetWeightName(fPDFName);
     fHSRooFit->SetDataWeightFast();
   }
+
   //Fit data
   fHSRooFit->Fit();
 
@@ -136,7 +151,7 @@ Bool_t RooHS1StepStudy::execute()
 
   Info("RooHS1StepStudy::execute()","Done Got to event %lld in tree",fGeni);
   fHSRooFit->SetName(TString(GetName())+Form("_Study_%d_",summaryData()->numEntries()));
-  if(fIsPlot)fHSRooFit->SavePlots("");
+  if(fIsPlot){fHSRooFit->SavePlots("");fHSRooFit->GetPlots()->Clear();}
   delete DS ;
   return kFALSE ;
 } 
@@ -153,16 +168,16 @@ Bool_t RooHS1StepStudy::finalize()
   TFile outfile(fOutDir+"/Study"+fHSRooFit->GetName()+".root","recreate");
   for(Int_t iv=0;iv<fHSRooFit->GetParameters().getSize();iv++){
     RooRealVar* var=(fWS->var(fHSRooFit->GetParameters()[iv].GetName()));
-    RooRealVar m("m","m",0,var->getMin(),var->getMax()) ;
-    RooRealVar s("s","s",(var->getMax()-var->getMin())/10,0,(var->getMax()-var->getMin())*10);
-    RooGaussian g("g","g",*var,m,s) ;
-    g.fitTo(*summaryData());
+    // RooRealVar m("m","m",0,var->getMin(),var->getMax()) ;
+    // RooRealVar s("s","s",(var->getMax()-var->getMin())/10,0,(var->getMax()-var->getMin())*10);
+    // RooGaussian g("g","g",*var,m,s) ;
+    // g.fitTo(*summaryData());
     RooPlot *frame=var->frame();
     summaryData()->plotOn(frame);
-    g.paramOn(frame,Layout(0.1, 0.4, 0.9),
-		    Format("NEU",AutoPrecision(2)),
-		    ShowConstants());
-    g.plotOn(frame);
+    //   g.paramOn(frame,Layout(0.1, 0.4, 0.9),
+    //Format("NEU",AutoPrecision(2)),
+		      //		    ShowConstants());
+  //g.plotOn(frame);
     //now pulls
     //    RooAbsReal* genPar =(RooAbsReal*) ((RooRealVar*)_initParams->find(var->GetName()))->Clone(TString(var->GetName())+"truth");
     RooRealVar* genPar =(RooRealVar*) ((RooRealVar*)_initParams->find(var->GetName()))->Clone(TString(var->GetName())+"truth");
@@ -174,27 +189,26 @@ Bool_t RooHS1StepStudy::finalize()
     RooPlot *framePull=pvar.frame();
     summaryData()->plotOn(framePull);
     
-    RooRealVar mp("mp","mp",0,-5,5) ;
-    RooRealVar sp("sp","sp",1,0,10);
-    RooGaussian gp("gp","gp",pvar,mp,sp);
-    gp.fitTo(*summaryData());
-    gp.paramOn(framePull,Layout(0.1, 0.4, 0.9),
-		    Format("NEU",AutoPrecision(2)),
-		    ShowConstants());
-    gp.plotOn(framePull);
+    // RooRealVar mp("mp","mp",0,-5,5) ;
+    // RooRealVar sp("sp","sp",1,0,10);
+    // RooGaussian gp("gp","gp",pvar,mp,sp);
+    // gp.fitTo(*summaryData());
+    // gp.paramOn(framePull,Layout(0.1, 0.4, 0.9),
+    // 		    Format("NEU",AutoPrecision(2)),
+    // 		    ShowConstants());
+    // gp.plotOn(framePull);
 
-    //    RooRealVar corPar(var->GetName(),var->GetTitle(),2*genPar->getValV()-m.getValV());
-    RooRealVar corPar(var->GetName(),var->GetTitle(),genPar->getValV()-m.getValV());
+    //    RooRealVar corPar(var->GetName(),var->GetTitle(),genPar->getValV()-m.getValV());
     //approx error calculation
-    Double_t err1=genPar->getError();
-    Double_t err2=m.getError();
+    //Double_t err1=genPar->getError();
+    //Double_t err2=m.getError();
     // corPar.setError(sqrt(err1*err1+err2*err2));
-    corPar.setError(sqrt(err2*err2));
-    corrPars.addClone(corPar);
+    //corPar.setError(sqrt(err2*err2));
+    //corrPars.addClone(corPar);
     
     frame->Write();
     framePull->Write();
-    corPar.Print();
+    //corPar.Print();
   }
   corrPars.Write();
   summaryData()->Write();
@@ -203,6 +217,7 @@ Bool_t RooHS1StepStudy::finalize()
 
   cout<<fIsPlot<<" "<<fOutDir<<endl;
   Info("RooHS1StepStudy::finalize()","Done Got to event %lld in tree",fGeni);
+  fWS->loadSnapshot("initial");//load initial back parameters
 
   // Finalization of study
   delete _params ;

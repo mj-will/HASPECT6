@@ -25,6 +25,7 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fParent=const_cast<RooHSEventsPDF*>(&other);
     if(other.fEvTree)fEvTree=other.fEvTree->CopyTree("");
     //    if(other.fEvTree)fEvTree=other.fEvTree->CloneTree();
+    if(other.fInWeights) fInWeights=other.fInWeights; //probably need to clone this
     fNInt=other.fNInt;
     fGeni=other.fGeni;
     if(other.fEntryList)fEntryList=(TEntryList*)other.fEntryList->Clone();
@@ -144,7 +145,7 @@ void RooHSEventsPDF::initGenerator(Int_t code)
     //for(Int_t i=0;i<fEvTree->GetEntries();i++){
     for(Int_t i=1;i<fEvTree->GetEntries();i++){
       fEvTree->GetEntry(i);
-        value=evaluateMC();
+        value=evaluateMC()*GetIntegralWeight();
       if(value>fMaxValue)fMaxValue=value;
     }
   }
@@ -173,7 +174,7 @@ void RooHSEventsPDF::generateEvent(Int_t code){
   if(!fUseWeightsGen){
     while(fGeni<fEvTree->GetEntries()){
       fEvTree->GetEntry(fGeni++);
-      value=evaluateMC();
+      value=evaluateMC()*GetIntegralWeight();
       if(value>fMaxValue*RooRandom::uniform()){//accept
 	for(Int_t i=0;i<fNvars;i++)
 	  (*(fProxSet[i]))=fMCVar[i];
@@ -190,7 +191,7 @@ void RooHSEventsPDF::generateEvent(Int_t code){
     while(fGeni<fEvTree->GetEntries()){
       fEvTree->GetEntry(fGeni++);
       if(!CheckRange("")) continue;
-      value=evaluateMC();
+      value=evaluateMC()*GetIntegralWeight();
       for(Int_t i=0;i<fNvars;i++)
 	(*(fProxSet[i]))=fMCVar[i];
      for(Int_t i=0;i<fNcats;i++)
@@ -204,8 +205,9 @@ void RooHSEventsPDF::generateEvent(Int_t code){
   //Used up all the events in the tree!
 }
 Int_t RooHSEventsPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const
-{ //return 0; //might be good to check numerical integral sometimes
-   if(!fEvTree&&!fForceConstInt) return 0; //no MC events to integrate over
+{ 
+  if(fForceNumInt) return 0; //might be good to check numerical integral sometimes
+  if(!fEvTree&&!fForceConstInt) return 0; //no MC events to integrate over
 
   if(fProxSet.size()==1){//special case 1 variable
     if (matchArgs(allVars,analVars,VarSet(0))) return 1 ;
@@ -245,7 +247,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
     for(Int_t ie=0;ie<NEv;ie++){
       fEvTree->GetEntry(ie);
       if(!CheckRange(rangeName)) continue;
-      integral+=evaluateMC();
+      integral+=evaluateMC()*GetIntegralWeight();
     }
   }
   else {
@@ -267,7 +269,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
       if(!CheckRange(rangeName)) continue;
      //only inlcude events within same bin as vval in integral
       if(TMath::Abs(fMCVar[code-2]-vval)>delta)continue;
-      integral+=evaluateMC();
+      integral+=evaluateMC()*GetIntegralWeight();
     }
     //correct for delta integration width
     //first 2 case near range limits 
@@ -521,8 +523,6 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   SetEvTree(fEvTree);
   fEvTree->Print();
   fEvTree->GetEntry(0);
-  //  cout<<"AddProto "<<fMCVar.at(0)<<" "<<fMCVar.at(1)<<endl;
-  cout<<"AddProto "<<fMCVar[0]<<" "<<fMCVar[1]<<endl;
-
+ 
   return fBranchStatus;  
 }

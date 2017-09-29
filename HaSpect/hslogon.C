@@ -167,7 +167,8 @@ void HSfit(){
   LoadMacro("THSRooFit.C");
   LoadMacro("THSsPlot.C");
   LoadMacro("RooHS1StepStudy.C");
-   //  LoadMacro("RooHSStudyManager.C");
+  LoadMacro("RooHSsPlotAndFitStudy.C");
+  LoadMacro("RooHSStudyManager.C");
 }
 void HSselector(){
   cout<<"Loading HSSel classes"<<endl;
