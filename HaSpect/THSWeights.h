@@ -17,7 +17,7 @@ class THSWeights : public TNamed{
   TTree *fIDTree=nullptr;  //! not saved tree of ids, branchname = species
   StrIntMap_t fSpecies;//names of species with index in map
   TList* fWeightList=nullptr; //list of weight bins which have been merged to make this
-  TFile* fFile;
+  TFile* fFile=nullptr;
   TVectorD fWVals;
   Long64_t fID;
   Long64_t fCurrEntry;

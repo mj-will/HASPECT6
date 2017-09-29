@@ -175,7 +175,7 @@ void MakeAll(){
  * It loads necessary functions to perform sWeight fits:\n
  * THSBins.C
  * THSWeights.C
- * RooHSAbsEventsPDF.C
+ * RooHSEventsPDF.C
  * RooHSEventsHistPDF.C
  * THSRooFit.C
  * THSsPlot.C
@@ -190,7 +190,7 @@ void HSfit(){
   //Load extra classes for roofit
   LoadMacro("THSBins.C"); 
   LoadMacro("THSWeights.C");
-  LoadMacro("RooHSAbsEventsPDF.C");
+  LoadMacro("RooHSEventsPDF.C");
   LoadMacro("RooHSEventsHistPDF.C");
   LoadMacro("THSRooFit.C");
   LoadMacro("THSsPlot.C");
