@@ -1,0 +1,68 @@
+To download Haspect and help improving it you need to set everything up first
+
+1. Create account on github.com
+
+2. Go to https://github.com/dglazier/HASPECT6 and click "Fork" (on the right hand side of the screen)
+
+3. Go to https://github.com/[USERNAME]/HASPECT6 and click "Clone or download" and copy the link.
+
+4. Open a terminal and cd into the directory you want the HASPECT code to be in
+
+5. Type: git clone [LINK]
+   Now you have the code and can start to use it and help developing it.
+
+
+To keep your code up-to-date with the current master branch of Derek (do this regularly!). In your haspect directory type:
+
+1. git remote add upstream https://github.com/dglazier/HASPECT6.git
+   (This step only has to be done once)
+
+2. git fetch upstream
+
+3. git checkout master
+
+4. git merge upstream/master
+
+
+To make changes to the code:
+
+1. Create a new branch where you want to apply the changes to by typing:
+   git checkout master
+   git branch [NEW BRANCH NAME]
+
+2. Switch to branch
+   git checkout [NEW BRANCH NAME]
+
+3. Do some work
+
+4. Check status by typing
+   git status
+
+5. Add the work you want to commit with
+   git add [FILES]
+
+6. Commit you work by typing
+   git commit -m [meaningfull commit message, not just "commit1" etc]
+
+7. Repeat 5. & 6. until there are no modified files
+
+8. Push your changes to github with:
+   git push origin [NEW BRANCH NAME]
+
+9. Go to https://github.com/[USERNAME]/HASPECT6 and click on "Compare & pull request"
+
+10. Select base (e.g. dglazier/HASPECT6 master) and make sure that the branches are "Able to merge"
+    If there are conflicts resolve them or ask someone else to have a look
+
+11. Click "Create pull request"
+
+12. Wait for Derek to merge your code
+
+
+General tips:
+-Create a new branch for your work on the code and give it a meaningful name
+-Use git status regularly to check the current status of your repository
+-Regularly commit your work. If you break something you can easily restore everything then
+-Files specified in .gitignore will not be looked after by git (e.g. .root files)
+-If you want to try out everything first you can use https://github.com/s6pepaul/testrepo
+ Feel free to add and change files as you like and create pull requests
