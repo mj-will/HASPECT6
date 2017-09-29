@@ -8,7 +8,7 @@
 #define ROOHSEVENTSHISTPDF
 
 #include "RooAbsPdf.h"
-#include "RooHSAbsEventsPDF.h"
+#include "RooHSEventsPDF.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
@@ -19,7 +19,7 @@
 #include "RooRealVar.h"
 #include "TH2.h" 
 
-class RooHSEventsHistPDF : public RooHSAbsEventsPDF {
+class RooHSEventsHistPDF : public RooHSEventsPDF {
 public:
   RooHSEventsHistPDF() {cout<<"IN DEFAULT "<<endl;} ; 
   RooHSEventsHistPDF(const char *name, const char *title,
@@ -58,6 +58,7 @@ private:
   
  public:
 
+  virtual Bool_t SetEvTree(TTree* tree,Long64_t ngen=0);
   virtual Bool_t SetEvTree(TChain* tree,Long64_t ngen=0);
   void CreateHistPdf();
 

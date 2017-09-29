@@ -92,7 +92,7 @@ class THSKinematics{
   void ElectroCMDecay();
   void PhotoCMDecay();
   void LambdaDecay();
-
+  void PolPhotoCMDecay();
 };
 
 inline Double_t THSKinematics::t0(TLorentzVector p0,TLorentzVector p1){   
@@ -141,6 +141,37 @@ inline void THSKinematics::PhotoCMDecay(){
   TLorentzVector CMMes=CMBoost*fMes;
   fCosTh=CMMes.CosTheta();
   fPhi=CMMes.Phi();
+}
+inline void THSKinematics::PolPhotoCMDecay(){
+  // From Daria Sokhan thesis
+  // Assuming polarisation vector is (0,1,0) (the E vector) and B vector (1,0,0), these are components of the boosted E-vector.  
+
+  TVector3 beta_vector=-fCM.BoostVector();
+  Double_t gamma=fCM.Gamma();
+  Double_t beta=fCM.Beta();
+  
+  Double_t E1 = (gamma * (gamma-1.) * beta_vector.X() * beta_vector.Y() / (beta*beta)) - (beta_vector.X() * beta_vector.Y() * gamma*gamma);
+  
+  Double_t E2 = (beta_vector.Z() * gamma) - (beta_vector.Y()*(beta_vector.Y()) * gamma*gamma) + gamma + (gamma * (gamma-1.) * pow(beta_vector.Y(),2) / (beta*beta));
+  
+  Double_t E3 = (gamma * (gamma-1.) * beta_vector.Y() * beta_vector.Z() / (beta*beta)) - (beta_vector.Y() * gamma) - (beta_vector.Y() * beta_vector.Z() * gamma*gamma);
+  
+  TVector3 Polarisation(E1,E2,E3); //photon pol in CM 
+  Polarisation.RotateZ(TMath::Pi()/2);
+  TLorentzVector CMGamma=fGamma;
+  //TLorentzRotation CMBoost(-fCM.BoostVector());
+  CMGamma.Boost(beta_vector);
+
+  TVector3 zV=CMGamma.Vect().Unit();
+  TVector3 yV=Polarisation.Unit().Cross(CMGamma.Vect()).Unit();
+  TVector3 xV=yV.Cross(zV).Unit();
+  
+  TLorentzRotation CMBoost(-fCM.BoostVector());
+  TLorentzVector CMMes=CMBoost*fMes;
+  TVector3 angles(CMMes.Vect().Dot(xV),CMMes.Vect().Dot(yV),CMMes.Vect().Dot(zV));
+  fCosTh=angles.CosTheta();
+  fPhi=angles.Phi();
+
 }
 
 inline void THSKinematics::MesonDecayHelicity(){

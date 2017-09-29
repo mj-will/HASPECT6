@@ -30,7 +30,7 @@ class RooHS1StepStudy;
 
 class THSRooFit : public TNamed {
  protected:
-  RooWorkspace* fWS; //RooFit workspace container
+  RooWorkspace* fWS=nullptr; //RooFit workspace container
   RooArgList fVariables; //variables in tree, to be fitted
   RooArgList fAuxVars; //variables in tree, not to be fitted
   RooArgList fBinVars; //variables in tree, to be used to make bins for fitting
@@ -38,37 +38,40 @@ class THSRooFit : public TNamed {
   RooArgList fPDFs;//species pdfs
   RooArgList fParameters;//model parameters
   RooArgList fConstraints;//constraints on  parameters
-  RooRealVar *fID;
-  RooAbsPdf* fModel; //model to be fitted to data
-  RooAbsData* fData; //dataset to be fitted
-  TList* fCanvases;  //canvases for plotting fitted variables
-  TList* fHists;  //histograms for plotting weighted variables
-  TList* fRooFits;  //collection of sub fits
-  TTree* fTree; //!     // tree to be imported, don't save as part of class!
-  TTree* fMCIntTree;//! //tree for calculating MC based NormInt
-  TTree* fMCGenTree;//! //tree for calculating MC based NormInt
+  RooRealVar *fID=nullptr;
+  RooAbsPdf* fModel=nullptr; //model to be fitted to data
+  RooAbsData* fData=nullptr; //dataset to be fitted
+  TList* fCanvases=nullptr;  //canvases for plotting fitted variables
+  TList* fHists=nullptr;  //histograms for plotting weighted variables
+  TList* fRooFits=nullptr;  //collection of sub fits
+  TTree* fTree=nullptr; //!     // tree to be imported, don't save as part of class!
+  TTree* fMCIntTree=nullptr;//! //tree for calculating MC based NormInt
+  TTree* fMCGenTree=nullptr;//! //tree for calculating MC based NormInt
   TString fIDBranchName="DontHaveOneYet";
-  TString fYld;     //yield variable prepend
+  TString fYld="Yld_";     //yield variable prepend
   TString fSingleSp;
   TString fOutDir;
   TString fBinDir;
   TString fWeightName; //Input Weight species for this dataset
   TString fStudyPDF; //pdf to be studied
-  RooFitResult* fResult;   //RooFit result
-  THSWeights* fInWeights; //! //input weights for dataset to be fitted
-  THSBins* fDataBins; //! 
-  Bool_t fGotID;
-  Bool_t fBinnedFit;
-  Bool_t ftoWS;
+  RooFitResult* fResult=nullptr;   //RooFit result
+  THSWeights* fInWeights=nullptr; //! //input weights for dataset to be fitted
+  THSBins* fDataBins=nullptr; //! 
+  Bool_t fGotID=kFALSE;
+  Bool_t fIsPlot=kTRUE;
+  Bool_t fBinnedFit=kFALSE;
+  Bool_t ftoWS=kFALSE;
   Bool_t fStudyPlot=kFALSE;
-  Double_t fChi2;
-  Int_t fFiti;
+  Bool_t fOwnWorkSpace=kFALSE;
+  Double_t fChi2=0;
+  Int_t fFiti=0;
   Int_t fNStudyTrials=0;
   
   RooLinkedList fFitOptions;
 public:
   THSRooFit() ;//default constructor, must not allocate memory!!!
   THSRooFit(TString name);
+  THSRooFit(TString name,RooWorkspace* ws);
   THSRooFit(THSRooFit* rf) ;
   virtual ~THSRooFit();
 
@@ -85,13 +88,15 @@ public:
   void LoadMCIntTree(TTree* tree){fMCIntTree=tree;}
   void LoadMCGenTree(TTree* tree){fMCGenTree=tree;}
   void LoadWeights(TString wfile,TString wname);
+  void LoadWeights(THSWeights* wts){fInWeights=wts;};
   void SetDataWeight(); //Add a weight to RooFit dataset
   void SetDataWeightFast(); //Add a weight to RooFit dataset without ID 
-  void LoadWorkSpace(RooWorkspace* ws); //load a workspace without data
-  void LoadWorkSpaceData(RooWorkspace* ws); //load a workspace with data
+  void LoadWorkSpace(RooWorkspace* ws,TString rfname=""); //load a workspace without data
+  void LoadWorkSpaceData(RooWorkspace* ws,TString rfname=""); //load a workspace with data
   void TotalPDF(); //sum different PDFs if different species
   RooArgList GetVariables(){return fVariables;}
   RooRealVar* GetVariable(TString name){return dynamic_cast<RooRealVar*>(fVariables.find(name));}
+  RooRealVar* GetParameter(TString name){return dynamic_cast<RooRealVar*>(fParameters.find(name));}
   RooArgList GetAuxVars(){return fAuxVars;}
   RooArgList GetBinVars(){return fBinVars;}
   RooRealVar* GetAuxVar(TString name){return dynamic_cast<RooRealVar*>(fAuxVars.find(name));}
@@ -109,6 +114,7 @@ public:
   RooDataHist* GetDataHist(){return dynamic_cast<RooDataHist*>(fData);}
   TList* GetFits(){return fRooFits;}
   RooFitResult* GetResult(){return fResult;}
+  TList* GetPlots(){return fCanvases;};
   void AddVariables(RooArgList list){fVariables=list;}
   void AddAuxVars(RooArgList list){fAuxVars=list;}
   void AddParameters(RooArgList list){fParameters=list;}
@@ -122,6 +128,7 @@ public:
     fID=dynamic_cast<RooRealVar*>((fWS->factory(str+"[0,9.99999999999999e14]")));
     fWS->defineSet("ID",RooArgSet(*fID));
    }
+  void CheckRange();
   void SetParVals(RooFitResult *res);
   void SetParVals(RooArgList pars);
   void RemoveDataSet();
@@ -135,9 +142,9 @@ public:
   void Factory(TString opt){fWS->factory(opt);}
   void Fit(Bool_t randPar=kFALSE);
   virtual Bool_t  InitialiseFit();
-  THSRooFit*  CreateSubFit(TNamed cut); //allow individual cuts
-  THSRooFit*  CreateSubFitBins(TNamed cut);//from predefined entrylists
-  virtual THSRooFit*  CreateSubFitBins(TTree* ctree,Bool_t CopyTree=kTRUE);//from alredy selected tree
+  //  THSRooFit*  CreateSubFit(TNamed cut); //allow individual cuts
+  //THSRooFit*  CreateSubFitBins(TNamed cut);//from predefined entrylists
+  virtual THSRooFit*  CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree=kTRUE);//from alredy selected tree
   void SavePlots(TString filename);
   virtual void FitMany(Int_t Nfits=1);
   void FitSavedBins(Int_t Nfits);
@@ -148,25 +155,27 @@ public:
   void MakeBins(TTree* tree,TString name);
   void MakeBinnedTrees(TTree* tree,TString name);
   virtual void FitWithBins(Int_t Nfits=1);
-  virtual void PrepareForFarm();
+  // virtual void PrepareForFarm();
   THSBins* GetBins(){return fDataBins;}
   void SetOutDir(TString name){fOutDir=name;fOutDir+="/";gSystem->MakeDirectory(fOutDir);}
   void SetBinDir(TString name){fBinDir=name;fBinDir+="/";}
-  void ConfigureSavedBins(TString dirname);
+  void ConfigureSavedBins(TString dirname,TString pdfname="Data");
   TString GetOutDir(){return fOutDir;}
   TString GetBinDir(){return fBinDir;}
   void WriteToFile(TString fname);
   void SetBinnedFit(Bool_t bf=kTRUE){fBinnedFit=bf;}
   void SetInWeights(THSWeights* wts){fInWeights=wts;}
   void SetWeightName(TString WName);
-  void DefaultFitOptions();
+  virtual void DefaultFitOptions();
   void AddFitOption(RooCmdArg cmd){fFitOptions.Add((RooCmdArg*)cmd.Clone());}
   RooLinkedList GetFitOptions(){return fFitOptions;}
+  void SetPlot(Bool_t plot=kTRUE){fIsPlot=plot;}
+ 
   void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}
   void SetStudyPDF(TString pdfn){fStudyPDF=pdfn;}
   void SetStudyPlot(Bool_t plot=kTRUE){fStudyPlot=plot;}
-  ClassDef(THSRooFit, 0)  // RooFit interface fit class, 
+ ClassDef(THSRooFit, 0)  // RooFit interface fit class, 
 
 };
 

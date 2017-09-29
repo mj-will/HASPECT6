@@ -26,8 +26,8 @@ class THSSkeleton :public TObject  {
   Bool_t fIsHSTree=kFALSE;   //Use THSOuput to THSParticle interface (probably not)
   Bool_t fIsQval=kFALSE;   //Use Qvale event weighting algorithm
   Bool_t fIsWeights=kFALSE;   //Use THSWeights event weighting 
-  Bool_t fIsProject=kFALSE;   //Use THSProject 
-  Bool_t fIsProjectPerm=kFALSE;   //Use THSProject Permutations
+  Bool_t fIsFinalState=kFALSE;   //Use THSProject 
+  Bool_t fIsFinalStatePerm=kFALSE;   //Use THSProject Permutations
   Bool_t fMadeSelector=kFALSE;
   Int_t fNLPS=0;   //Use Longitidinal phase space class with NLPS particles
 
@@ -40,9 +40,9 @@ class THSSkeleton :public TObject  {
   TMacro fCurMacro;
   Int_t fPlace;
   TString fOption;
-  TString fProjName;
-  TString fProjTopo;
-  TString fProjFinal;
+  TString fFinalName;
+  TString fFinalTopo;
+  TString fFinalParts;
   
  public :
   
@@ -55,9 +55,9 @@ class THSSkeleton :public TObject  {
   void SetNewTree(Bool_t is=kTRUE){fIsNewTree=is;}
   void SetWeights(Bool_t is=kTRUE){fIsWeights=is;}
   void SetLPS(Int_t is=0){fNLPS=is;}
-  void SetProject(TString proj,Bool_t perm=kFALSE){fProjName=proj;fIsProject=kTRUE;fIsProjectPerm=perm;}
-  void SetProjectTopo(TString topos){fProjTopo=topos;};
-  void SetProjectFinal(TString finals){fProjFinal=finals;};
+  void SetFinalState(TString proj,Bool_t perm=kFALSE){fFinalName=proj;fIsFinalState=kTRUE;fIsFinalStatePerm=perm;}
+  void SetFinalStateTopo(TString topos){fFinalTopo=topos;};
+  void SetFinalStateParts(TString finals){fFinalParts=finals;};
   void SetFileName(TString name){fFileName=name;}
   void SetSelName(TString name){fSelName=name;}
   void CreateSelector(TString selname,TString filename,TString treename,TString opt="");
@@ -70,8 +70,8 @@ class THSSkeleton :public TObject  {
   void HSNewTree();
   void HSWeights();
   void HSLPS();
-  void HSProject();
-  void CreateMyProject();
+  void HSFinalState();
+  void CreateMyFinalState();
   
   //RooFit classes
   void CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString parNames);
@@ -82,7 +82,7 @@ class THSSkeleton :public TObject  {
   TString FindNextLineLike(TString linelike);
   void ReplaceMacroText(TString text0,TString text1);
   void ReplaceAllMacroText(TString text0,TString text1);
-  
+  void ReplaceInCurrLine(TString text0,TString text1);
 };
 
 

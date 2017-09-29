@@ -11,13 +11,16 @@ THSsPlot::THSsPlot() : THSRooFit(),fSPlot(0),fWeights(0){
   fSRange[0]=0;fSRange[1]=0; 
 };
 
-THSsPlot::THSsPlot(TString name) : THSRooFit(name),fSPlot(0),fWeights(0){
+THSsPlot::THSsPlot(TString name) : THSRooFit(name){
+  fSRange[0]=0;fSRange[1]=0; 
+}
+THSsPlot::THSsPlot(TString name,RooWorkspace* ws) : THSRooFit(name,ws){
   fSRange[0]=0;fSRange[1]=0; 
 }
 THSsPlot::THSsPlot(THSsPlot* rf){
    THSRooFit(dynamic_cast<THSRooFit*>(rf));
    //copy constructor, but do not copy the data tree, load that explicitly
- 
+   fSaveWeights=rf->fSaveWeights;
 }
 
 THSsPlot::~THSsPlot(){
@@ -128,8 +131,10 @@ void THSsPlot::sPlot(){
     fData=tmpData;
     SetDataWeight();//if weighted data reassign the weight
     fFiti++;
-    PlotDataModel();
-    ((TCanvas*)fCanvases->Last())->SetTitle(Form("%s Model on new Range = %lf",GetName(),fChi2));
+    if(fIsPlot){
+      PlotDataModel();
+      ((TCanvas*)fCanvases->Last())->SetTitle(Form("%s Model on new Range = %lf",GetName(),fChi2));
+    }
     
   }
   Info("THSsPlot::sPlot()"," about to start");
@@ -151,8 +156,10 @@ void THSsPlot::sPlot(){
     fWeights->SetTitle(GetName());
     fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
     ExportWeights();
-    PlotDataModel();
-    ((TCanvas*)fCanvases->Last())->SetTitle(Form("%s sWeights Fit chi2 = %lf",GetName(),fChi2));
+    if(fIsPlot){
+      PlotDataModel();
+      ((TCanvas*)fCanvases->Last())->SetTitle(Form("%s sWeights Fit chi2 = %lf",GetName(),fChi2));
+    }
   }
   else Warning("THSsPlot::sPlot()"," total weights 0, fit did not converge. Make sure the non-sweight fit to fix parameters was succesful. No weights will be assigned for these events");
   
@@ -191,7 +198,7 @@ void THSsPlot::ExportWeights1(TString wmname){
     if(fGotID){//use ID from initial tree
       const RooArgSet* vars=fData->get(ev);
       fWeights->FillWeights((Long64_t)vars->getRealValue(fIDBranchName),eventW);
-      } //ID not defined just use entry number on tree
+    } //ID not defined just use entry number on tree
     else fWeights->FillWeights(ev,eventW);
   }
 }
@@ -313,15 +320,13 @@ void THSsPlot::DrawTreeVar(TString VarName,Int_t nbins,Double_t hmin,Double_t hm
   leg->Draw();
   fTree->ResetBranchAddresses();
 }
-THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events already selected
+THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree){//events already selected
 
-  cout<<"THSsPlot::CreateSubFitBins with tree "<<ctree->GetName()<<" "<<CopyTree<<endl;
   //create a fit object for a subset of data either by setting cut
   //or by fTree->SetEntryList prior to calling this function 
   //It will be deleted by this object
-  cout<<fOutDir<<endl;
-  THSsPlot* RFa=new THSsPlot();
-  RFa->SetName(ctree->GetName());
+  cout<<"THSsPlot::CreateSubFitBins with tree "<<ctree->GetName()<<" "<<CopyTree<<endl;
+  THSsPlot* RFa=new THSsPlot(rfname);
   if(fBinnedFit)RFa->SetBinnedFit();
   RFa->SetSingleSpecies(fSingleSp);
   RFa->SetBinDir(fBinDir);
@@ -335,13 +340,13 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,Bool_t CopyTree){//events al
   fRooFits->Add(RFa);
  
   RFa->LoadWorkSpace(fWS);
+  //  RFa->SetIDBranchName(fIDBranchName);
 
   for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
     RFa->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));
  
   TDirectory *saveDir=gDirectory;
   ctree->GetDirectory()->cd();
-  cout<<"WWWWWWWWWWWWWWWWWWWWW "<<ctree->GetEntries()<<" "<<fInWeights<<" "<<fWeightName<<endl;
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(""));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree
   saveDir->cd();
@@ -429,12 +434,12 @@ void THSsPlot::SaveHists(TString filename){
 // }
 void THSsPlot::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree
-  if(!fWS->set("PDFs"))DefineSets();
+  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
   if(!fModel) TotalPDF();
   FitMany(Nfits);
   //Fit the model to data with only species yields as free pars
   //calculate weights and import to WeightMap
-  //Fix any zero yield to be constant to help fit converge
+  //Remove any zero yield to be constant to help fit converge
   for(Int_t iy=0;iy<fYields.getSize();iy++){
     Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();
     if(thisYield<1E-2){
@@ -448,24 +453,38 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
       GetWorkSpace()->defineSet("PDFs",GetPDFs());	
       
     }
-    }
-      
-    //   if(fYields.getSize()==1){//Only 1 species all weights==1
-    //   fWeights=new THSWeights("HSsWeights");//initialise weights
-    //   fWeights->SetTitle(GetName());
-    //   fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
-    //   ExportWeights1();
-    // }
+  }
+  
+  if(fYields.getSize()==1){//Only 1 species all weights==1
+    fWeights=new THSWeights("HSsWeights");//initialise weights
+    fWeights->SetTitle(GetName());
+    fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
+    ExportWeights1();
+    GetWeights()->PrintWeight();
+    GetWeights()->SortWeights();
+    if(fSaveWeights) GetWeights()->Save();
+    return;
+  }
   sPlot();
   //save any canvases produced
   Info("THSsPlot::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetName()).Data());
   SavePlots(fOutDir+TString("Results")+GetName()+".root");
   StudyFit();
-    //save weights to file
+  //save weights to file
   if(GetWeights()){
     GetWeights()->PrintWeight();
     GetWeights()->SortWeights();
-    GetWeights()->Save();//don't save if single bin so we can draw
+    if(fSaveWeights) GetWeights()->Save();//don't save if single bin so we can draw
   }
+  
+}
+void THSsPlot::DefaultFitOptions(){
+  // AddFitOption(RooFit::Extended());
+  // if(fData)
+  //   if(fData->isNonPoissonWeighted())AddFitOption(RooFit::SumW2Error(kTRUE));
+  AddFitOption(RooFit::NumCPU(1));
+  AddFitOption(RooFit::Save(kTRUE));
+  AddFitOption(RooFit::Warnings(kFALSE));
+
 
 }

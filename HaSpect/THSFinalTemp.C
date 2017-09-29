@@ -1,15 +1,15 @@
 #include "TDatabasePDG.h"
-#include "THSProjTemp.h"
+#include "THSFinalTemp.h"
 #include <algorithm>
 
-//ClassImp(THSProjTemp)
+//ClassImp(THSFinalTemp)
 
-THSProjTemp::THSProjTemp(){
+THSFinalTemp::THSFinalTemp(){
   //include topology for analysis and get index
  
   //Set final state
 }
-Bool_t THSProjTemp::WorkOnEvent(){
+Bool_t THSFinalTemp::WorkOnEvent(){
   //Should this event be saved?
   fGoodEvent=kTRUE;
   fCorrect=0; //Correct permutation? used for simulation only
@@ -39,21 +39,21 @@ Bool_t THSProjTemp::WorkOnEvent(){
   PermutateParticles();
   return kFALSE;
 }
-void THSProjTemp::Init_Generated(){
+void THSFinalTemp::Init_Generated(){
   if(!frGenParts) return;
-  //  if(frGenParts->GetSize()!=4) {fGoodEvent=kFALSE;return;}
+  if(frGenParts->size()!=REPLACE_WITH_N_GENERATED_PARTICLES) {fGoodEvent=kFALSE;return;}
   //Fill our data member particles
   //User is responsible for indicing right
   //comes from order in generated file (e.g LUND)
   if(fIsGenerated){
-    //fElectron=*frGenParts->At(0);
+    //fElectron=*frGenParts->at(0);
   }
   else{//Just assign truth values
-    //fElectron.SetTruth(frGenParts->At(0));
+    //fElectron.SetTruth(frGenParts->at(0));
   }
 }
 //Define topology Init functions
-// void THSProjTemp::Init_(){
+// void THSFinalTemp::Init_(){
 //   //Fill data member particles
 //   //Particle vectors will be permutated over
 //   //fElectron=*fVecMinus.at(0);
@@ -61,11 +61,13 @@ void THSProjTemp::Init_Generated(){
 
 // }
 
-void THSProjTemp::Kinematics(){
- 
+void THSFinalTemp::Kinematics(){
+  if(!fGoodEvent) return;//don't do calculations
+  //Do calculations if Good Event
+
 }
 
-void THSProjTemp::ProjectOutTree(TTree* tree){
+void THSFinalTemp::FinalStateOutTree(TTree* tree){
   fFinalTree=tree;
   tree->Branch("Final",&fFinal);
   tree->Branch("MissMass",&fMissMass,"MissMass/D");

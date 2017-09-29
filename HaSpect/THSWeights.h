@@ -13,10 +13,10 @@ typedef map<TString, Int_t > StrIntMap_t;
 
 class THSWeights : public TNamed{
  private:
-  TTree *fWTree;  //! not saved tree of weights, branchname = species
-  TTree *fIDTree;  //! not saved tree of ids, branchname = species
+  TTree *fWTree=nullptr;  //! not saved tree of weights, branchname = species
+  TTree *fIDTree=nullptr;  //! not saved tree of ids, branchname = species
   StrIntMap_t fSpecies;//names of species with index in map
-  TList* fWeightList; //list of weight bins which have been merged to make this
+  TList* fWeightList=nullptr; //list of weight bins which have been merged to make this
   TFile* fFile;
   TVectorD fWVals;
   Long64_t fID;
@@ -24,10 +24,10 @@ class THSWeights : public TNamed{
   Bool_t fGotEntry;
   Bool_t fIsSorted;
   Long64_t fN;
-  Long64_t *fIDi;//!
-  Long64_t *fIDv;//!
+  Long64_t *fIDi=nullptr;//!
+  Long64_t *fIDv=nullptr;//!
  public:
- THSWeights() : fWTree(0),fIDTree(0),fWeightList(0),fFile(0),fIDi(0),fIDv(0){};
+ THSWeights() {};
    THSWeights(TString name);
   ~THSWeights();
   

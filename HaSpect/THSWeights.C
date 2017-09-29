@@ -19,9 +19,9 @@ THSWeights::THSWeights(TString name) :TNamed(name,name),fWTree(0),fWeightList(0)
 
 THSWeights::~THSWeights(){
   if(fWeightList) delete fWeightList;
-  //if(fWTree) delete fWTree;
-  // if(fIDTree) delete fIDTree;
-  // if(fFile) {delete fFile;}
+  if(fWTree) delete fWTree;
+  if(fIDTree) delete fIDTree;
+  if(fFile) {delete fFile;}
 }
 void THSWeights::SetSpecies(TString name){
   UInt_t NSpecies=fSpecies.size(); 
@@ -295,26 +295,3 @@ void THSWeights::LoadSaved(TString fname,TString wname){
   wfile->Close();
   delete wfile;
 }
-// void THSWeights::LoadSavedOld(TString fname,TString wname){
-//   TDirectory* savedir=gDirectory;
-//   TFile* wfile=new TFile(fname);
-//   THSWeights* file_wts=(THSWeights*)wfile->Get(wname);//read into memory
-//   savedir->cd();
-//   fWTree=(TTree*) file_wts->GetTree()->Clone();
-//   fWTree->SetDirectory(0);
-//   fSpecies=file_wts->GetSpecies();
-//   fWVals.ResizeTo(fSpecies.size());
-//   for(UInt_t i=0;i<fSpecies.size();i++)
-//     fWTree->SetBranchAddress(GetSpeciesName(i),&fWVals[i]); 
-
-//   fIDTree=(TTree*)file_wts->GetIDTree()->Clone();
-//   fIDTree->SetDirectory(0);
-//   fIDTree->SetBranchAddress("WID",&fID);
-
-//   fCurrEntry=0;
-//   fIsSorted=kFALSE;
-//   fN=fWTree->GetEntries();
-//   delete file_wts;  
-//   wfile->Close();
-//   delete wfile;
-// }

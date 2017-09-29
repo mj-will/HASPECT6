@@ -1,8 +1,8 @@
-#include "THSProject.h"
-//ClassImp(THSProject)
+#include "THSFinalState.h"
+//ClassImp(THSFinalState)
 
 
-Int_t THSProject::AddTopology(TString topo){
+Int_t THSFinalState::AddTopology(TString topo){
    vector<Int_t> detpart;
   //topo should be a pdg particle list seperated by : e.g. "proton:pi+:pi-"
   TObjArray* OptList = topo.Tokenize(":");
@@ -11,7 +11,7 @@ Int_t THSProject::AddTopology(TString topo){
     if(((TObjString*)OptList->At(i))->String()==TString("Rootino+")) pdg=1E6;
     else if(((TObjString*)OptList->At(i))->String()==TString("Rootino-")) pdg=-1E6;
     else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) pdg=-22;
-    else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSProject::AddTopology","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
+    else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSFinalState::AddTopology","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
     else pdg=TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String())->PdgCode();
     detpart.push_back(pdg);
     //Make list of all possible detected types to optimise particle vectors
@@ -28,7 +28,7 @@ Int_t THSProject::AddTopology(TString topo){
   return fNTopo-1;//return index of this topology
 }
 
-Int_t THSProject::FindTopology(){
+Int_t THSFinalState::FindTopology(){
   //Note particles with TruthOnly are reserved for undetected particles
   //which may be kept in simulated data, but shouldn't be included
   //in final state check
@@ -58,7 +58,7 @@ Int_t THSProject::FindTopology(){
   
   return fCurrTopo;
 }
-Int_t THSProject::FindInclusiveTopology(Int_t incType){
+Int_t THSFinalState::FindInclusiveTopology(Int_t incType){
   //Note particles with TruthOnly are reserved for undetected particles
   //which may be kept in simulated data, but shouldn't be included
   //in final state check
@@ -108,7 +108,7 @@ Int_t THSProject::FindInclusiveTopology(Int_t incType){
   
   return fCurrTopo;
 }
-void THSProject::InitParticles(){
+void THSFinalState::InitParticles(){
   //This should be optimised to run 1 loop not number of sepcies loops
   if(fIsPermutating0==kTRUE) return;
   //Init all particle type vectors
@@ -140,7 +140,7 @@ void THSProject::InitParticles(){
   fNBeamTurns=0;
   fNGamTurns=0;
 }
-void THSProject::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
+void THSFinalState::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
   //Place detected particles in array associated with their pdg type
   //Loop over detected particles
   parts->clear();
@@ -156,48 +156,21 @@ void THSProject::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
   std::sort(parts->begin(),parts->end());
 
 }
-void THSProject::ProcessEvent(){
+void THSFinalState::ProcessEvent(){
   //Process one input event
-  fNPerm=0;
-  fGotCorrectOne=kFALSE;
   InitEvent();
    do{
      WorkOnEvent();
      if(fFinalTree)
        if(IsGoodEvent())
 	 fFinalTree->Fill(); //fill for first combination
-     fNPerm++;
    }
    
     while(IsPermutating());
    FinaliseEvent();
 }
-// Bool_t THSProject::PermutateParticles(){
-//   if(!fTryPerm) return kFALSE;
-//   //returns true if another valid permuation to be tried
-//   //returns false when time to move on
-//   //check through particle types
-//   //if more than 1 of a type permutate through all combinations
-//   fIsPermutating0=kTRUE; //Will be set to false when event over
-//   if(std::next_permutation(fVecProtons.begin(),fVecProtons.end())) return kTRUE;
-//   if(std::next_permutation(fVecPiPs.begin(),fVecPiPs.end())) return kTRUE;
-//   if(std::next_permutation(fVecPiMs.begin(),fVecPiMs.end())) return kTRUE;
-//   if(std::next_permutation(fVecPi0s.begin(),fVecPi0s.end())) return kTRUE;
-//   if(std::next_permutation(fVecKPs.begin(),fVecKPs.end())) return kTRUE;
-//   if(std::next_permutation(fVecKMs.begin(),fVecKMs.end())) return kTRUE;
-//   if(std::next_permutation(fVecEls.begin(),fVecEls.end())) return kTRUE;
-//   if(std::next_permutation(fVecPos.begin(),fVecPos.end())) return kTRUE;
-//   if(std::next_permutation(fVecGams.begin(),fVecGams.end())) return kTRUE;
-//   if(std::next_permutation(fVecPlus.begin(),fVecPlus.end())) return kTRUE;
-//   if(std::next_permutation(fVecMinus.begin(),fVecMinus.end())) return kTRUE;
-//   if(std::next_permutation(fVec0.begin(),fVec0.end())) return kTRUE;
-//   if(fVecBeams.size()>0)cout<<fVecBeams.at(0).P4().E()<<endl;
-//   if(std::next_permutation(fVecBeams.begin(),fVecBeams.end())) return kTRUE;
- 
-//   fIsPermutating0=kFALSE;
-//   return kFALSE; 
-// }
-Bool_t THSProject::PermutateParticles(){
+Bool_t THSFinalState::PermutateParticles(){
+  fNPerm++;
   if(!fTryPerm) return kFALSE;
   if(fIsPermutating1) return kTRUE;
   //returns true if another valid permuation to be tried
@@ -221,7 +194,7 @@ Bool_t THSProject::PermutateParticles(){
   fIsPermutating0=kFALSE;
   return kFALSE; 
 }
-Bool_t THSProject::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
+Bool_t THSFinalState::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
   //move through vector of particles return false when all done
   if(vec->empty()) return kFALSE;
   if(vec->size()==UInt_t(*Nturns)+1) {
@@ -233,7 +206,7 @@ Bool_t THSProject::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
   *Nturns=(*Nturns)+1;
   return kTRUE;
 }
-void THSProject::MatchWithGen(THSParticle *part){
+void THSFinalState::MatchWithGen(THSParticle *part){
   //Loop through generated and record momentum distance
   UInt_t match=0;
   Double_t mindist=1E10;
@@ -248,7 +221,7 @@ void THSProject::MatchWithGen(THSParticle *part){
   part->SetTruth(frGenParts->at(match)->P4(),frGenParts->at(match)->Vertex(),frGenParts->at(match)->PDG());
 
 }
-Bool_t THSProject::IsCorrectTruth(THSParticle *part){
+Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
   if(!frGenParts) return kFALSE;
   if(!frGenParts->size())return kFALSE;
   //Loop through generated and record momentum distance 
@@ -267,7 +240,7 @@ Bool_t THSProject::IsCorrectTruth(THSParticle *part){
     return kTRUE;
   return kFALSE;
 }
-void THSProject::CheckTruth(){
+void THSFinalState::CheckTruth(){
   if(fIsGenerated) return;
   //Already got one for this event
   //If we set this correct it would be double counting

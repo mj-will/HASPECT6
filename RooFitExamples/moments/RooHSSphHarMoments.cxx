@@ -19,7 +19,7 @@
 ClassImp(RooHSSphHarMoments) 
 
 RooHSSphHarMoments::RooHSSphHarMoments(const char *name, const char *title,RooAbsReal& _Z, RooAbsReal& _Phi,Int_t _Lmax,Int_t _Mmax) :
-RooHSAbsEventsPDF(name,title),
+RooHSEventsPDF(name,title),
   Z("Z","Z",this,_Z),
   Phi("Phi","Phi",this,_Phi),
   Lmax(_Lmax),
@@ -39,7 +39,7 @@ RooHSSphHarMoments::~RooHSSphHarMoments(){
   
 }
 RooHSSphHarMoments::RooHSSphHarMoments(const char *name, const char *title,RooAbsReal& _Z, RooAbsReal& _Phi,Int_t _Lmax,Int_t _Mmax,const RooArgList& coefList) :
-  RooHSAbsEventsPDF(name,title),
+  RooHSEventsPDF(name,title),
   Z("Z","Z",this,_Z),
   Phi("Phi","Phi",this,_Phi),
   fMoms("moments","List of moments",this),
@@ -79,14 +79,13 @@ RooHSSphHarMoments::RooHSSphHarMoments(const char *name, const char *title,RooAb
 //void RooHSSphHarMoments::CreateSpHarmonic(RooArgSet pars,RooAbsReal& _Z, RooAbsReal& _Phi){
 
 RooHSSphHarMoments::RooHSSphHarMoments(const RooHSSphHarMoments& other, const char* name) :  
-   RooHSAbsEventsPDF(other,name),
+   RooHSEventsPDF(other,name),
    Z("Z",this,other.Z),
    Phi("Phi",this,other.Phi),
    fMoms("moments",this,other.fMoms),
    Lmax(other.Lmax),
    Mmax(other.Mmax)
  {
-   cout<<"CLONE "<<endl;
    MakeSets();
    Z.SetName(other.Z.GetName());
    Phi.SetName(other.Phi.GetName());
@@ -187,8 +186,8 @@ Double_t RooHSSphHarMoments::evalLegendre(Double_t _Z,Int_t _L,Int_t _M) const{
 
 Double_t RooHSSphHarMoments::evaluateMC() const {
 // ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
-  Double_t mcZ=fMCVar.at(0);
-  Double_t mcPhi=fMCVar.at(1);
+  Double_t mcZ=fMCVar[0];
+  Double_t mcPhi=fMCVar[1];
   Double_t val=0;
    Int_t iY=0;
    for(Int_t iL=0;iL<=Lmax;iL++)
@@ -204,12 +203,3 @@ Double_t RooHSSphHarMoments::evaluateMC() const {
  
 }
 
-
-// Int_t RooHSSphHarMoments::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const
-// {
-//   return 0; 
-// }
-// Double_t RooHSSphHarMoments::analyticalIntegral(Int_t code,const char* rangeName) const
-// {
-//   return 1;
-// }

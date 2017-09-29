@@ -7,12 +7,14 @@ using namespace std;
 
 class THSsPlot : public THSRooFit {
  protected:
-  RooStats::SPlot* fSPlot; //!  //sPlot object
-  THSWeights* fWeights; //! new weights calcualted in this fit
+  RooStats::SPlot* fSPlot=nullptr; //!  //sPlot object
+  THSWeights* fWeights=nullptr; //! new weights calcualted in this fit
   Double_t fSRange[2];
+  Bool_t fSaveWeights=kTRUE;
 public:
   THSsPlot() ;//default constructor, must not allocate memory!!!
   THSsPlot(TString name);
+  THSsPlot(TString name,RooWorkspace *ws);
   THSsPlot(THSsPlot* rf) ;
   virtual ~THSsPlot();
 
@@ -39,13 +41,16 @@ public:
   void DrawTreeVar(TString VarName,Int_t nbins,Double_t hmin,Double_t hmax);
 // void CorrelationWithVars(TString VarName);
   void AddSubWeights();
-  virtual THSRooFit* CreateSubFitBins(TTree* ctree,Bool_t CopyTree);
+  virtual THSRooFit* CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree);
   void SaveHists(TString filename);
   // virtual void RunWeights(Int_t Nfits=1);
   // virtual void RunSingleWeights(Int_t Nfits);
   void SetWeights(THSWeights* wts){fWeights=wts;}
+  void DeleteWeights(){if(fWeights)delete fWeights;fWeights=nullptr;};
   virtual void FitAndStudy(Int_t Nfits);
-
+  virtual void DefaultFitOptions();
+  void SetSaveWeights(Bool_t save=kTRUE){fSaveWeights=save;}
+  
   ClassDef(THSsPlot, 1)  // RooFit interface fit class, 
 
 };

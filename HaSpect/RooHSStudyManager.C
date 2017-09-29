@@ -80,7 +80,6 @@ void RooHSStudyManager::runMyProof(Int_t nExperiments, const char* proofHost, Bo
   coutP(Generation) << "RooHSStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetOutputList()",(ULong_t)p)) ;
   aggregateData(olist) ;
-
   // cleaning up                                                                                                                                           
   coutP(Generation) << "RooHSStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;                                                   
   gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetInputList()->Remove((TObject*)0x%lx) ;",(ULong_t)p,(ULong_t)_pkg) ) ;                                                   

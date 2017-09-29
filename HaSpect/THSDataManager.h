@@ -39,8 +39,8 @@ class THSDataManager{
   void ClearParticles(){fParticles.clear();fGenerated.clear();fNin=0;fNgen=0;};
   
   void SetReadBranch(TString name){fReadBName=name;}
-  void SetReadGenBranch(TString name){fReadGName=name;fInGenerated=kTRUE;}
-  void SetWriteGenBranch(TString name){fWriteGName=name;fAddGenerated=kTRUE;}
+  void SetReadGenBranch(TString name=""){fReadGName=name;fInGenerated=kTRUE;}
+  void SetWriteGenBranch(TString name=""){fWriteGName=name;fAddGenerated=kTRUE;}
   virtual void InitOutput(TString filename);
   void WriteEvent(){fWriteTree->Fill();}
   void CloseOutput();

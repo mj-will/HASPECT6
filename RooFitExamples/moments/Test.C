@@ -8,19 +8,11 @@
   RF->LoadVariable("Phi[0,-3.14159,3.14159]");//phi
   Int_t LMAX=4;
   RooArgSet pars=RooHSSphHarMoments::CreateMoments(LMAX);
-  //pars.Print("");
-  //RooRealVar v1(Form("MomY_%d_%d",0,0),Form("MomY_%d_%d",0,0),-1,1);
   RF->GetWorkSpace()->import(pars);
   RF->GetWorkSpace()->defineSet("Moments",pars);
 
-  // RF->GetWorkSpace()->import(pars);
-  // RF->Factory("SphHarMoments::Y(Z ,Phi,1,MomY)");
-  //  RooHSSphHarMoments* pdf=new RooHSSphHarMoments("YLM","YLM",*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),0,pars);
   RooHSSphHarMoments* pdf=new RooHSSphHarMoments("YLM","YLM",*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),LMAX,*RF->GetWorkSpace()->set("Moments"));
-  //  RF->Factory("RooHSSphHarMoments::YLM(Z,Phi,4,Moments)");
   RF->GetWorkSpace()->import(*pdf);
-  //pdf->importMoments(RF->GetWorkSpace());
-  //RooDataSet *ds=RF->GetModel()->generate(RF->GetVariables(),1000);
 
   RF->LoadSpeciesPDF("YLM");
   RF->TotalPDF();
