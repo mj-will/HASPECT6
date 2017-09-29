@@ -180,6 +180,8 @@ void MakeAll(){
  * THSRooFit.C
  * THSsPlot.C
  * RooHS1StepStudy.C
+ * RooHSsPlotAndFitStudy.C
+ * RooHSStudyManager.C
  */
 void HSfit(){
   cout<<"Loading HSFit classes"<<endl;
@@ -193,7 +195,8 @@ void HSfit(){
   LoadMacro("THSRooFit.C");
   LoadMacro("THSsPlot.C");
   LoadMacro("RooHS1StepStudy.C");
-   //  LoadMacro("RooHSStudyManager.C");
+  LoadMacro("RooHSsPlotAndFitStudy.C");
+  LoadMacro("RooHSStudyManager.C");
 }
 
 /** Function is called with \--hssel \n
@@ -279,13 +282,6 @@ void startproof(Int_t Nw){
   //set prompt
   ((TRint*)gROOT->GetApplication())->SetPrompt("hsproof [%d] ");
   TProof::Open("://lite");
-  // gProof->AddEnvVar("PROOF_INITCMD","echo setenv HSOUT test");
-  // cout<<"HSOUT IS "<<gSystem->Getenv("HSOUT")<<endl;
-  // plite->AddIncludePath(gInterpreter->GetIncludePath());
-  //  tree->SetProof();
-  //  plite->SetParameter("PROOF_UseTreeCache", 0); //turn off caching =0
-  // plite->SetParameter("PROOF_CacheSize", 1000M);
-  // gProof->SetParameter("PROOF_UseMergers", 0);//seems to be a bit faster initialising, for when you have lots of histograms
   if(Nw) gProof->SetParallel(Nw); //set number of workers if specified on command line
   //plite->SetParallel(UsePROOF); //restrict workers
 }
