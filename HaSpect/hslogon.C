@@ -1,6 +1,25 @@
+/*! \file
+	Sets up HaSpect environment when included in .rootrc file.
+	
+	### Usage
+	Use flags when starting root to load needed functions \n
+	- \--hsfit : Classes for sWeight fits etc
+	- \--hssel : Classes for hselector
+	- \--hsdata : Classes for hsdata
+	- \--hsproj : Classes for hsproject
+	
+	e.g. 
+	\code root -l --hsfit FitHSSimple.C \endcode
+	to start FitHSSimple.C macro whicht uses sWeights to fit data.
+	
+	
+*/
+
+#include <TProof.h> //Make sure gProof can be seen here
+
 void HSfit();//Load hsfit classes
 void HSdata();//Load hsdata classes
-void HSselector(); //load hsselctor classes
+void HSselector(); //load hsselector classes
 void HSproject(TString pname); //load hsproject classes
 void startproof(Int_t Nw); //intialise proof for hsselector classes
 void LoadMacro(TString macro); //Load class via its source code
@@ -13,11 +32,12 @@ void HSproj(TString hsproj){gSystem->Setenv("HSPROJ",hsproj);} //set out file
 void MakeAll();
 void HSMacPath(TString opt);
 void HSUserPath(TString opt);
-#include <TProof.h> //MAke sure gProof can be seen here
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
 TString THSPARTICLE("THSParticle.0.C");
 
+///////////////////////////////////////////////////////
+///Initialises functions demanded by the user
 void hslogon(){
   //Execute system .rootlogon.C script 
   if(gSystem->AccessPathName("~/.rootlogon.C")){};
@@ -124,6 +144,8 @@ void hslogon(){
   }	
   
 }
+
+
 void MakeAll(){
 
   TString HSANA=gSystem->Getenv("HSANA");
@@ -148,6 +170,17 @@ void MakeAll(){
 
   gSystem->Exec(Form("cd %s",CurDir.Data()));
 }
+
+/** Function is called with \--hsfit \n
+ * It loads necessary functions to perform sWeight fits:\n
+ * THSBins.C
+ * THSWeights.C
+ * RooHSAbsEventsPDF.C
+ * RooHSEventsHistPDF.C
+ * THSRooFit.C
+ * THSsPlot.C
+ * RooHS1StepStudy.C
+ */
 void HSfit(){
   cout<<"Loading HSFit classes"<<endl;
   //set prompt
@@ -162,6 +195,17 @@ void HSfit(){
   LoadMacro("RooHS1StepStudy.C");
    //  LoadMacro("RooHSStudyManager.C");
 }
+
+/** Function is called with \--hssel \n
+ * It loads the following functions:\n
+ * THSBins.C
+ * THSWeights.C
+ * THSHisto.C
+ * THSOutput.C
+ * THSSkeleton.C
+ * THSKinematics.C
+ * THSParticle.0.C (unless explicitly replaced)
+ */
 void HSselector(){
   cout<<"Loading HSSel classes"<<endl;
  //set prompt
@@ -185,6 +229,14 @@ void HSselector(){
   //gROOT->LoadMacro("THSLongPS.C+");
 }
 
+/** Function is called with \--hsproj \n
+ * It loads the following functions:\n
+ * [pname].C
+ * THSDataManager.C
+ * THSProject.C
+ * THSParticle.0.C
+ * THSParticle.C (if specified)
+ */
 void HSproject(TString pname){
   HSproj(pname);
   if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
@@ -194,6 +246,16 @@ void HSproject(TString pname){
   LoadMacro(pname+".C");
 
 }
+
+/** Function is called with \--hsdata \n
+ * It loads the following functions:\n
+ * THSWeights.C
+ * THSParticle.0.C
+ * THSDataManager.C
+ * THSLundReader.C
+ * THSRADSReader.C
+ * THSHipoReader.C (if RHIPO set)
+ */
 void HSdata(){
   if(gSystem->Getenv("RHIPO"))
     gROOT->ProcessLine(TString(".x ")+gSystem->Getenv("RHIPO")+"/Hipo2Root.C");
@@ -209,6 +271,9 @@ void HSdata(){
     LoadMacro("THSHipoReader.C");
 
 }
+
+//////////////////////////////////
+/// Start proof with Nw workers
 void startproof(Int_t Nw){
   cout<<"Loading Proof setup"<<endl;
   //set prompt
@@ -221,9 +286,11 @@ void startproof(Int_t Nw){
   //  plite->SetParameter("PROOF_UseTreeCache", 0); //turn off caching =0
   // plite->SetParameter("PROOF_CacheSize", 1000M);
   // gProof->SetParameter("PROOF_UseMergers", 0);//seems to be a bit faster initialising, for when you have lots of histograms
-  if(Nw) gProof->SetParallel(Nw); //set number of workers if specifed on command line
+  if(Nw) gProof->SetParallel(Nw); //set number of workers if specified on command line
   //plite->SetParallel(UsePROOF); //restrict workers
 }
+
+
 void LoadMacro(TString macro){
   //Different methods depending on whether proof or not
   TString HSANA=gSystem->Getenv("HSANA");
@@ -246,22 +313,34 @@ void LoadMacro(TString macro){
     else {cout<<"Can't find macro "<<macro<<endl; return;}
     gProof->Load(macro+"+");
   }
-  else gROOT->LoadMacro(macro+"+");//don't use HSANA in case wnat to overwrite with macro in current directory
+  else gROOT->LoadMacro(macro+"+");//don't use HSANA in case want to overwrite with macro in current directory
   
 }
+
+//////////////////////////////////////////
+/// Checks for and returns HSPROJ variable
 TString HSproj(){
   if(!gSystem->Getenv("HSPROJ")) cout<<"Warning no HSPROJ env variable defined but hsproj() called..."<<endl;
   return TString(gSystem->Getenv("HSPROJ"));
 }
+
+//////////////////////////////////////////
+/// Checks for and returns HSIN variable
 TString HSin(){
   if(!gSystem->Getenv("HSIN")) cout<<"Warning no HSIN env variable defined but hsin() called..."<<endl;
   return TString(gSystem->Getenv("HSIN"))+"";
 }
+
+//////////////////////////////////////////
+/// Checks for and returns HSOUT variable
 TString HSout(){
   if(!gSystem->Getenv("HSOUT")) cout<<"Warning no HSOUT env variable defined but hsout() called..."<<endl;
   if(gProof) cout<<"Warning : Using proof so need full path to output"<<endl;
   return gSystem->Getenv("HSOUT");
 }
+
+/////////////////////////////////////////
+/// Adds opt to MACPATH (macro path)
 void HSMacPath(TString opt){
   cout<<"Adding Macro Path "<<opt<<endl;
   MACPATH=opt;
