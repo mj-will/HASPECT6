@@ -61,7 +61,8 @@ private:
   virtual Bool_t SetEvTree(TTree* tree,Long64_t ngen=0);
   virtual Bool_t SetEvTree(TChain* tree,Long64_t ngen=0);
   void CreateHistPdf();
-
+  virtual void ResetTree();
+  
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const;
   Double_t analyticalIntegral(Int_t code,const char* rangeName) const;
   

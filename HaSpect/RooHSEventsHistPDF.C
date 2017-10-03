@@ -265,3 +265,11 @@ Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName
   
   return 1; 
 }
+void RooHSEventsHistPDF::ResetTree(){
+  RooHSEventsPDF::ResetTree();
+  if(fHist) {
+    delete fHist;
+    fHist=nullptr;
+    fRHist->Reset();
+  }
+}

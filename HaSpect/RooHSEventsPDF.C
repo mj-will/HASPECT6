@@ -526,3 +526,7 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
  
   return fBranchStatus;  
 }
+void RooHSEventsPDF::ResetTree(){
+
+  if(fEvTree) {delete fEvTree;fEvTree=nullptr;}
+}

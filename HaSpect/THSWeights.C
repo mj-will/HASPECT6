@@ -20,7 +20,7 @@ THSWeights::THSWeights(TString name) :TNamed(name,name),fWTree(0),fWeightList(0)
 THSWeights::~THSWeights(){
   if(fWeightList) delete fWeightList;
   if(fWTree) delete fWTree;
-  if(fIDTree) delete fIDTree;
+  if(fIDTree) delete fIDTree; 
   if(fFile) {delete fFile;}
 }
 void THSWeights::SetSpecies(TString name){
@@ -267,12 +267,16 @@ void THSWeights::Save(){
 void THSWeights::LoadSaved(TString fname,TString wname){
   TDirectory* savedir=gDirectory;
   TFile* wfile=new TFile(fname);
+  cout<<fname<<" "<<wname<<endl;
+  wfile->ls();
   THSWeights* file_wts=(THSWeights*)wfile->Get(wname);//read into memory
   fName=file_wts->GetName();
   fTitle=file_wts->GetTitle();
+  cout<<fName<<" "<<fTitle<<endl;
   savedir->cd();
   TTree* tempTree=0;
   tempTree=(TTree*)wfile->Get(wname+"_W");
+  cout<<tempTree<<endl;
   fWTree=tempTree->CloneTree();
   delete tempTree;
   fWTree->SetDirectory(0);

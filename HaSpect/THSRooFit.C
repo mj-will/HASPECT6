@@ -97,18 +97,16 @@ THSRooFit::THSRooFit(THSRooFit* rf){
 }
 
 THSRooFit::~THSRooFit(){
-
-  if(fWS&&fOwnWorkSpace) delete fWS;
+  if(fWS&&fOwnWorkSpace) {delete fWS;fWS=nullptr;}
   //if(fCanvases)delete fCanvases;
-  if(fHists)delete fHists;
-  if(fResult) delete fResult;
-  //if(fRooFits) delete fRooFits;
-  if(fDataBins) delete fDataBins;
-  if(fMCIntTree) delete fMCIntTree;
-  if(fMCGenTree) delete fMCGenTree;
-  if(fInWeights) delete fInWeights;
-  // if(fID) delete fID;
-}
+  if(fHists){delete fHists;fHists=nullptr;}
+  if(fResult) {delete fResult;fResult=nullptr;}
+  //if(fRooFits) delete fRooFits;=nullptr;}
+  if(fDataBins) {delete fDataBins;fDataBins=nullptr;}
+  if(fMCIntTree) {delete fMCIntTree;fMCIntTree=nullptr;}
+  if(fMCGenTree) {delete fMCGenTree;fMCGenTree=nullptr;}
+  if(fInWeights&&fOwnWorkSpace) {delete fInWeights;fInWeights=nullptr;}
+ }
 
 void THSRooFit::LoadDataSet(TTree* tree,Bool_t toWS){
   ftoWS=toWS;
@@ -719,13 +717,15 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
       RooHSEventsPDF* hspdf=0;
       if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
 	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
+	hspdf->ResetTree();
 	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
 	TChain *chainMC=new TChain("BinnedTree");
 	//pdf has ownership of chain when set
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
 	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
-      hspdf->SetEvTree(chainMC);
-      hspdf->AddProtoData(rf->GetDataSet());
+	hspdf->SetEvTree(chainMC);
+	hspdf->AddProtoData(rf->GetDataSet());
+	delete chainMC;
       }
     } 
     //Configured the fir for this bin now do it

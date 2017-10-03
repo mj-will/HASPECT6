@@ -24,10 +24,9 @@ THSsPlot::THSsPlot(THSsPlot* rf){
 }
 
 THSsPlot::~THSsPlot(){
-
   if(fWeights) delete fWeights;
-  if(fSPlot) delete fSPlot;
- }
+  //  if(fSPlot) delete fSPlot; //crashes FitSavedBins with weights
+}
 
 void THSsPlot::MergeModelSpecies(){
   //Functon to combine best fit pdfs into single PDF 
@@ -142,6 +141,7 @@ void THSsPlot::sPlot(){
   fParameters.setAttribAll("Constant");
   if(fInWeights) //need to clone datset if want to draw results with in weights
     fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields,RooArgSet(),kTRUE,kTRUE);
+  //fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields);
   else
     fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields);
     
@@ -269,7 +269,7 @@ void THSsPlot::AddSubWeights(){
 void THSsPlot::DrawTreeVar(TString VarName,Int_t nbins,Double_t hmin,Double_t hmax){
   Info("THSsPlot::DrawTreeVar"," %s",VarName.Data());
   if(!fWeights->GetTree())fWeights->LoadSaved(fOutDir+TString("Weights")+GetName()+".root","HSsWeights");
-
+  cout<<fTree<<endl;
   if(fTree->GetBranch(fIDBranchName))fGotID=kTRUE;
   if(fWeights->GetTree()->GetEntries()!=fTree->GetEntries()) {cout<<"DrawTreeVar : Tree and Map have different entries!"<<" " <<fWeights->GetTree()->GetEntries()<<" "<<fTree->GetEntries()<<endl;}
   if(!fWeights->IsSorted()) fWeights->SortWeights();
@@ -340,8 +340,6 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
   RFa->SetSPlotRange(fSRange[0],fSRange[1]);//Extra to THSRooFit
    //Done configuring RF
   fRooFits->Add(RFa);
-  fWS->Print();
-  cout<<"LOADED "<<GetName()<<endl;
   RFa->LoadWorkSpace(fWS,GetName());
   RFa->GetVariables().Print();
   //  RFa->SetIDBranchName(fIDBranchName);
