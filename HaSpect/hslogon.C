@@ -16,6 +16,8 @@
 	to remove all .so .d and .pcm files
 	\code root RunSomeScript.C --proof=N \endcode
 	to initialise a proof session with N workers
+	\code root --MyClass.C \endcode
+	to load your own class from current directory, or a class from HSANA or HSUSER
 	
 */
 
@@ -122,8 +124,10 @@ void hslogon(){
     if((opt==TString("--hsdata"))) HSdata(); //Load data classes
     if((opt==TString("--hssel"))) HSselector(); //Load selector classes
     if((opt.Contains("--hsfinal"))) HSFinal(TString(opt(10,opt.Sizeof()))); //Load finalstate classes
-
-   }	
+    if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+    if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+    
+  }	
   
 }
 
