@@ -6,12 +6,16 @@
 	- \--hsfit : Classes for sWeight fits etc
 	- \--hssel : Classes for hselector
 	- \--hsdata : Classes for hsdata
-	- \--hsproj : Classes for hsproject
+	- \--hsfinal=MyFinalState : Classes for hsfinalstate where\n
+	MyFinalState is the users own derived class
 	
 	e.g. 
 	\code root -l --hsfit FitHSSimple.C \endcode
-	to start FitHSSimple.C macro whicht uses sWeights to fit data.
-	
+	to start FitHSSimple.C macro which uses sWeights to fit data.
+	\code root --cleanall \endcode
+	to remove all .so .d and .pcm files
+	\code root RunSomeScript.C --proof=N \endcode
+	to initialise a proof session with N workers
 	
 */
 
@@ -20,21 +24,21 @@
 void HSfit();//Load hsfit classes
 void HSdata();//Load hsdata classes
 void HSselector(); //load hsselector classes
-void HSproject(TString pname); //load hsproject classes
+void HSFinal(TString pname); //load hsproject classes
 void startproof(Int_t Nw); //intialise proof for hsselector classes
 void LoadMacro(TString macro); //Load class via its source code
 TString HSin(); //return inout void HSMacPath(TString opt)files directory
 TString HSout(); //return inout files directory
-TString HSproj(); //return project classname
+TString HSfinal(); //return project classname
 void HSin(TString hsin){gSystem->Setenv("HSIN",hsin);} //set in files directory
 void HSout(TString hsout){gSystem->Setenv("HSOUT",hsout);} //set out file
-void HSproj(TString hsproj){gSystem->Setenv("HSPROJ",hsproj);} //set out file
-void MakeAll();
+void HSfinal(TString hsfinal){gSystem->Setenv("HSFINAL",hsfinal);} //set out file
+void CleanAll();
 void HSMacPath(TString opt);
 void HSUserPath(TString opt);
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
-TString THSPARTICLE("THSParticle.0.C");
+TString THSPARTICLE("THSParticle.C");
 
 ///////////////////////////////////////////////////////
 ///Initialises functions demanded by the user
@@ -45,27 +49,17 @@ void hslogon(){
   //Check if user source code directory defined
   TString HSANA=gSystem->Getenv("HSANA");
   TString HSUSER=gSystem->Getenv("HSUSER");
-  //remove default link to THSParticle.0.h in case user defined THSParticle
-  if(gSystem->Which(HSANA,"THSParticle.h"))
-    gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
 
   if(gSystem->Getenv("HSUSER")){
     gROOT->SetMacroPath(Form("%s:%s",HSUSER.Data(),gROOT->GetMacroPath()));
     gSystem->AddIncludePath(TString("-I")+HSUSER);
-    //See if there is a user THSParticle class
-    if(gSystem->Which(HSUSER,"THSParticle.C"))
-      THSPARTICLE="THSParticle.C";
-  }
-  else{
-    //Make a soft link to THSParticle.0.h, if another particle class is given this will be replaced
-    gSystem->Exec(Form("ln -s $HSANA/THSParticle.0.h $HSANA/THSParticle.h"));
   }
 
   //get command line options first check if makeall
   for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
     //look for --proof=Nworkers optionif Nworkers not given all cores will be used
-    if((opt.Contains("--makeall"))) MakeAll();
+    if((opt.Contains("--cleanall"))) CleanAll();
     
   }
   //check if additional macro dir given
@@ -75,14 +69,7 @@ void hslogon(){
     if((opt.Contains("--macrodir"))){
       HSMacPath(TString(opt(11,opt.Sizeof())));
     }
-    if((opt.Contains("--particle"))){
-      THSPARTICLE=(TString(opt(11,opt.Sizeof()))).Data();
-      cout<<"THSPARTICLE= "<<THSPARTICLE<<endl;
-      gSystem->Exec(Form("rm $HSANA/THSParticle.h"));
-      TString THSPARTICLEH=THSPARTICLE;
-      THSPARTICLEH.ReplaceAll(".C",".h");
-    }
-  }
+   }
 
   
    //get command line options first check if proof
@@ -134,45 +121,28 @@ void hslogon(){
     if((opt==TString("--hsfit"))) HSfit(); //Load fit classes
     if((opt==TString("--hsdata"))) HSdata(); //Load data classes
     if((opt==TString("--hssel"))) HSselector(); //Load selector classes
-    if((opt.Contains("--hsproj"))) HSproject(TString(opt(9,opt.Sizeof()))); //Load project classes
+    if((opt.Contains("--hsfinal"))) HSFinal(TString(opt(10,opt.Sizeof()))); //Load finalstate classes
 
-    //don't load alter --particle option
-    if(!(opt.Contains("--particle"))){
-      if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
-      if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
-    }
-  }	
+   }	
   
 }
 
 
-void MakeAll(){
+void CleanAll(){
 
   TString HSANA=gSystem->Getenv("HSANA");
   TString CurDir=gSystem->Getenv("PWD");
   gSystem->Exec(Form("cd %s",HSANA.Data()));
   gSystem->Exec("rm *.so");
+  gSystem->Exec("rm *.d");
+  gSystem->Exec("rm *.pcm");
 
-  // gROOT->LoadMacro("THSBins.C++");
-  // gROOT->LoadMacro("THSWeights.C++");
-  // gROOT->LoadMacro("THSRooFit.C++");
-  // gROOT->LoadMacro("THSsPlot.C++");
-  // //  gROOT->LoadMacro("THSParticle.C++");
-  // gROOT->LoadMacro(THSPARTICLE+"++");
-  // gROOT->LoadMacro("THSHisto.C++");
-  // gROOT->LoadMacro("THSOutput.C++");
-  // gROOT->LoadMacro("THSPartOutput.C++");
-  // gROOT->LoadMacro("THSSkeleton.C++");
-  // gROOT->LoadMacro("THSKinematics.C++");
-  // gROOT->LoadMacro("THSProject.C++");
-  // gROOT->LoadMacro("THSDataManager.C++");
-  // gROOT->LoadMacro("THSLundReader.C++");
 
   gSystem->Exec(Form("cd %s",CurDir.Data()));
 }
 
 /** Function is called with \--hsfit \n
- * It loads necessary functions to perform sWeight fits:\n
+ * It loads necessary functions to perform RooFit/RooStats fits:\n
  * THSBins.C
  * THSWeights.C
  * RooHSEventsPDF.C
@@ -207,7 +177,7 @@ void HSfit(){
  * THSOutput.C
  * THSSkeleton.C
  * THSKinematics.C
- * THSParticle.0.C (unless explicitly replaced)
+ * THSParticle.C (unless explicitly replaced)
  */
 void HSselector(){
   cout<<"Loading HSSel classes"<<endl;
@@ -217,35 +187,30 @@ void HSselector(){
   //particle container class
   LoadMacro("THSBins.C");
   LoadMacro("THSWeights.C");
-  // LoadMacro("THSParticle.C");
-  //if(!TClass::GetClass("THSParticle"))LoadMacro(THSPARTICLE);
   LoadMacro(THSPARTICLE);
   LoadMacro("THSHisto.C");
   LoadMacro("THSOutput.C");
-  // LoadMacro("THSPartOutput.C");
   LoadMacro("THSSkeleton.C");
   LoadMacro("THSKinematics.C");
-
-  //qfactor class
-  //gROOT->LoadMacro("THSEventWeighter.C+");
-  //lps class
-  //gROOT->LoadMacro("THSLongPS.C+");
 }
 
-/** Function is called with \--hsproj \n
+/** Function is called with \--hsfinal \n
  * It loads the following functions:\n
  * [pname].C
+ * THSWeights.C
  * THSDataManager.C
- * THSProject.C
- * THSParticle.0.C
- * THSParticle.C (if specified)
+ * THSFinalState.C
+ * THSKinematics.C
+ * THSParticle.C
  */
-void HSproject(TString pname){
-  HSproj(pname);
+void HSFinal(TString pname){
+  HSfinal(pname);
   if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
+  LoadMacro("THSWeights.C");
   LoadMacro("THSDataManager.C");
-  LoadMacro("THSProject.C");
+  LoadMacro("THSKinematics.C");
+  LoadMacro("THSFinalState.C");
   LoadMacro(pname+".C");
 
 }
@@ -253,10 +218,9 @@ void HSproject(TString pname){
 /** Function is called with \--hsdata \n
  * It loads the following functions:\n
  * THSWeights.C
- * THSParticle.0.C
+ * THSParticle.C
  * THSDataManager.C
  * THSLundReader.C
- * THSRADSReader.C
  * THSHipoReader.C (if RHIPO set)
  */
 void HSdata(){
@@ -269,7 +233,6 @@ void HSdata(){
   LoadMacro(THSPARTICLE);
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
-  LoadMacro("THSRADSReader.C");
   if(gSystem->Getenv("RHIPO"))
     LoadMacro("THSHipoReader.C");
 
@@ -283,7 +246,6 @@ void startproof(Int_t Nw){
   ((TRint*)gROOT->GetApplication())->SetPrompt("hsproof [%d] ");
   TProof::Open("://lite");
   if(Nw) gProof->SetParallel(Nw); //set number of workers if specified on command line
-  //plite->SetParallel(UsePROOF); //restrict workers
 }
 
 
@@ -315,9 +277,9 @@ void LoadMacro(TString macro){
 
 //////////////////////////////////////////
 /// Checks for and returns HSPROJ variable
-TString HSproj(){
-  if(!gSystem->Getenv("HSPROJ")) cout<<"Warning no HSPROJ env variable defined but hsproj() called..."<<endl;
-  return TString(gSystem->Getenv("HSPROJ"));
+TString HSfinal(){
+  if(!gSystem->Getenv("HSFINAL")) cout<<"Warning no HSFINAL env variable defined but hsfinal() called..."<<endl;
+  return TString(gSystem->Getenv("HSFINAL"));
 }
 
 //////////////////////////////////////////
