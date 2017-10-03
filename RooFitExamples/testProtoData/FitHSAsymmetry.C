@@ -19,20 +19,20 @@
   TChain *chainMC=new TChain("MyModel");
   chainMC->Add("SimASymRes10.root");
   cout<<"PDF "<<PDF<<endl;
-  //  PDF->SetEvTree(chainMC);
+  PDF->SetEvTree(chainMC);
   RF->LoadSpeciesPDF("SigAsym");
-  //  PDF->SetNInt(1E4);
+  //PDF->SetNInt(1E4);
   //PDF->CheckIntegralParDep(4);
-  //  PDF->SetConstInt();
+  //PDF->SetConstInt();
   RF->TotalPDF();
   TChain *chainData=new TChain("MyModel");
   chainData->Add("DataASymRes10PS02.root");
   RF->LoadDataSet(chainData);
   gBenchmark->Start("Binned");
   PDF->AddProtoData(RF->GetDataSet());
-  //PDF->CheckIntegralParDep(10);
+  PDF->CheckIntegralParDep(10);
   RF->SetStudyPDF("SigAsym"); //study this PDF
-  RF->SetNStudyTrials(1);  //Perform 20 trials
+  RF->SetNStudyTrials(2);  //Perform 20 trials
   RF->SetStudyPlot();  //Produce plots for each trial fit
   RF->FitAndStudy(1);
   // gBenchmark->Stop("Binned");
