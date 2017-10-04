@@ -73,7 +73,8 @@ void THSSkeleton::HSOut_C(){
   //
   //First add shadow Selector function calls
   AddLineAfter("::Begin(TTree * /*tree*/)","   THSOutput::HSBegin(fInput,fOutput);",1);//off=1 to get past { line
-  AddLineAfter("::Process(Long64_t entry)","   THSOutput::HSProcessStart(entry);",1);
+  if(fOption.Contains("legacy"))AddLineAfter("::Process(Long64_t entry)","   THSOutput::HSProcessStart(entry);",1);
+  else AddLineAfter("fReader.Set","   THSOutput::HSProcessStart(entry);",0);
   AddLineAfter("::SlaveTerminate()","   THSOutput::HSSlaveTerminate();",1);
   AddLineAfter("::Terminate()","   THSOutput::HSTerminate();",1);
   //Case of SlaveBegin, we want to have TString option=GetOPtion line first
@@ -84,7 +85,7 @@ void THSSkeleton::HSOut_C(){
   FindNextLineLike("return kTRUE;");
   ContinueLineAfter("   THSOutput::HSProcessFill();",-1);
 
-  if(fOption.Contains("legacy"))AddLineAfter("HSProcessStart","   GetEntry(entry);",1);
+  if(fOption.Contains("legacy"))AddLineAfter("HSProcessStart","   GetEntry(entry);",-1);
 
   fCurMacro.SaveSource(fSelName+".C");
 }
