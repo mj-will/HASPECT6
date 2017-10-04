@@ -1,3 +1,10 @@
+/**
+ \class THSSkeleton
+ 
+ Class to generate selector code
+ based on TTree::MakeSelector()
+ 
+*/
 
 #include "THSSkeleton.h"
 #include <RooClassFactory.h>
@@ -5,8 +12,10 @@
 #include <iostream>
 using namespace std;
 
+
+/////////////////////////////////////////////////////////////////////
+///Create intial selector code from TTree::MakeSelector()
 void THSSkeleton::CreateSelector(TString selname,TString filename,TString treename,TString opt){
-  //Function to create intial selector code from TTree::MakeSelector()
   fSelName=selname;
   fFileName=filename;
   fTreeName=treename;

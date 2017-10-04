@@ -1,3 +1,13 @@
+/**
+ * \class THSsPlot
+ * 
+ * RooFit interface fit class
+ * 
+ * 
+ * @example FitHSSimple.C
+ * 
+*/
+
 #include "THSsPlot.h"
 #include <TH1.h>
 #include <TH2.h>
@@ -14,9 +24,11 @@ THSsPlot::THSsPlot() : THSRooFit(),fSPlot(0),fWeights(0){
 THSsPlot::THSsPlot(TString name) : THSRooFit(name){
   fSRange[0]=0;fSRange[1]=0; 
 }
+
 THSsPlot::THSsPlot(TString name,RooWorkspace* ws) : THSRooFit(name,ws){
   fSRange[0]=0;fSRange[1]=0; 
 }
+
 THSsPlot::THSsPlot(THSsPlot* rf){
    THSRooFit(dynamic_cast<THSRooFit*>(rf));
    //copy constructor, but do not copy the data tree, load that explicitly
@@ -28,11 +40,12 @@ THSsPlot::~THSsPlot(){
   //  if(fSPlot) delete fSPlot; //crashes FitSavedBins with weights
 }
 
+//////////////////////////////////////////////////////////
+/// Function to combine best fit pdfs into single PDF. 
+/// This allows sPlot fit to just be dependent on 2 yields
+/// where one is defined by fSingleSp and the other is the 
+/// sum of the rest.
 void THSsPlot::MergeModelSpecies(){
-  //Functon to combine best fit pdfs into single PDF 
-  //the allows sPlot fit to just be dependent on 2 yields
-  //Where one is defined by fSingleSp and the other is the 
-  //sum of the rest 
   if(!fWS->pdf(fSingleSp)) {cout<<"THSsPlot::MergeModelSpecies() single Species not found "<<fSingleSp<<endl;}
   RooArgList yields=fYields;
   RooRealVar* sYield=(RooRealVar*)yields.find(fYld+fSingleSp);
@@ -83,7 +96,7 @@ void THSsPlot::MergeModelSpecies(){
   fYields.removeAll();
   fYields.add(*(sYield)); //add back in single species yld
   
-  //construct new yeild paramter for sum of other contribtutions
+  //construct new yield parameter for sum of other contributions
   Double_t Ym=0; //first sum the fitted yields
   for(Int_t iy=0;iy<yields.getSize();iy++){
     Ym+=((RooRealVar*)&yields[iy])->getVal();
@@ -102,10 +115,12 @@ void THSsPlot::MergeModelSpecies(){
   TotalPDF();
  
 }
+
+////////////////////////////////////////
+///Perform fit of yields to get sWeights
 void THSsPlot::sPlot(){
   if(fTree)
     cout<<"THSsPlot::sPlot() weights will be synchronised to branch "<<fIDBranchName<<" "<<fTree<<" "<<fTree->GetBranch(fIDBranchName)<<endl;
-  //Perform fit of yields only to get sWeights
   //Check if there is an ID branch for synchronisation
   //check if ID branch exists
   if(fTree){
@@ -117,7 +132,7 @@ void THSsPlot::sPlot(){
   }
   //Option here to sum background contributions and fix relative yields
   if(fSingleSp!=TString("")) MergeModelSpecies();
-   //Set all the model parameters to be constant, so only fitting the species yields
+  //Set all the model parameters to be constant, so only fitting the species yields
   //calculate the sWeights 
   if(fSRange[0]!=fSRange[1]){//sub range set for sPlot fit, remake dataset
    ((RooRealVar*)&fVariables[0])->setRange(0,fSRange[0],fSRange[1]);
@@ -163,12 +178,13 @@ void THSsPlot::sPlot(){
   }
   else Warning("THSsPlot::sPlot()"," total weights 0, fit did not converge. Make sure the non-sweight fit to fix parameters was succesful. No weights will be assigned for these events");
   
-
 }
+
 Double_t THSsPlot::GetSWeight(Long64_t event,TString species){
   //Note species should include the prepend fYld
    return fSPlot->GetSWeight(event,species);
 }
+
 void THSsPlot::ExportWeights(TString wmname){
   cout<<"THSsPlot:ExportWeights "<<endl;
   //fWeights=new THSWeights(wmname);//initialise map
@@ -186,6 +202,7 @@ void THSsPlot::ExportWeights(TString wmname){
     else fWeights->FillWeights(ev,eventW);
   }
 }
+
 void THSsPlot::ExportWeights1(TString wmname){
   cout<<"THSsPlot:ExportWeights1 no sPlot fit done as only 1 species left"<<endl;
   Int_t NSpecies=fYields.getSize();
@@ -202,10 +219,12 @@ void THSsPlot::ExportWeights1(TString wmname){
     else fWeights->FillWeights(ev,eventW);
   }
 }
+
+///////////////////////////////////////////////////////////////
+///This function gives a weight=0 for each entry in the tree
+///if event not in fit (outside limits),
+///as such the weight tree could be used with TTree::AddFriend.
 void THSsPlot::ExportTreeWeights(TString wmname){
-  //This function would give a weight for each entry in the tree
-  //=0 if event not in fit (outside llimits)
-  //as such the weight tree could be used with TTree::AddFriend
   cout<<"THSsPlot::ExportTreeWeights "<<fTree->GetName()<<" "<<fTree->GetEntries()<<" "<<fGotID<<endl;
   if(!fTree) {cout<<"THSsPlot::ExportTreeWeights( No tree found"<<endl;return;}
   Int_t NSpecies=fYields.getSize();
@@ -235,16 +254,20 @@ void THSsPlot::ExportTreeWeights(TString wmname){
     }
     else {//need to be same events in dataset as tree for this to be meaningful
       for(Int_t iw=0;iw<NSpecies;iw++)//loop over species
-	eventW[iw]=GetSWeight(ev,fYields.at(iw)->GetName());//get weight for      
+		eventW[iw]=GetSWeight(ev,fYields.at(iw)->GetName());//get weight for      
       fWeights->FillWeights(ev,eventW);//no tree id just fill with entry number
     }
   }
- }
+}
+ 
 void THSsPlot::ExportWeightsToFile(TString filename){
   Info("THSsPlot::ExportWeightsToFile"," Exporting Weights to %s",filename.Data());
   if(fWeights->GetWeightList())fWeights->SortWeights();//if merged from differen  
    fWeights->Save();
- }
+}
+
+/////////////////////////////////////
+///Constructs new map if not existing
 void THSsPlot::AddWeightMap(THSWeights *Wts){
   Info("THSsPlot::AddWeightMap"," Start add weights %lld",Wts->Size());
   if(!fWeights){//construct new map if not existing
@@ -255,9 +278,11 @@ void THSsPlot::AddWeightMap(THSWeights *Wts){
   }
   fWeights->Add(Wts);
 }
+
+//////////////////////////////////////////////////////
+///Look through sub fits and add the maps to the total
+///loop over subfits.
 void THSsPlot::AddSubWeights(){
-  //look through sub fits and add the maps to the total
-  //loop over subfits
   if(!fWeights){//construct new map if not existing
     fWeights=new THSWeights("WeightMap");
     fWeights->SetTitle(GetName());
@@ -320,6 +345,7 @@ void THSsPlot::DrawTreeVar(TString VarName,Int_t nbins,Double_t hmin,Double_t hm
   leg->Draw();
   fTree->ResetBranchAddresses();
 }
+
 THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree){//events already selected
 
   //create a fit object for a subset of data either by setting cut
@@ -355,6 +381,7 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
   RFa->SetDataWeight();//if defined weights use them for this dataset
   return RFa;
 }
+
 void THSsPlot::SaveHists(TString filename){
   TFile* file=new TFile(filename,"recreate");
   fHists->Write();
@@ -362,15 +389,16 @@ void THSsPlot::SaveHists(TString filename){
   delete file;
 }
 
-
+///////////////////////////////////////////////////
+/// Call this function to generate Nfits fits.
+/// Fit the model to data with only species yields as free pars,
+/// calculate weights and import to WeightMap.
+/// Remove any zero yield to be constant to help fit converge
 void THSsPlot::FitAndStudy(Int_t Nfits){
-   //Create new fit and load the new bin data tree
+  //Create new fit and load the new bin data tree
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
   if(!fModel) TotalPDF();
   FitMany(Nfits);
-  //Fit the model to data with only species yields as free pars
-  //calculate weights and import to WeightMap
-  //Remove any zero yield to be constant to help fit converge
   for(Int_t iy=0;iy<fYields.getSize();iy++){
     Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();
     if(thisYield<1E-2){
@@ -409,6 +437,7 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   }
   
 }
+
 void THSsPlot::DefaultFitOptions(){
   // AddFitOption(RooFit::Extended());
   // if(fData)
