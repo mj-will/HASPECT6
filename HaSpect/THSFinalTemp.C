@@ -1,3 +1,14 @@
+/**
+ * \class THSFinalTemp
+ * 
+ * Template project class for omega photoproduction.
+ * 
+ * Users should create their own analysis specific project classes.
+ * 
+ */
+
+
+
 #include "TDatabasePDG.h"
 #include "THSFinalTemp.h"
 #include <algorithm>
@@ -9,6 +20,7 @@ THSFinalTemp::THSFinalTemp(){
  
   //Set final state
 }
+
 Bool_t THSFinalTemp::WorkOnEvent(){
   //Should this event be saved?
   fGoodEvent=kTRUE;
@@ -39,6 +51,7 @@ Bool_t THSFinalTemp::WorkOnEvent(){
   PermutateParticles();
   return kFALSE;
 }
+
 void THSFinalTemp::Init_Generated(){
   if(!frGenParts) return;
   if(frGenParts->size()!=REPLACE_WITH_N_GENERATED_PARTICLES) {fGoodEvent=kFALSE;return;}
@@ -52,6 +65,7 @@ void THSFinalTemp::Init_Generated(){
     //fElectron.SetTruth(frGenParts->at(0));
   }
 }
+
 //Define topology Init functions
 // void THSFinalTemp::Init_(){
 //   //Fill data member particles

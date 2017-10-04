@@ -1,3 +1,23 @@
+/**
+	\class THSFinalState
+	
+	Class to control particlular analysis
+	Users need to create their own specific project
+	It should operate on 3 classes of data:
+	real, mc rec, mc gen
+	input should be in form of events extracted
+	from trees or text files,...
+	
+	The main task is to take detected particles and
+	convert them into information needed for subsequent
+	fitting of observables, e.g TLorentzVectors for AmpTools
+	Double_t s for RooFit
+	
+	@example THSFinalTemp.C
+*/
+
+
+
 #include "THSFinalState.h"
 //ClassImp(THSFinalState)
 

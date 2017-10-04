@@ -1,4 +1,4 @@
-//Sample project class for omega photoproduction
+
 #ifndef THSPROJTEMP_h
 #define THSPROJTEMP_h
 
