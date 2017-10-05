@@ -20,7 +20,7 @@ void MakeHSSelector(TString treeName = "tree"){
 	
 	sk->SetFinalState("pKK");
 	
-	sk->SetFinalStateTopo("pKK"); //add topology where all three particles are detected
+	sk->SetFinalStateTopo("proton:K+:K-"); //add topology where all three particles are detected
 	sk->SetFinalStateParts("Proton:proton,KPlus:K+,KMinus:K-"); //set final state particles <name:pdgname>
 	sk->CreateMyFinalState(); //create a project class
 	
