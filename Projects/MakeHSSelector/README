@@ -2,7 +2,7 @@ Root macro to create a THSSelector to analyse root data trees.
 
 Usage instructions:
 Run macro with
-	 root -l \<file containing tree> \--hssel '$HSANA/MakeHSSelector.C(\<treename>)'
+	 root -l \<file containing tree> \--hssel '$HSANA/../MakeHSSelector/MakeHSSelector.C(\<treename>)'
 to create a selector.
 The example code that is directly created can be changed by using the set functions of THSSkeleton.
 For more information check THSSkeleton.C/h and the online documentation.
