@@ -21,10 +21,10 @@
 #include "THSFinalState.h"
 //ClassImp(THSFinalState)
 
-
+//////////////////////////////////////////////////////////////////////////
+///topo should be a pdg particle list seperated by : e.g. "proton:pi+:pi-"
 Int_t THSFinalState::AddTopology(TString topo){
-   vector<Int_t> detpart;
-  //topo should be a pdg particle list seperated by : e.g. "proton:pi+:pi-"
+  vector<Int_t> detpart;
   TObjArray* OptList = topo.Tokenize(":");
   for(Int_t i=0;i<OptList->GetEntries();i++){
     Int_t pdg=0;
@@ -48,10 +48,11 @@ Int_t THSFinalState::AddTopology(TString topo){
   return fNTopo-1;//return index of this topology
 }
 
+/////////////////////////////////////////////////////////////////////
+///Note particles with TruthOnly are reserved for undetected particles
+///which may be kept in simulated data, but shouldn't be included
+///in final state check
 Int_t THSFinalState::FindTopology(){
-  //Note particles with TruthOnly are reserved for undetected particles
-  //which may be kept in simulated data, but shouldn't be included
-  //in final state check
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   vector<Int_t> thisTopo;
   for(UInt_t ip=0;ip<frDetParts->size();ip++){
@@ -78,10 +79,12 @@ Int_t THSFinalState::FindTopology(){
   
   return fCurrTopo;
 }
+
+//////////////////////////////////////////////////////////////////////
+///Note particles with TruthOnly are reserved for undetected particles
+///which may be kept in simulated data, but shouldn't be included
+///in final state check
 Int_t THSFinalState::FindInclusiveTopology(Int_t incType){
-  //Note particles with TruthOnly are reserved for undetected particles
-  //which may be kept in simulated data, but shouldn't be included
-  //in final state check
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   vector<Int_t> thisTopo;
   for(UInt_t ip=0;ip<frDetParts->size();ip++){
@@ -128,8 +131,9 @@ Int_t THSFinalState::FindInclusiveTopology(Int_t incType){
   
   return fCurrTopo;
 }
+
 void THSFinalState::InitParticles(){
-  //This should be optimised to run 1 loop not number of sepcies loops
+  //This should be optimised to run 1 loop not number of species loops
   if(fIsPermutating0==kTRUE) return;
   //Init all particle type vectors
   InitDetParts(2212,&fVecProtons);
@@ -160,9 +164,11 @@ void THSFinalState::InitParticles(){
   fNBeamTurns=0;
   fNGamTurns=0;
 }
+
+///////////////////////////////////////////////////////////////////
+///Place detected particles in array associated with their pdg type
+///Loop over detected particles
 void THSFinalState::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
-  //Place detected particles in array associated with their pdg type
-  //Loop over detected particles
   parts->clear();
   //Comment out line below as it can block inclusive topologies
   // if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
@@ -176,6 +182,7 @@ void THSFinalState::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
   std::sort(parts->begin(),parts->end());
 
 }
+
 void THSFinalState::ProcessEvent(){
   //Process one input event
   InitEvent();
@@ -189,14 +196,16 @@ void THSFinalState::ProcessEvent(){
     while(IsPermutating());
    FinaliseEvent();
 }
+
+//////////////////////////////////////////////////////////////
+///returns true if another valid permuation to be tried \n
+///returns false when time to move on \n
+///Check through particle types,
+///if more than 1 of a type permutate through all combinations
 Bool_t THSFinalState::PermutateParticles(){
   fNPerm++;
   if(!fTryPerm) return kFALSE;
   if(fIsPermutating1) return kTRUE;
-  //returns true if another valid permuation to be tried
-  //returns false when time to move on
-  //check through particle types
-  //if more than 1 of a type permutate through all combinations
   fIsPermutating0=kTRUE; //Will be set to false when event over
   if(RotatePartVector(&fVecProtons,&fNProtTurns)) return kTRUE;
   if(RotatePartVector(&fVecPiPs,&fNPipTurns)) return kTRUE;
@@ -214,8 +223,10 @@ Bool_t THSFinalState::PermutateParticles(){
   fIsPermutating0=kFALSE;
   return kFALSE; 
 }
+
+///////////////////////////////////////////////////////////////
+///Move through vector of particles, return false when all done
 Bool_t THSFinalState::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
-  //move through vector of particles return false when all done
   if(vec->empty()) return kFALSE;
   if(vec->size()==UInt_t(*Nturns)+1) {
     std::rotate(vec->begin(),vec->begin()+1,vec->end());//rotate back to start	
@@ -226,8 +237,10 @@ Bool_t THSFinalState::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
   *Nturns=(*Nturns)+1;
   return kTRUE;
 }
+
+///////////////////////////////////////////////////////
+///Loop through generated and record momentum distance
 void THSFinalState::MatchWithGen(THSParticle *part){
-  //Loop through generated and record momentum distance
   UInt_t match=0;
   Double_t mindist=1E10;
   for(UInt_t ip=0;ip<frGenParts->size();ip++){
@@ -239,13 +252,15 @@ void THSFinalState::MatchWithGen(THSParticle *part){
     }
   }
   part->SetTruth(frGenParts->at(match)->P4(),frGenParts->at(match)->Vertex(),frGenParts->at(match)->PDG());
-
 }
+
+//////////////////////////////////////////////////////////////////////
+///Loop through generated and record momentum distance 
+///if the nearest generated track is the same as the TRUTH return true
 Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
   if(!frGenParts) return kFALSE;
   if(!frGenParts->size())return kFALSE;
-  //Loop through generated and record momentum distance 
-  //if the nearest generated track is the same as the TRUTH return true
+  
   UInt_t match=0;
   Double_t mindist=1E10;
   for(UInt_t ip=0;ip<frGenParts->size();ip++){
@@ -260,11 +275,14 @@ Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
     return kTRUE;
   return kFALSE;
 }
+
+///////////////////////////////////////////////
+///Check if our final vectors match with truth
 void THSFinalState::CheckTruth(){
   if(fIsGenerated) return;
   //Already got one for this event
   //If we set this correct it would be double counting
-  //This can happen when using inclusivetopologies
+  //This can happen when using inclusive topologies
   //And rotate particles that are not in the defined topology
   fCorrect=0;
   if(fGotCorrectOne) return;

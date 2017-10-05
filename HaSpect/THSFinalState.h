@@ -91,11 +91,13 @@ class THSFinalState{
   Int_t fNGamTurns=0;
 
   TTree* fFinalTree=nullptr;
+  
   //Kinematics calculator
   THSKinematics fKine;
 
   //Unique event ID
   Double_t fUID=0;
+  
   //Detected Particles
   vector<THSParticle* >* frDetParts=nullptr;
   vector<THSParticle* >* frGenParts=nullptr;
