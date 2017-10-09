@@ -26,8 +26,8 @@ class THSLongPS {
   vector< vector<Int_t> > fITop; //indices of particles in top branch for each sector
   vector< vector<Int_t> > fIBot; //indices of particles in top branch
   TLorentzVector fCM; //CM 4 vector = sum of fP4s; 
-  Float_t fMTop; //MAss of particle on top branch
-  Float_t fMBot; //MAss pf particles on bottom branch
+  Float_t fMTop; //Mass of particle on top branch
+  Float_t fMBot; //Mass pf particles on bottom branch
   Float_t fCosTh; //Cos centre of mass angle
   Float_t fPtot;
   Int_t fSize;//number of 4 vectors loaded for this event
