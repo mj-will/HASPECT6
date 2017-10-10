@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "THSCLAS12Particle.h"
+#include "THSParticle.h"
 #include "THSDataManager.h"
 #include "THipo.h"
 

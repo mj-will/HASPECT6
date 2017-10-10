@@ -126,7 +126,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
     while(fPBank->NextEntry()){
       THSParticle* particle=fReadParticles->at(ip++);
       fParticles.push_back(particle);
-      particle->SetXYZT(fPx->Val(),fPy->Val(),fPz->Val(),0);
+      particle->SetXYZM(fPx->Val(),fPy->Val(),fPz->Val(),0);
       particle->SetVertex(fVx->Val(),fVy->Val(),fVz->Val());
       if(fBeta->Val())particle->SetMeasMass(particle->P4p()->Rho()/fBeta->Val());
       if(!fPid->Val()||!fUsePID) particle->SetPDGcode(fCharge->ValI()*1E6); //unknown
@@ -139,6 +139,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       particle->SetTime(0);
       particle->SetEdep(0);
       particle->SetPath(0);
+      particle->SetDetector(0);
 
 
       while(fSPindex->FindEntry(fPBank->GetEntry())){
@@ -169,10 +170,9 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	particle->SetEdep(fFTEnergy->Val());
 	particle->SetPath(fFTPath->Val()/100);
 	particle->SetDetector(fFTDet->Val());
-	particle->TakePDGMassFromE(); //Use E to calc p
+	particle->TakePDGMass();
 	
-      }
-      
+      }  
       
     }
   }
