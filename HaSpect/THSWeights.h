@@ -26,6 +26,7 @@ class THSWeights : public TNamed{
   Long64_t fN;
   Long64_t *fIDi=nullptr;//!
   Long64_t *fIDv=nullptr;//!
+  
  public:
  THSWeights() {};
    THSWeights(TString name);

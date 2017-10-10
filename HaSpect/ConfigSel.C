@@ -1,3 +1,10 @@
+/** \file ConfigSel.C
+ * 
+ * DEPRECATED
+ * 
+ * For guidance on how to create a THSSelector look at THSSkeleton and its example
+ * 
+ */
 {
   //You need to have the enviroment variable HSANA defined to link to the THS source
   TString HSANA(gSystem->Getenv("HSANA"));

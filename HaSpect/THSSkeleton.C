@@ -1,3 +1,12 @@
+/**
+ \class THSSkeleton
+ 
+ Class to generate selector code
+ based on TTree::MakeSelector()
+ 
+ @example MakeHSSelector.C
+ 
+*/
 
 #include "THSSkeleton.h"
 #include <RooClassFactory.h>
@@ -5,8 +14,10 @@
 #include <iostream>
 using namespace std;
 
+
+/////////////////////////////////////////////////////////////////////
+///Create intial selector code from TTree::MakeSelector()
 void THSSkeleton::CreateSelector(TString selname,TString filename,TString treename,TString opt){
-  //Function to create intial selector code from TTree::MakeSelector()
   fSelName=selname;
   fFileName=filename;
   fTreeName=treename;
@@ -54,6 +65,7 @@ void THSSkeleton::AddHSOutput(){
   // AddLineAfter(,,1);
 
 }
+
 void THSSkeleton::HSOut_C(){
   //Open source code as macro
   fCurMacro=TMacro(fSelName+".C");
@@ -89,6 +101,7 @@ void THSSkeleton::HSOut_C(){
 
   fCurMacro.SaveSource(fSelName+".C");
 }
+
 void THSSkeleton::HSOut_h(){
   //Open source code as macro
   fCurMacro=TMacro(fSelName+".h");
@@ -102,6 +115,7 @@ void THSSkeleton::HSOut_h(){
   
   fCurMacro.SaveSource(fSelName+".h");
 }
+
 void THSSkeleton::HSOut_Control(){
   fPlace=0;
   
@@ -116,6 +130,10 @@ void THSSkeleton::HSOut_Control(){
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 
 }
+
+/////////////////////////////////////////////
+/// Add examples of how to use the
+/// THSHisto class
 void THSSkeleton::HSHisto(){
   fPlace=0;
   //////////////////////////////////////////////////////////////////  
@@ -171,6 +189,10 @@ void THSSkeleton::HSHisto(){
   
   fCurMacro.SaveSource(fSelName+".h");
 }
+
+//////////////////////////////////////////////////////////////////
+/// Adds examples of how to append branches to the input
+/// to the input tree.
 void THSSkeleton::HSAppend(){
   if(fIsNewTree)Error("THSSkeleton::HSNewTree()","Can't have a new tree and an append tree!");
 
@@ -200,8 +222,10 @@ void THSSkeleton::HSAppend(){
   //////////////////////////////////////////////////////////////////  
   //Now with .C
  
-
 }
+
+////////////////////////////////////////////////////////////
+/// Adds example of how to create a new output tree
 void THSSkeleton::HSNewTree(){
   if(fIsAppendTree)Error("THSSkeleton::HSNewTree()","Can't have a new tree and an append tree!");
  
@@ -239,6 +263,9 @@ void THSSkeleton::HSNewTree(){
 
 
 }
+
+///////////////////////////////////////////////////////////////
+/// Adds example of how to use the THSWeights class.
 void THSSkeleton::HSWeights(){
   fPlace=0;
   //////////////////////////////////////////////////////////////////  
@@ -290,6 +317,9 @@ void THSSkeleton::HSWeights(){
 
   // fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
+
+///////////////////////////////////////////////////////////////////
+/// Adds example of how to use the THSLongPS class.
 void THSSkeleton::HSLPS(){
   fPlace=0;
   //////////////////////////////////////////////////////////////////  
@@ -322,6 +352,10 @@ void THSSkeleton::HSLPS(){
 
 
 }
+
+////////////////////////////////////////////////////////
+/// Adds examples of how to include an analysis project
+/// like e.g. THSFinalTemp.C
 void THSSkeleton::HSFinalState(){
   fPlace=0;
   //////////////////////////////////////////////////////////////////  
@@ -401,6 +435,7 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter("  HSfinal(\""+fFinalName+"\");");
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
+
 // void THSSkeleton::HSHisto(){
 //   fPlace=0;
 //   //////////////////////////////////////////////////////////////////  
@@ -414,7 +449,8 @@ void THSSkeleton::HSFinalState(){
 
 
 // }
-////////////////////////////////////////////////////////
+
+
 void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString parNames){
   TObjArray* obss=obsNames.Tokenize(",");
   TObjArray* pars=parNames.Tokenize(",");
@@ -536,6 +572,12 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   fCurMacro.SaveSource(pdfName+".h");
 
 }
+
+////////////////////////////////////////////////////
+/// Create a FinalState project. \n
+/// Set fFinalTopo with SetFinalStateTopo() \n
+/// Set fFinalParts with SetFinalStateParts() \n
+/// Set fFinalName with SetFinalState() \n
 void THSSkeleton::CreateMyFinalState(){
 
   TObjArray* topos=0;
@@ -613,7 +655,6 @@ void THSSkeleton::CreateMyFinalState(){
 
 }
 
-
 //////////////////////////////////////////////////////
 void THSSkeleton::AddLineAfter(TString line0,TString line1,Int_t off){
   TList *lines=fCurMacro.GetListOfLines();
@@ -621,17 +662,20 @@ void THSSkeleton::AddLineAfter(TString line0,TString line1,Int_t off){
   fPlace=fPlace+1+off;
   lines->AddAt(new TObjString(line1),fPlace);
 }
+
 void THSSkeleton::ContinueLineAfter(TString line1,Int_t off){
   TList *lines=fCurMacro.GetListOfLines();
   fPlace=fPlace+1+off;
   lines->AddAt(new TObjString(line1),fPlace);
 }
+
 void THSSkeleton::MoveToLine(TString line0){
   TList *lines=fCurMacro.GetListOfLines();
   TObject* obj=fCurMacro.GetLineWith(line0);
   if(!obj) Error("THSSkeleton::MoveToLine","Line %s does not exist in %s",line0.Data(),"file");
   fPlace=lines->IndexOf(obj); //get line number
 }
+
 TString THSSkeleton::FindNextLineLike(TString linelike){
   TList *lines=fCurMacro.GetListOfLines();
   TObjString* thisline=0;
@@ -645,6 +689,7 @@ TString THSSkeleton::FindNextLineLike(TString linelike){
   else fPlace=count; //get line number
   return thisline->String();
 }
+
 void THSSkeleton::ReplaceInCurrLine(TString text0,TString text1){
   // TString strline=fCurMacro.GetLineWith(text0)->GetString();
   TList *lines=fCurMacro.GetListOfLines();
@@ -652,11 +697,13 @@ void THSSkeleton::ReplaceInCurrLine(TString text0,TString text1){
   if(!thisline->String().Contains(text0)) cout<<"Warning : ReplaceInCurrLine text not found "<<text0<<" in line "<<thisline->String()<<endl;
   thisline->String().ReplaceAll(text0,text1);
 }
+
 void THSSkeleton::ReplaceMacroText(TString text0,TString text1){
   TString strline=fCurMacro.GetLineWith(text0)->GetString();
   strline.ReplaceAll(text0,text1);
   fCurMacro.GetLineWith(text0)->SetString(strline);
 }
+
 void THSSkeleton::ReplaceAllMacroText(TString text0,TString text1){
   TList *lines=fCurMacro.GetListOfLines();
   TObjString* thisline=0;

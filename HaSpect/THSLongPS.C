@@ -4,7 +4,15 @@
 //--Description
 //HASPECT Event Reconstruction
 //THSLongPS
-//Class to perform general Longitudinal Phasespace Analysis
+
+/**
+	\class THSLongPS
+	
+	Class to perform general Longitudinal Phasespace Analysis
+	
+*/
+
+
 #include "THSLongPS.h"
 #include <TLorentzRotation.h>
 
@@ -28,12 +36,15 @@ THSLongPS::THSLongPS(Int_t Np){
   fNSector=fSector;
   fSector=0;
 }
-void THSLongPS::MakeIndices(Int_t Np,Int_t Nt){//number of particle, number of particles top
-  //makes all combinations of particles on top and bottom branches
-  //saves in vectors fITop and fIBot
-  //index of these vectors corresponds to unique Sector number
-  //Note number of combinations choosing Nt from Np and ignoring order :
-  // Number = Np!/(Np-Nt)!/Nt! or TMath::Factorial(N)/TMath::Factorial(N-K)/TMath::Factorial(K)
+/////////////////////////////////////////////////////////////////////////////////////////////
+///Makes all combinations of particles on top and bottom branches. \n
+///Np = number of particles, Nt = number of particles top \n
+///Saves in vectors fITop and fIBot,
+///index of these vectors corresponds to unique Sector number. \n
+///Note number of combinations choosing Nt from Np and ignoring order : \n
+/// Number = Np!/(Np-Nt)!/Nt! or TMath::Factorial(N)/TMath::Factorial(N-K)/TMath::Factorial(K)
+void THSLongPS::MakeIndices(Int_t Np,Int_t Nt){
+  
 
   vector<Int_t> donethis;//use to reject equivalnet permutations (not ordering)
   vector<Int_t >IP(Np); //vector containing particle numbers from 0->Np
@@ -73,18 +84,24 @@ void THSLongPS::PrintVector(vector<Int_t> vecI){
   for(UInt_t i=0;i<vecI.size();i++)cout<<vecI[i]<<" ";
   cout<<endl;
 }
+
 void THSLongPS::PrintVector(vector<Bool_t> vecI){
   for(UInt_t i=0;i<vecI.size();i++)cout<<vecI[i]<<" ";
   cout<<endl;
 }
 
-void THSLongPS::AddParticle(TLorentzVector p4){//add 4 vectors should be done for each particle for each event
+//////////////////////////////////////////////////////////////////
+///Add 4 vectors: should be done for each particle for each event. \n
+///Particle 0 must be baryon.
+void THSLongPS::AddParticle(TLorentzVector p4){
   if(fSize<fNpart){
     fP4s[fSize++]=p4;
     fCM+=p4;
   }
 }
 
+///////////////////////////////////////////
+///Analyse in centre-of-mass helicity frame
 void THSLongPS::AnalyseCMHelicity(TLorentzVector *zLV){
   TLorentzVector zVec=(*zLV);
   fCM+=zVec;
@@ -141,16 +158,19 @@ void THSLongPS::AnalyseCMHelicity(TLorentzVector *zLV){
   fOmegaCut[0]=TMath::ATan2(-fPmin[0],-fPmax[1]);
   }
 }
+
 double THSLongPS::BetaPM(double p0, double m0){
   //Warning return -ve if p0<0 
  //beta =p/E
   return p0/sqrt(p0*p0+m0*m0);
 }
+
 // double THSLongPS::BetaPM(double p0, double m0){
 //   //Warning return -ve if p0<0 
 //  //beta =p/E
 //   return p0/sqrt(p0*p0+m0*m0);
 // }
+
 double THSLongPS::breakupMomentum( double mass0, double mass1, double mass2 ){
    
   double q;
@@ -167,6 +187,8 @@ double THSLongPS::breakupMomentum( double mass0, double mass1, double mass2 ){
   
 }
 
+///////////////////////////////////////////////////
+///Do the kinematics and find the current sector
 void THSLongPS::Analyse(){
    //Construct the CM boosts
    TVector3 CMboost=-fCM.BoostVector();
@@ -195,10 +217,12 @@ void THSLongPS::Analyse(){
   for(UInt_t ip=0;ip<fIBot[fSector].size();ip++) pBot+=fP4s[fIBot[fSector][ip]];
   fMBot=pBot.M();
 }
+
 Float_t THSLongPS::GetOmegaDG(){
   if(fSize==2) return TMath::ATan2(fP4s[0].Z(),fP4s[1].Z());
   else return 0;
 }
+
 Float_t THSLongPS::GetOmega(){
   //Vincnet
   // Float_t Omega=asin(-fP4s[0].Z()/fPtot/sqrt(2./3))+TMath::Pi();

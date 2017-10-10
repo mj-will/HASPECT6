@@ -1,3 +1,10 @@
+/**
+	\class THSWeights
+	
+	Class to control weight structures in HaSpect.
+	
+*/
+
 #include "THSWeights.h"
 #include <TTreeIndex.h>
 #include <TSystem.h>
@@ -23,6 +30,7 @@ THSWeights::~THSWeights(){
   if(fIDTree) delete fIDTree; 
   if(fFile) {delete fFile;}
 }
+
 void THSWeights::SetSpecies(TString name){
   UInt_t NSpecies=fSpecies.size(); 
   fSpecies.insert(pair<TString,Int_t>(name,NSpecies)); //save name in map
@@ -32,24 +40,29 @@ void THSWeights::SetSpecies(TString name){
   cout<<"Insert species "<<name <<" "<<NSpecies<<" "<<fWVals[NSpecies]<<endl;
   fWTree->Branch(name,&fWVals[NSpecies],name+TString("/D")); 
 }
+
+//////////////////////////////////////////////////////////////
+///Move down the tree until you find an event with correct ID.
+///This requires the trees are sorted in ID
+///and fWTree is a subset of whatever tree requires the weight.
+///Fastest if both trees have same events
 Bool_t THSWeights::GetEntryFast(Long64_t id){
-  //move down the tree until find event with correct ID
-  //this requires the trees are sorted in ID
-  //and fWTree is a subset of whatever tree requires the weight
-  //Fastest if both trees have same events
+
   if(!fIDv) BuildIndex();
   if(id!=fIDv[fCurrEntry]){//no weight for this id
     return fGotEntry=kFALSE;}
   fWTree->GetEntry(fCurrEntry++); //get entry now we know it exists 
   return fGotEntry=kTRUE;
 }
+
+////////////////////////////////////////////////////////////
+///for unsorted tree \n
+///Move down the tree until find event with correct ID.
+///This is faster if trees are sorted in ID and ReStart not required
+///(in which case use GetEntryFast)
+///and fWTree is a subset of whatever tree requires the weight.
+///Fastest if both trees have same events
 Bool_t THSWeights::GetEntrySlow(Long64_t id){
-  //for unsorted tree
-  //move down the tree until find event with correct ID
-  //this is faster if  trees are sorted in ID and ReStart not required
-  //in which case use GetEntryFast
-  //and fWTree is a subset of whatever tree requires the weight
-  //Fastest if both trees have same events
   if(!fIDv) BuildIndex();
   Bool_t ReStart=0;
   if(id!=fIDv[fCurrEntry++]){//no weight for this id
@@ -63,18 +76,24 @@ Bool_t THSWeights::GetEntrySlow(Long64_t id){
   fWTree->GetEntry(fCurrEntry++); //get entry now we know it exists 
   return fGotEntry=kTRUE;
 }
+
+/////////////////////////////////////////////////////////////
+///Use a binary search to find the entry for an unsorted tree
 Bool_t THSWeights::GetEntryBinarySearch(Long64_t id){
-  //use a binary search to find the entry for an unsorted tree
+
   if(!fIDv) BuildIndex();
   Long64_t entry=TMath::BinarySearch(fN,fIDv,id);
   if(fIDv[entry]!=id) return fGotEntry=kFALSE;
   fWTree->GetEntry(fIDi[entry]);//entry should be OK if these arrays are be ordered...
   return fGotEntry=kTRUE;
 }
+
+//////////////////////////////////////////////////
+///Function to merge weights from many root files
 Long64_t THSWeights::Merge(TString tempName,TString outName,TString wmName){
   //THSWeights* WM=new THSWeights();
   //WM->Merge("dirname/prefix","outfile","WeightMap")
-  //Function to merge weights from many root files
+
   if(outName!=TString("")) {
     //TFile* outFile=new TFile(outName,"recreate");
     SetFile(outName);
@@ -117,6 +136,9 @@ Long64_t THSWeights::Merge(TString tempName,TString outName,TString wmName){
   return Size();
   
 }
+
+//////////////////////////////////////
+///Find the name for a given index
 TString THSWeights::GetSpeciesName(UInt_t isp){
   if(isp>=fSpecies.size()) return TString("");
   //find the name for a given index
@@ -124,6 +146,12 @@ TString THSWeights::GetSpeciesName(UInt_t isp){
     if(it1->second==(Int_t)isp) return it1->first;
   return TString("");
 }
+
+/////////////////////////////////////////////////////////////
+///Add the tree \n
+///Zero weight values in case of missing species in new weights.
+///These branches will then just be filled with zero weight for
+///the new entries.
 void THSWeights::Add(THSWeights* Wts){
   StrIntMap_t *sp0=GetSpeciesp();
   StrIntMap_t *sp1=Wts->GetSpeciesp();
@@ -143,9 +171,6 @@ void THSWeights::Add(THSWeights* Wts){
     }
   }
   //Add the tree
-  //zero weight values in case of missing species in new weights
-  //these branches will then just be filled with zero weight for
-  //the new entries
   for(UInt_t isp=0;isp<Ns0;isp++)
     fWVals[isp]=0;
   //if(New_sp==0){//no new species, just merge trees
@@ -162,6 +187,7 @@ void THSWeights::Add(THSWeights* Wts){
   fWeightList->Add(new TNamed(Wts->GetTitle(),""));//include name of this bin
 
 }
+
 void THSWeights::PrintWeight(){
   cout<<"Map "<<GetName()<<" contains "<<Size() <<" events associated file is ";
   if(fFile) cout<<fFile->GetName()<< " "<<fFile->GetTitle()<<endl;
@@ -196,10 +222,12 @@ void THSWeights::BuildIndex(){
   fN=fWTree->GetEntries();
   cout<<"Done"<<endl;
 }
+
+////////////////////////////////////////////////////////////////////////////
+///GetEntryFast only works properly on trees where the ID is in order \n
+///This is not guaranteed particualrly if weights are merged from different bins,
+///reorder here
 void THSWeights::SortWeights(){
-  //GetEntryFast only works properly on trees where the ID is in order
-  //This is not garunteed particualrly if weights are merged from different bins
-  //reorder here
   TTree* idtree=fIDTree->CloneTree(0); //create empty tree with branch adresses set //Clone before create index so do not have to save index
   idtree->SetDirectory(fFile); //set file to save memory
   BuildIndex();
@@ -238,6 +266,7 @@ void THSWeights::SortWeights(){
   //  BuildIndex();//build for new tree!
   fIsSorted=kTRUE;
 }
+
 void THSWeights::SetFile(TString filename){
   TDirectory *saveDir=gDirectory;
   cout<<"THSWeights::SetFile "<<filename<<endl;
@@ -246,6 +275,7 @@ void THSWeights::SetFile(TString filename){
   if(fWTree)fWTree->SetDirectory(fFile);
   saveDir->cd();
 }
+
 void THSWeights::Save(){
   cout<<"void THSWeights::Save() "<<fFile<<endl;
   cout<<fIDTree<<" "<<fWTree<<endl;
@@ -258,12 +288,13 @@ void THSWeights::Save(){
   fFile->cd();
   fWTree->Write();//Note can't just save whole object
   fIDTree->Write(); //As 1GB limit on object buffers in TFile
-  Write();//save the rest(not trees) of the weights class
+  Write();//save the rest (not trees) of the weights class
   fFile->Close();
   delete fFile;fFile=0;fWTree=0;fIDTree=0;
   cout<<"THSWeights::Save() Saved weights to file"<<endl;
 
 }
+
 void THSWeights::LoadSaved(TString fname,TString wname){
   TDirectory* savedir=gDirectory;
   TFile* wfile=new TFile(fname);
