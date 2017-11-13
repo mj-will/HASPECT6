@@ -250,7 +250,7 @@ inline void THSKinematics::BaryonDecayHelicity(){
 ///z-axis along -target direction in baryon rest frame
 inline void THSKinematics::BaryonDecayGJ(){
   TLorentzRotation decBoost(-fBar.BoostVector());
-  TLorentzVector decTarget=decBoost*fTar;
+  TLorentzVector decTar=decBoost*fTar;
   TLorentzVector decGamma=decBoost*fGamma;
   TLorentzVector decMes=decBoost*fMes;
   TVector3 zV=-decTar.Vect().Unit();
