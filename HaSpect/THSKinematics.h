@@ -46,20 +46,33 @@ class THSKinematics{
     fTar=tar;
     fCM=fGamma+fTar;
   
-   }
+  }
+  
+  /////////////////////////////////////////////////////////////
+  /// Set incoming photon and target 4-vectors \n
+  /// Use them to calculate cm 4-vector
   void SetGammaTarget(TLorentzVector gamma,TLorentzVector tar){
     fGamma=gamma;
     fTar=tar;
     fCM=gamma+tar;
   }
+  
   void SetMesonBaryon(TLorentzVector mes,TLorentzVector bar){
     fMes=mes;
     fBar=bar;
   }
+  
+  ///////////////////////////////////////////////////////////
+  /// Set decay products of the meson. \n
+  /// d1 will be used to calculate angles in GJ and helicity frame.
   void SetMesonDecay(TLorentzVector d1,TLorentzVector d2){
     fMes_d1=d1;
     fMes_d2=d2;
   }
+  
+  ///////////////////////////////////////////////////////////
+  /// Set decay products of the baryon. \n
+  /// d1 will be used to calculate angles in GJ and helicity frame.
   void SetBaryonDecay(TLorentzVector d1,TLorentzVector d2){
     fBar_d1=d1;
     fBar_d2=d2;
@@ -85,10 +98,13 @@ class THSKinematics{
 
   Double_t Cosx(){return fCosx;}  
   Double_t Cosy(){return fCosy;}  
-  Double_t Cosz(){return fCosz;}  
+  Double_t Cosz(){return fCosz;}
+  
   //Decay angles
   void MesonDecayHelicity();
   void MesonDecayGJ();
+  void BaryonDecayHelicity();
+  void BaryonDecayGJ();
   void ElectroCMDecay();
   void PhotoCMDecay();
   void LambdaDecay();
@@ -135,16 +151,21 @@ inline void THSKinematics::ElectroCMDecay(){
   fCosTh=angles.CosTheta();
   fPhi=angles.Phi();
 }
+
+////////////////////////////////////////////////////////
+///CM frame defined by CM boost. No rotation to lab phi.
 inline void THSKinematics::PhotoCMDecay(){
-  //CM frame defined by CM boost. No rotation to lab phi
+  
   TLorentzRotation CMBoost(-fCM.BoostVector());
   TLorentzVector CMMes=CMBoost*fMes;
   fCosTh=CMMes.CosTheta();
   fPhi=CMMes.Phi();
 }
+
+////////////////////////////////////////////////////////
+/// From Daria Sokhan thesis \n
+/// Assuming polarisation vector is (0,1,0) (the E vector) and B vector (1,0,0), these are components of the boosted E-vector.  
 inline void THSKinematics::PolPhotoCMDecay(){
-  // From Daria Sokhan thesis
-  // Assuming polarisation vector is (0,1,0) (the E vector) and B vector (1,0,0), these are components of the boosted E-vector.  
 
   TVector3 beta_vector=-fCM.BoostVector();
   Double_t gamma=fCM.Gamma();
@@ -174,8 +195,9 @@ inline void THSKinematics::PolPhotoCMDecay(){
 
 }
 
+/////////////////////////////////////////////////////
+///z-axis along -baryon in meson rest frame
 inline void THSKinematics::MesonDecayHelicity(){
-  //z-axis along -baryon in meson rest frame
   TLorentzRotation decBoost(-fMes.BoostVector());
   TLorentzVector decBar=decBoost*fBar;
   TLorentzVector decGamma=decBoost*fGamma;
@@ -190,8 +212,9 @@ inline void THSKinematics::MesonDecayHelicity(){
   fPhi=angles.Phi();
 }
 
+////////////////////////////////////////////////////////
+///z-axis along gamma direction in meson rest frame
 inline void THSKinematics::MesonDecayGJ(){
-  //z-axis along gamma direction in meson decay frame
   TLorentzRotation decBoost(-fMes.BoostVector());
   TLorentzVector decGamma=decBoost*fGamma;
   TLorentzVector decBar=decBoost*fBar;
@@ -205,8 +228,45 @@ inline void THSKinematics::MesonDecayGJ(){
   fCosTh=angles.CosTheta();
   fPhi=angles.Phi();
 }
+
+//////////////////////////////////////////////////////
+///z-axis along -meson in baryon rest frame
+inline void THSKinematics::BaryonDecayHelicity(){
+  TLorentzRotation decBoost(-fBar.BoostVector());
+  TLorentzVector decMes=decBoost*fMes;
+  TLorentzVector decGamma=decBoost*fGamma;
+  TVector3 zV=-decMes.Vect().Unit();
+  TVector3 yV=decMes.Vect().Cross(decGamma.Vect()).Unit();
+  TVector3 xV=yV.Cross(zV).Unit();
+   
+  TLorentzVector decD1=decBoost*fBar_d1;
+  
+  TVector3 angles(decD1.Vect().Dot(xV),decD1.Vect().Dot(yV),decD1.Vect().Dot(zV));
+  fCosTh=angles.CosTheta();
+  fPhi=angles.Phi();
+}
+
+//////////////////////////////////////////////////////
+///z-axis along -target direction in baryon rest frame
+inline void THSKinematics::BaryonDecayGJ(){
+  TLorentzRotation decBoost(-fBar.BoostVector());
+  TLorentzVector decTar=decBoost*fTar;
+  TLorentzVector decGamma=decBoost*fGamma;
+  TLorentzVector decMes=decBoost*fMes;
+  TVector3 zV=-decTar.Vect().Unit();
+  TVector3 yV=decMes.Vect().Cross(decGamma.Vect()).Unit();
+  TVector3 xV=yV.Cross(zV).Unit();
+
+  TLorentzVector decD1=decBoost*fBar_d1;
+
+  TVector3 angles(decD1.Vect().Dot(xV),decD1.Vect().Dot(yV),decD1.Vect().Dot(zV));
+  fCosTh=angles.CosTheta();
+  fPhi=angles.Phi();
+}
+
+//////////////////////////////////////////////////////
+///z-axis along gamma direction in meson decay frame
 inline void THSKinematics::LambdaDecay(){
-  //z-axis along gamma direction in meson decay frame
   TLorentzRotation decBoost(-fBar.BoostVector());
   TLorentzVector decGamma=decBoost*fGamma;
   TLorentzVector decBar=decBoost*fMes;
