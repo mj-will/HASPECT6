@@ -24,6 +24,7 @@ void Model1(TString filename){
   fM2s->SetParameters(1,5,0.1,0.1);
   TF1* fMmisss=new TF1("mmisss","gaus(0)",0,10);
   fMmisss->SetParameters(1,0.1,1);
+  fMmisss->SetParameters(1,5,0.7);
 
   //bakcground
   TF1* fM1b=new TF1("m1b","2-[0]*x",0,10);
@@ -32,6 +33,8 @@ void Model1(TString filename){
   fM2b->SetParameter(0,0.05);
   TF1* fMmissb=new TF1("mmissb","[0]*(x-4)+2",0,10);
   fMmissb->SetParameter(0,0);
+
+  fMmissb->SetParameter(0,0.2);
   Int_t Nev=100000;
   for(Int_t i=0;i<Nev;i++){
     fgID=i;
@@ -39,7 +42,6 @@ void Model1(TString filename){
       Eg=gRandom->Uniform(3,4);
       M1=fM1s->GetRandom();
       M2=fM2s->GetRandom();
-      fMmisss->SetParameters(1,5,0.7);
       Mmiss=fMmisss->GetRandom();
       Sig=1;
       tsig->Fill();
@@ -48,8 +50,6 @@ void Model1(TString filename){
       Eg=gRandom->Uniform(3,4);
       M1=fM1b->GetRandom();
       M2=fM2b->GetRandom();
-      fMmissb->SetParameter(0,0.2);
-      // fMmissb->SetParameter(0,0);
       Mmiss=fMmissb->GetRandom();
       Sig=-1;
       tbg->Fill();

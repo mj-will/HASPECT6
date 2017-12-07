@@ -103,8 +103,8 @@ ClassImp(RooHSEventsHistPDF)
    if(other.fOffConstr)fOffConstr=(RooGaussian*)other.fOffConstr->Clone();
    if(other.fScaleConstr)fScaleConstr=(RooGaussian*)other.fScaleConstr->Clone();
    fVarMax=other.fVarMax;
-   if(fEvTree) SetEvTree(fEvTree);//Needs fProxSet filled first
-   
+   if(fEvTree) SetEvTree(fEvTree,fCut);//Needs fProxSet filled first
+ 
    MakeSets();
     
  }
@@ -161,13 +161,12 @@ Double_t RooHSEventsHistPDF::evaluateMC(Double_t mcx) const {
   
 }
 
-Bool_t RooHSEventsHistPDF::SetEvTree(TChain* tree,Long64_t ngen){
+Bool_t RooHSEventsHistPDF::SetEvTree(TChain* tree,TString cut,Long64_t ngen){
 
-  return RooHSEventsHistPDF::SetEvTree(tree->CloneTree(),ngen); //standard intilisation
+  return RooHSEventsHistPDF::SetEvTree(tree->CloneTree(),cut,ngen); //standard intilisation
 }
-Bool_t RooHSEventsHistPDF::SetEvTree(TTree* tree,Long64_t ngen){
-
-  Bool_t OK=RooHSEventsPDF::SetEvTree(tree,ngen); //standard intilisation
+Bool_t RooHSEventsHistPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
+  Bool_t OK=RooHSEventsPDF::SetEvTree(tree,cut,ngen); //standard intilisation
   //Now also need to create underlying HistPdf
   if(!fHist)CreateHistPdf();
   if(OK&&fHist) return kTRUE;
@@ -187,10 +186,33 @@ void RooHSEventsHistPDF::CreateHistPdf(){
   //create 1D template of x variable
   for(Int_t itr=0;itr<NFT;itr++){//loop over events tree
     fEvTree->GetEntry(itr);
-    Double_t weight=1;
     Double_t tvar=fMCVar[0];
-    his1->Fill(tvar,weight);
+    //    cout<<GetIntegralWeight(itr)<<endl;
+    his1->Fill(tvar,GetIntegralWeight(itr));
   }
+  //Could be problems if weights result in -ve bins...
+  for(Int_t ix=0;ix<his1->GetEntries();ix++)
+    if(his1->GetBinContent(ix)<0){
+      cout<<" RooHSEventsHistPDF::CreateHistPdf() weights have resulted in some -ve bins. Will try averaging with 2 nearest nieghbours, if still -ve will set to 0. You may want to try using less bins for your histogram PDF via RooRealVar::setBins()"<<endl;
+      Double_t b0,b1,b2;
+      if(ix==1)
+	b0=his1->GetBinContent(ix); //lower edge
+      else
+	b0=his1->GetBinContent(ix-1);
+      b1=his1->GetBinContent(ix);
+      if(ix==his1->GetEntries())
+	b2=his1->GetBinContent(ix);//upper edge
+      else
+	b2=his1->GetBinContent(ix+1);
+      
+      Double_t bmean=(b0+b1+b2)/3;
+      if(bmean<0) bmean=0;
+      his1->SetBinContent(ix-1,bmean);
+      his1->SetBinContent(ix,bmean);
+      his1->SetBinContent(ix+1,bmean);
+    }
+  cout<<"Integral "<<his1->Integral()<<" "<<fEvWeights.size()<<" "<<endl;
+  if(fUseEvWeights) cout<<fEvWeights[0]<<" "<<fEvWeights[1]<<endl;
   his1->Smooth();
   //Fill first y bin of 2D hist (no smearing)
   for(Int_t jtemp=1;jtemp<=fRHist->GetNbinsX();jtemp++)//First alpha bin, no semaring!
@@ -240,7 +262,6 @@ void RooHSEventsHistPDF::CreateHistPdf(){
 }
 Int_t RooHSEventsHistPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const
 {
-  
   return RooHSEventsPDF::getAnalyticalIntegral(allVars,analVars,rangeName);
 }
 Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName) const
@@ -256,7 +277,7 @@ Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName
     for(Int_t ie=1;ie<=Nbins;ie++){
       Double_t val=min+delta*ie;
       if(!(var->inRange(val,rangeName))) continue;
-      integral+=evaluateMC(val)*GetIntegralWeight();
+      integral+=evaluateMC(val);
     }
     fLast[0]=integral*delta;
     

@@ -1,0 +1,113 @@
+/**
+ * \class THSep_omegap
+ * 
+ * Template final class .
+ * 
+ * Users should create their own analysis specific project classes.
+ * 
+ */
+
+
+
+#include "TDatabasePDG.h"
+#include "THSep_omegap.h"
+#include <algorithm>
+
+
+THSep_omegap::THSep_omegap(){
+  //Set final state
+  //Note for CheckTruth algorithm to work all particles added 
+  //to fFinal should have been in Generated 
+  fFinal.push_back(&fElectron);
+  fFinal.push_back(&fProton);
+  fFinal.push_back(&fPip);
+  fFinal.push_back(&fPim);
+  fFinal.push_back(&fPi0);
+
+  SetUseChargePID();//If want to only use charge for IDing
+
+  //include topology for analysis and get index
+  AddTopology("pi+:pi-:gamma:gamma:proton:e-",
+             bind(&THSep_omegap::Init_Iter0, this),
+             bind(&THSep_omegap::Topo_0, this),
+             "ALL","");
+
+  AddTopology("pi+:pi-:proton:e-",
+             bind(&THSep_omegap::Init_Iter1, this),
+             bind(&THSep_omegap::Topo_1, this),
+             "ALL","");
+
+ 
+
+  //Initialise particle iters
+  fDetIter.resize(fNTopo);
+  Init_Iter0();
+  Init_Iter1();
+}
+
+
+void THSep_omegap::Init_Generated(){
+  if(!THSFinalState::frGenParts) return;
+  if(THSFinalState::frGenParts->size()!=REPLACE_WITH_N_GENERATED_PARTICLES) {fGoodEvent=kFALSE;return;}
+  //Fill our data member particles
+  //User is responsible for indicing right
+  //comes from order in generated file (e.g LUND)
+  if(THSFinalState::fIsGenerated){
+    //fElectron=*frGenParts->at(0);
+  }
+  else{//Just assign truth values
+    //fElectron.SetTruth(frGenParts->at(0));
+  }
+}
+
+//Define topology Iterator functions
+void THSep_omegap::Init_Iter0(){
+  //THSParticle iterator initialisation
+  //For topology pi+:pi-:gamma:gamma:proton:e-
+
+}
+void THSep_omegap::Init_Iter1(){
+  //THSParticle iterator initialisation
+  //For topology pi+:pi-:proton:e-
+
+}
+// void THSep_omegap::Init_IterX(){
+//  THSParticleIter* diter=CreateParticleIter(fTID_X,&fVecY,NPARTICLES);
+//  ...
+// }
+//Or if iterator the same as a previous one
+// void THSep_omegap::Init_IterY(){
+//   fDetIter[fTID_1]=fDetIter[fTID_0];
+// }
+//Define topology functions
+void THSep_omegap::Topo_0(){
+  //For topology pi+:pi-:gamma:gamma:proton:e-
+  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle
+  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors
+
+  //Reconstruct missing or combined particles
+
+}
+void THSep_omegap::Topo_1(){
+  //For topology pi+:pi-:proton:e-
+  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle
+  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors
+
+  //Reconstruct missing or combined particles
+
+}
+// void THSep_omegap::Topo_X(){
+// }
+
+void THSep_omegap::Kinematics(){
+  if(!THSFinalState::fGoodEvent) return;//don't do calculations
+  //Do calculations if Good Event
+
+}
+
+void THSep_omegap::FinalStateOutTree(TTree* tree){
+  THSFinalState::fFinalTree=tree;
+  //tree->Branch("Final",&fFinal);//If you want to save the final THSParticles
+  tree->Branch("MissMass",&fMissMass,"MissMass/D");
+
+}

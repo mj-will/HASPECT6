@@ -13,6 +13,7 @@
 #include "TObjArray.h" 
 #include "TCanvas.h" 
 #include "TBranch.h" 
+#include "TLeaf.h" 
 #include <algorithm> 
 
 ClassImp(RooHSEventsPDF)
@@ -33,6 +34,11 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fConstInt=other.fConstInt;
     fCheckInt=other.fCheckInt;
     fUseWeightsGen=other.fUseWeightsGen;
+    fCut=other.fCut;
+
+    fUseEvWeights=other.fUseEvWeights;
+    fEvWeights=other.fEvWeights;
+    fWgtSpecies=other.fWgtSpecies;
   }
 RooHSEventsPDF::~RooHSEventsPDF(){
   //RooFit clones everything so I need to give the original
@@ -145,7 +151,7 @@ void RooHSEventsPDF::initGenerator(Int_t code)
     //for(Int_t i=0;i<fEvTree->GetEntries();i++){
     for(Int_t i=1;i<fEvTree->GetEntries();i++){
       fEvTree->GetEntry(i);
-        value=evaluateMC()*GetIntegralWeight();
+        value=evaluateMC();
       if(value>fMaxValue)fMaxValue=value;
     }
   }
@@ -174,7 +180,7 @@ void RooHSEventsPDF::generateEvent(Int_t code){
   if(!fUseWeightsGen){
     while(fGeni<fEvTree->GetEntries()){
       fEvTree->GetEntry(fGeni++);
-      value=evaluateMC()*GetIntegralWeight();
+      value=evaluateMC();
       if(value>fMaxValue*RooRandom::uniform()){//accept
 	for(Int_t i=0;i<fNvars;i++)
 	  (*(fProxSet[i]))=fMCVar[i];
@@ -191,7 +197,7 @@ void RooHSEventsPDF::generateEvent(Int_t code){
     while(fGeni<fEvTree->GetEntries()){
       fEvTree->GetEntry(fGeni++);
       if(!CheckRange("")) continue;
-      value=evaluateMC()*GetIntegralWeight();
+      value=evaluateMC();
       for(Int_t i=0;i<fNvars;i++)
 	(*(fProxSet[i]))=fMCVar[i];
      for(Int_t i=0;i<fNcats;i++)
@@ -247,7 +253,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
     for(Int_t ie=0;ie<NEv;ie++){
       fEvTree->GetEntry(ie);
       if(!CheckRange(rangeName)) continue;
-      integral+=evaluateMC()*GetIntegralWeight();
+      integral+=evaluateMC()*GetIntegralWeight(ie);
     }
   }
   else {
@@ -269,7 +275,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
       if(!CheckRange(rangeName)) continue;
      //only inlcude events within same bin as vval in integral
       if(TMath::Abs(fMCVar[code-2]-vval)>delta)continue;
-      integral+=evaluateMC()*GetIntegralWeight();
+      integral+=evaluateMC()*GetIntegralWeight(ie);
     }
     //correct for delta integration width
     //first 2 case near range limits 
@@ -310,14 +316,18 @@ Bool_t RooHSEventsPDF::CheckChange() const{
   }
   return hasChanged;
 }
-Bool_t RooHSEventsPDF::SetEvTree(TChain* tree,Long64_t ngen){
+Bool_t RooHSEventsPDF::SetEvTree(TChain* tree,TString cut,Long64_t ngen){
   if(!tree->GetEntries()) return kFALSE;
-  return SetEvTree(tree->CloneTree());
+  return SetEvTree(tree->CloneTree(),cut,ngen);
 }
-Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
+Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
   if(!tree->GetEntries())return kFALSE;
-  Info("RooHSEventsPDF::SetEvTree"," with name %s",tree->GetName());
-  fEvTree=tree;
+  Info("RooHSEventsPDF::SetEvTree"," with name %s and cut %s",tree->GetName(),cut.Data());
+  fCut=cut;
+  
+  if(fCut.Sizeof()!=1)fEvTree=tree->CopyTree(fCut);
+  else fEvTree=tree;
+  fCut=""; //remove cut once events filtered as branches may be removed 
   fNMCGen=ngen;
   fConstInt=fEvTree->GetEntries();
    // RooArgList set1=fVarSet.at(0);
@@ -328,12 +338,8 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
   fMCCat.clear();
   fMCCat.reserve(fCatSet.size());
   fMCVar.ResizeTo(fProxSet.size());
-  //fMCCat.ResizeTo(fCatSet.size());
   for(UInt_t i=0;i<fProxSet.size();i++){
     if(fEvTree->GetBranch(fProxSet[i]->GetName())){
-      //  Double_t tempD=0;
-      //fMCVar.push_back(tempD); //initalise element
-      //fMCVar[i]=0;
       fEvTree->SetBranchStatus(fProxSet[i]->GetName(),1);
       fEvTree->SetBranchAddress(fProxSet[i]->GetName(),&fMCVar[i]);
       if(fEvTree->GetBranch(TString("gen")+fProxSet[i]->GetName())) fEvTree->SetBranchStatus(TString("gen")+fProxSet[i]->GetName(),1);
@@ -343,6 +349,7 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
       fBranchStatus=kFALSE;
     }
   }
+  //Now look for equivalent generated (truth) branches
   for(UInt_t i=0;i<fCatSet.size();i++){
     cout<<fCatSet[i]->GetName()<<" "<<endl;
     // Int_t tempI=0;
@@ -359,11 +366,43 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,Long64_t ngen){
   }
   // cout<<"CHECK TREE "<<endl;
   fEvTree->GetEntry(0);
-  cout<<"SetEvTree "<<fMCVar[0]<<" "<<fBranchStatus<<" "<<fConstInt<<endl;
+  cout<<"RooHSEventsPDF::SetEvTree "<<fMCVar[0]<<" "<<fBranchStatus<<" "<<fConstInt<<endl;
+
+  
+  //Read weights into fEvWeights
+  if(fInWeights){
+    fEvWeights.clear();
+    if(fEvTree->GetBranch(fInWeights->GetIDName())){ //the weight ID branch is in fEvTree
+      fUseEvWeights=kTRUE;
+      fEvTree->SetBranchStatus(fInWeights->GetIDName(),1);
+      TLeaf* idleaf=(TLeaf*)fEvTree->GetBranch(fInWeights->GetIDName())->GetListOfLeaves()->First();
+      if(!idleaf) { cout<<"ERROR RooHSEventsPDF::SetEvTree weights id branch "<<fInWeights->GetIDName()<<" is not part of event tree "<<endl; fEvTree->Print();exit(1);}
+      for(Long64_t iw=0;iw<fEvTree->GetEntries();iw++){
+	fEvTree->GetBranch(fInWeights->GetIDName())->GetEntry(iw);
+	fInWeights->GetEntryBinarySearch((Long64_t)idleaf->GetValue());
+
+        fEvWeights.push_back(fInWeights->GetWeight(fWgtSpecies));
+      }
+    }
+    delete fInWeights;fInWeights=nullptr;
+  }
 
   if(fCheckInt) CheckIntegralParDep(fCheckInt);
   return fBranchStatus;
 }
+void  RooHSEventsPDF::LoadWeights(TString species,TString wfile,TString wname){
+  //GetWeights object 
+  cout<<"void RooHSEventsPDF::LoadWeights and use species "<<species<<" "<<wfile<<" "<<wname<<endl;
+  if(fInWeights) delete fInWeights;
+  fInWeights=nullptr;
+  fInWeights=new THSWeights();
+  fInWeights->LoadSaved(wfile,wname);
+  
+  fInWeights->PrintWeight();
+  fWgtSpecies = species;
+  fUseEvWeights=kTRUE;
+}
+
 void  RooHSEventsPDF::CheckIntegralParDep(Int_t Ntests){
   fCheckInt=Ntests;
   if(!fEvTree) return; //will check later when tree is set
@@ -520,7 +559,7 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   }
   
   
-  SetEvTree(fEvTree);
+  SetEvTree(fEvTree,fCut);
   fEvTree->Print();
   fEvTree->GetEntry(0);
  

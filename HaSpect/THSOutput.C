@@ -148,7 +148,7 @@ void THSOutput::HSTerminate(){
    WriteListtoFile(fStepDir);
    infile->Close();
    SafeDelete(infile);
-
+   
    outfile->Close();
    SafeDelete(outfile);
    //make sure new tree events are back in fgID order
@@ -211,7 +211,6 @@ void THSOutput::HSTerminate(){
      }
    }
 
-  //   OrganiseSavedHists(fSelOutput);
    
    return;
  
@@ -300,8 +299,8 @@ void THSOutput::InitOutFile(TTree* chain){
   if(fFile)	SafeDelete(fFile);
    //if(fProofFile)	SafeDelete(fProofFile);
   fMessages.Info("InitOutFile","Making new proof file %s",ofname.Data());
-  fProofFile = 0;
-  fFile = 0;
+  fProofFile = nullptr;
+  fFile = nullptr;
   fProofFile = new TProofOutputFile(ofname,"M");
   fFile = fProofFile->OpenFile("RECREATE");
   if (fFile && fFile->IsZombie()) SafeDelete(fFile);
@@ -321,6 +320,7 @@ void THSOutput::InitOutTree(){
    if(fOutTree&&fFile){
      fOutTree->SetDirectory(fFile);
      fOutTree->AutoSave();
+     //if proof will add UID in terminate so it is incremented properly
      if(!fOutTree->GetBranch("UID")&&!gProof)fOutTree->Branch("UID", &fgID, "UID/D");
      //if(!fSaveID)//copy existing global ID
        // fOutTree->SetBranchAddress("UID",fCurTree->GetBranch("UID")->GetAddress());

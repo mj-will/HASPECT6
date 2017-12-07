@@ -1,6 +1,6 @@
 
-#ifndef THSPROJTEMP_h
-#define THSPROJTEMP_h
+#ifndef THSFINALTEMP_h
+#define THSFINALTEMP_h
 
 #include "THSFinalState.h"
 #include "TLorentzVector.h"
@@ -12,19 +12,17 @@ class THSFinalTemp : public THSFinalState{
   THSFinalTemp();
   ~THSFinalTemp(){};
 
-  virtual Bool_t WorkOnEvent();
 
   //Init functions
   void Init_Generated();
-  //void Init_();
+  //void Init_IterX();
+  //void Topo_X();
 
   void Kinematics();
   protected :
-  //Topology flags for this project
-  // Int_t fTID_=-1;
  
   //Initial state
-  TLorentzVector fBeam=TLorentzVector(0,0,10.6,10.600510999);
+  TLorentzVector fBeam=TLorentzVector(0,0,10.6,10.6);
   TLorentzVector fTarget=TLorentzVector(0,0,0,0.938272);
   //Final Particles
  
@@ -42,9 +40,8 @@ class THSFinalTemp : public THSFinalState{
    public :
   virtual void FinalStateOutTree(TTree* tree);
 
-  // ClassDef(THSProjTemp, 1)  // Writeable  class
-
+ 
 
 };
 
-#endif //ifdef THSProjTemp
+#endif //ifdef THSFinalTemp

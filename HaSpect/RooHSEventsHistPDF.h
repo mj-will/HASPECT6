@@ -58,8 +58,8 @@ private:
   
  public:
 
-  virtual Bool_t SetEvTree(TTree* tree,Long64_t ngen=0);
-  virtual Bool_t SetEvTree(TChain* tree,Long64_t ngen=0);
+  virtual Bool_t SetEvTree(TTree* tree,TString cut,Long64_t ngen=0);
+  virtual Bool_t SetEvTree(TChain* tree,TString cut,Long64_t ngen=0);
   void CreateHistPdf();
   virtual void ResetTree();
   
@@ -70,6 +70,7 @@ private:
   RooGaussian* OffConstraint() {return fOffConstr;};
   RooGaussian* ScaleConstraint() {return fScaleConstr;};
 
+  TH2* GetRootHist() {return fRHist;}
   ClassDef(RooHSEventsHistPDF,1) // Your description goes here...
 };
  

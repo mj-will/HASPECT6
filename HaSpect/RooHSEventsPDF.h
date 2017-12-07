@@ -44,6 +44,9 @@ class RooHSEventsPDF : public RooAbsPdf {
   Double_t fConstInt=1;
   THSWeights* fWeights=nullptr;  //weights for event generator
   THSWeights* fInWeights=nullptr; //weights for shaping the events tree
+  vector<Float_t> fEvWeights; //read in weights saved in vector
+  TString fWgtSpecies;
+  Bool_t fUseEvWeights=kFALSE;
   
   vector< RooArgSet* > fVarSet;//set of variables for which integral defined
   vector< RooRealProxy* > fProxSet; //double observbles
@@ -53,6 +56,8 @@ class RooHSEventsPDF : public RooAbsPdf {
   vector<Int_t> fMCCat;
   vector< RooRealProxy* > fParSet;
   vector<Bool_t> fIsCat;
+  TString fCut; //cut for applying to event tree
+  
   void InitSets();
   RooArgSet VarSet(Int_t iset) const;
     
@@ -78,8 +83,9 @@ class RooHSEventsPDF : public RooAbsPdf {
   Bool_t CheckRange(const char* rangeName) const; //only integrate EvTree over specifed variable range
 
   void SetNInt(Long64_t n){fNInt=n;}
-  virtual Bool_t SetEvTree(TChain* tree,Long64_t ngen=0);
-  virtual Bool_t SetEvTree(TTree* tree,Long64_t ngen=0);
+  virtual Bool_t SetEvTree(TChain* tree,TString cut,Long64_t ngen=0);
+  virtual Bool_t SetEvTree(TTree* tree,TString cut,Long64_t ngen=0);
+  virtual void LoadWeights(TString species,TString wfile,TString wname);
   void SetNMCGen(Long64_t N){fNMCGen=N;}
   TTree* GetEvTree(){return fEvTree;};
   TVectorD GetMCVar(){return fMCVar;}
@@ -96,8 +102,11 @@ class RooHSEventsPDF : public RooAbsPdf {
   void SetNumInt(Bool_t force=kTRUE){fForceNumInt=force;}
   void  CheckIntegralParDep(Int_t Ntests);
   virtual void ResetTree();
-  virtual Double_t GetIntegralWeight() const {return 1;} ;
+  virtual Double_t GetIntegralWeight(Long64_t iw) const {if(!fUseEvWeights) return 1; return fEvWeights[iw];} ;
   Bool_t AddProtoData(RooDataSet* data);
+  void SetCut(TString cut){fCut=cut;};
+  TString GetCut(){return fCut;}
+  
   ClassDef(RooHSEventsPDF,1) // Yor description goes here...
 };
  

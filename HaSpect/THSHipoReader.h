@@ -26,6 +26,8 @@ class THSHipoReader: public THSDataManager{
   THipo *fHipo=nullptr;
   THipoBank *fPBank=nullptr;
   THipoBank *fSBank=nullptr;
+  THipoBank *fCalBank=nullptr;
+  THipoBank *fChBank=nullptr;
   THipoBank *fMCBank=nullptr;
   THipoBank *fFTBank=nullptr;
   THipoBank *fEvBank=nullptr;
@@ -43,9 +45,19 @@ class THSHipoReader: public THSDataManager{
   
   THipoItem* fSPindex=nullptr;
   THipoItem* fSTime=nullptr;
+  THipoItem* fSSector=nullptr;
   THipoItem* fSEnergy=nullptr;
   THipoItem* fSDet=nullptr;
   THipoItem* fSPath=nullptr;
+
+  THipoItem* fCalPindex=nullptr;
+  THipoItem* fCalEnergy=nullptr;
+  THipoItem* fCalTime=nullptr;
+  THipoItem* fCalPath=nullptr;
+
+  THipoItem* fChPindex=nullptr;
+  THipoItem* fChEnergy=nullptr;
+  THipoItem* fChDetector=nullptr;
 
   THipoItem* fFTPindex=nullptr;
   THipoItem* fFTTime=nullptr;

@@ -25,13 +25,29 @@ void THSParticle::Print(Option_t *) const{
   fP4.Print("");
   fVertex.Print("");
 }
-
-void THSParticle::CopyParticle(THSParticle* part){
+void THSParticle::Clear(){
+  fDetector=0;
+  fEdep=0;
+  fDeltaE=0;
+  fPDGMass=0;
+  fMeasMass=0; //Or other PID info
+  fTime=0;
+  fPath=0;
+  fDoca=0;
+  fP4.SetE(0);
+  fP4.SetTheta(0);
+  
+}
+void THSParticle::CopyParticle(THSParticle* part,Bool_t andPDG){
   SetP4(part->P4());
   SetVertex(part->Vertex());
   SetTime(part->Time());
   SetMeasMass(part->MeasMass());
-  SetPDGcode(part->PDG());
+  if(andPDG) SetPDGcode(part->PDG());
+  SetDoca(part->Doca());
+  SetPath(part->Path());
+  SetEdep(part->Edep());
+  SetDetector(part->Detector());
 }
 void THSParticle::Add(THSParticle* hsp1, THSParticle* hsp2,Int_t pdg){
   //  SetVertex(hsp1->Vertex()+hsp2->Vertex()); //average vertex
@@ -90,3 +106,4 @@ void THSParticle::Calc_dtfInterDOCA( TVector3 locUnitDir1, TVector3 locUnitDir2,
   *locInterDOCA1 = locVertex1 + locDistVertToInterDOCA1*(locUnitDir1); //intersection point between DOCA line and Kid 1
   *locInterDOCA2 = locVertex2 + locDistVertToInterDOCA2*(locUnitDir2); //intersection point between DOCA line and Kid 2
 }
+

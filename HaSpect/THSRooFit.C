@@ -51,37 +51,7 @@ THSRooFit::THSRooFit(THSRooFit* rf){
    //copy constructor, but do not copy the data tree, load that explicitly
   fOwnWorkSpace=kTRUE;
    LoadWorkSpace(rf->GetWorkSpace(),rf->GetName());
-  // if(rf->GetWorkSpace()){fWS=(RooWorkspace*)rf->GetWorkSpace()->Clone();}
-  // if(rf->GetModel())fModel=fWS->pdf(rf->GetModel()->GetName());
-  // for(Int_t i=0;i<rf->GetVariables().getSize();i++){
-  //   if((fWS->var(rf->GetVariables()[i].GetName())))
-  //     fVariables.add(*(fWS->var(rf->GetVariables()[i].GetName())));
-  //   else if((fWS->cat(rf->GetVariables()[i].GetName())))
-  //     fVariables.add(*((RooAbsArg*)fWS->cat(rf->GetVariables()[i].GetName())));
-  // }
-  // for(Int_t i=0;i<rf->GetAuxVars().getSize();i++){
-  //   if((fWS->var(rf->GetAuxVars()[i].GetName())))
-  //     fAuxVars.add(*(fWS->var(rf->GetAuxVars()[i].GetName())));
-  //   else if((fWS->cat(rf->GetAuxVars()[i].GetName())))
-  //     fAuxVars.add(*((RooAbsArg*)fWS->cat(rf->GetAuxVars()[i].GetName())));
-  // }
-  // for(Int_t i=0;i<rf->GetBinVars().getSize();i++){
-  //   if((fWS->var(rf->GetBinVars()[i].GetName())))
-  //     fBinVars.add(*(fWS->var(rf->GetBinVars()[i].GetName())));
-  //   else if((fWS->cat(rf->GetBinVars()[i].GetName())))
-  //     fBinVars.add(*((RooAbsArg*)fWS->cat(rf->GetBinVars()[i].GetName())));
-  // }
-  // for(Int_t i=0;i<rf->GetParameters().getSize();i++)
-  //   fParameters.add(*(fWS->var(rf->GetParameters()[i].GetName())));
-  // for(Int_t i=0;i<rf->GetYields().getSize();i++)
-  //   fYields.add(*(fWS->var(rf->GetYields()[i].GetName())));
-  // for(Int_t i=0;i<rf->GetPDFs().getSize();i++)
-  //   fPDFs.add(*(fWS->var(rf->GetPDFs()[i].GetName())));
-  // for(Int_t i=0;i<rf->GetConstraints().getSize();i++)
-  //   fConstraints.add(*(fWS->var(rf->GetConstraints()[i].GetName())));
-  // for(Int_t i=0;i<rf->GetFitOptions().GetSize();i++)
-  //   fFitOptions.Add(rf->GetFitOptions().At(i));
-
+ 
   if(rf->GetBins())fDataBins=(THSBins*)rf->GetBins()->Clone();
   //if(rf->fID) fID=rf->fID;
   fIsPlot=rf->fIsPlot;
@@ -112,10 +82,10 @@ void THSRooFit::LoadDataSet(TTree* tree,Bool_t toWS){
   ftoWS=toWS;
   //Take a tree and convert to RooDataSet
   if(!tree) {cout<<"Tree does not exist "<<endl;exit(0);}
-  fTree=tree;
+  fTree=tree;//->CopyTree(fCut);
   RooArgSet dataVars(fVariables,fAuxVars);
   if(fID) dataVars.add(*fID);
-  fData=new RooDataSet(tree->GetName(),tree->GetTitle(),dataVars,RooFit::Import(*tree)); //make roodatset if not splitting onto bins
+  fData=new RooDataSet(tree->GetName(),tree->GetTitle(),dataVars,RooFit::Import(*tree),RooFit::Cut(fCut)); //make roodatset if not splitting onto bins
   if(toWS) fWS->import(*fData); //import if told to
   else if(!(fDataBins))if(!fInWeights)fWS->import(*fData); //if not told to import if not bins
   //else if not told to import and there are bins don't import
@@ -218,7 +188,7 @@ void THSRooFit::LoadWeights(TString wfile,TString wname){
   fInWeights=0;
   fInWeights=new THSWeights();
   fInWeights->LoadSaved(wfile,wname);
-  
+  fIDBranchName=fInWeights->GetIDName();
   fInWeights->PrintWeight();
 }
 void THSRooFit::SetDataWeight(){
@@ -229,12 +199,14 @@ void THSRooFit::SetDataWeight(){
   setWeights.add(wvar);
   setWeights.Print();
   RooDataSet wData("weights","weights",setWeights) ;
-  cout<<"Print data "<<endl;
- fData->Print();
+  cout<<"THSRooFit::SetDataWeight() Print data "<<endl;
+  fData->Print();
   //Loop over the weights find the entry for the event ID
+  if(fInWeights->GetIDName().Sizeof()>1)fIDBranchName=fInWeights->GetIDName();
   for(Int_t ev=0;ev<fData->numEntries();ev++){
     const RooArgSet* vars=fData->get(ev);
     fInWeights->GetEntryBinarySearch((Long64_t)vars->getRealValue(fIDBranchName));
+    // cout<<fInWeights->GetWeight(fWeightName)<<endl;
     // wvar.setVal(fInWeights->GetWeight(fWeightName));
     wvar.setVal(fInWeights->GetWeight(fWeightName));
     wData.add(setWeights);
@@ -287,8 +259,27 @@ void THSRooFit::LoadVariable(TString opt){
 // void THSRooFit::LoadCategory(TString opt){
 //   fVariables.add(*(fWS->factory(opt)));
 // }
+
+/////////////////////////////////////////////////////////
+///THSRooFit::LoadAuxVars can bes used to cut input trees and keeping
+///variable bracnhes in binned or reduced trees
+///the limits of the varibale are added to Cut and applied to data import
 void THSRooFit::LoadAuxVars(TString opt){
-  fAuxVars.add(*(fWS->factory(opt)));
+  RooAbsArg* var=(RooAbsArg*) fWS->factory(opt);
+  fAuxVars.add(*(var));
+  //  fAuxVars.add(*(fWS->factory(opt)));
+  RooRealVar* varreal=nullptr;
+  //RooCategory* varcat=nullptr;
+  if((varreal=dynamic_cast<RooRealVar*>(var))){
+    if(fCut.Sizeof()>1)fCut+="&&";
+    fCut+=Form("%s>%lf&&%s<%lf",varreal->GetName(),varreal->getMin(),varreal->GetName(),varreal->getMax());
+    
+  }
+  // else if((varcat=dynamic_cast<RooCategory*>(var))){
+  //   if(fCut.Sizeof()>1)fCut+="&&";
+  //   fCut+=Form("%s>%lf&&%s<%lf",varcat->GetName(),varcat->getMin(),varcat->GetName(),varcat->getMax());
+  // }
+  return;
 }
 void THSRooFit::LoadBinVars(TString opt,Int_t nbins,Double_t min,Double_t max){
   if(!fDataBins) fDataBins=new THSBins("HSDataBins");
@@ -575,7 +566,7 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   //create a fit object for a subset of data either by setting cut
   //or by fTree->SetEntryList prior to calling this function 
   //It will be deleted by this object
-  cout<<"THSRooFit::CreateSubFitBins with tree "<<ctree->GetName()<<endl;
+  // cout<<"THSRooFit::CreateSubFitBins with tree "<<ctree->GetName()<<endl;
   THSRooFit* RFa=new THSRooFit(rfname);
   if(fBinnedFit)RFa->SetBinnedFit();
   RFa->SetSingleSpecies(fSingleSp);
@@ -586,17 +577,19 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   RFa->SetNStudyTrials(fNStudyTrials);
   RFa->SetStudyPDF(fStudyPDF);
   RFa->SetStudyPlot(fStudyPlot);
-
+  RFa->SetCut(fCut);
   //Done configuring RF
   fRooFits->Add(RFa);
   RFa->LoadWorkSpace(fWS,GetName());
   // RFa->SetIDBranchName(fIDBranchName);
-
   for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
     RFa->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));
+  if(!ctree) return RFa; 
+  //Load the data tree if given
   TDirectory *saveDir=gDirectory;
   if(ctree->GetDirectory())ctree->GetDirectory()->cd();
-  if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(""));//will use any EntryList
+  if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
+  else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree
   saveDir->cd();
   RFa->SetDataWeight();//if defined weights use them for this dataset
@@ -672,34 +665,34 @@ void THSRooFit::ConfigureSavedBins(TString dirname,TString pdfname){
   if(!fDataBins->GetN()) {Error("THSRooFit::ConfigureSavedBins()","No bins found in directory = %s",fBinDir.Data());return;}
   return;
 }
-void THSRooFit::FitWithBins(Int_t Nfits){
-  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
-  MakeBins();
-  cout<<"THSRooFit::FitWithBins(); number of bins "<<fDataBins->GetN()<<endl;
-  TDirectory *saveDir=gDirectory;
-  //Open made bins file (safer saving to harddrive)
-  THSBins* savedBins=new THSBins("HSDataBins",fOutDir+"DataEntries.root");
-  fTree->SetBranchStatus("*",0);
-  for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-    fTree->SetBranchStatus(fVariables[i].GetName(),1);
-  }
-  //but always need ID branch
-  if(fTree->GetBranch(fIDBranchName)){
-   fTree->SetBranchStatus(fIDBranchName,1);
-  }
-  for(Int_t i=0;i<fDataBins->GetN();i++){
-    THSRooFit* rf=CreateSubFitBins(savedBins->GetBinnedTree(fTree,i),savedBins->GetBinName(i),kFALSE);
+// void THSRooFit::FitWithBins(Int_t Nfits){
+//   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
+//   MakeBins();
+//   cout<<"THSRooFit::FitWithBins(); number of bins "<<fDataBins->GetN()<<endl;
+//   TDirectory *saveDir=gDirectory;
+//   //Open made bins file (safer saving to harddrive)
+//   THSBins* savedBins=new THSBins("HSDataBins",fOutDir+"DataEntries.root");
+//   fTree->SetBranchStatus("*",0);
+//   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
+//     fTree->SetBranchStatus(fVariables[i].GetName(),1);
+//   }
+//   //but always need ID branch
+//   if(fTree->GetBranch(fIDBranchName)){
+//    fTree->SetBranchStatus(fIDBranchName,1);
+//   }
+//   for(Int_t i=0;i<fDataBins->GetN();i++){
+//     THSRooFit* rf=CreateSubFitBins(savedBins->GetBinnedTree(fTree,i),savedBins->GetBinName(i),kFALSE);
   
-    if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
-    rf->FitMany(Nfits);
-    rf->SavePlots(fOutDir+TString("Results")+fDataBins->GetBinName(i)+".root");
+//     if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
+//     rf->FitMany(Nfits);
+//     rf->SavePlots(fOutDir+TString("Results")+fDataBins->GetBinName(i)+".root");
 
-    delete rf;
-  }
-  cout<<"THSRooFit::FitWithBins() Done all Fits "<<endl;
-  ///??delete savedBins;
-}
-void THSRooFit::FitSavedBins(Int_t Nfits){
+//     delete rf;
+//   }
+//   cout<<"THSRooFit::FitWithBins() Done all Fits "<<endl;
+//   ///??delete savedBins;
+// }
+void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
   if(!fDataBins->GetN()) return;
   Info("THSRooFit::FitSaved","Goint to run %d fits from %s",Nfits,fBinDir.Data());
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
@@ -723,7 +716,8 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
 	//pdf has ownership of chain when set
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
 	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
-	hspdf->SetEvTree(chainMC);
+
+	hspdf->SetEvTree(chainMC,fCut);
 	hspdf->AddProtoData(rf->GetDataSet());
 	delete chainMC;
       }
@@ -731,8 +725,50 @@ void THSRooFit::FitSavedBins(Int_t Nfits){
     //Configured the fir for this bin now do it
     if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
     rf->FitAndStudy(Nfits);
-    delete rf;
-    delete chainData;
+    rf->GetWorkSpace()->saveSnapshot(TString("FinalResults")+rf->GetName(),RooArgSet(fYields,fParameters),kTRUE);//make a copy of final results, this allows you to load the results if you want to loop over fFits later
+    if(cleanup){
+      delete rf;rf=nullptr;
+      delete chainData;chainData=nullptr;
+    }
+  }
+  
+}
+void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
+  if(!fDataBins->GetN()) return;
+  Info("THSRooFit::StudySavedBins","Going to run %d fits from %s",Nfits,fBinDir.Data());
+  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
+  TDirectory *saveDir=gDirectory;
+  //Loop over bins
+  for(Int_t ib=0;ib<GetBins()->GetN();ib++){
+    // Fit1SavedBin(ib,Nfits);
+    //TChain *chainData=new TChain("BinnedTree");
+    //chainData->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
+    //cout<<"Data chain "<<GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
+    THSRooFit* rf=CreateSubFitBins(nullptr,GetBins()->GetBinName(ib),kFALSE);
+     //look for RooHSEventsPDFs to get MC events trees
+    for(Int_t ip=0;ip<fPDFs.getSize();ip++){
+      RooAbsPdf* pdf=rf->GetWorkSpace()->pdf(fPDFs[ip].GetName());
+      RooHSEventsPDF* hspdf=0;
+      if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
+	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
+	hspdf->ResetTree();
+	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
+	TChain *chainMC=new TChain("BinnedTree");
+	//pdf has ownership of chain when set
+	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
+	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+
+	hspdf->SetEvTree(chainMC,fCut);
+	//	hspdf->AddProtoData(rf->GetDataSet());
+	delete chainMC;
+      }
+    } 
+    //Configured the fir for this bin now do it
+    if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
+    rf->StudyFit();
+    if(cleanup){
+      delete rf;rf=nullptr;
+    }
   }
   
 }
@@ -746,9 +782,6 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
   chainData->Add(GetBinDir()+TString("/Tree")+"Data"+".root");
   cout<<"Data chain "<<GetBinDir()+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
   LoadDataSet(chainData);
- //THSRooFit* rf=CreateSubFitBins(chainData,kFALSE);
-  //fBinDir.ReplaceAll("/","");
-  // rf->SetName(fBinDir);
   //look for RooHSEventsPDFs to get MC events trees
   for(Int_t ip=0;ip<fPDFs.getSize();ip++){
     RooAbsPdf* pdf=fWS->pdf(fPDFs[ip].GetName());
@@ -759,17 +792,14 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
       TChain *chainMC=new TChain("BinnedTree");
       //pdf has ownership of chain when set
       chainMC->Add(GetBinDir()+TString("/Tree")+hspdf->GetName()+".root");
-      hspdf->SetEvTree(chainMC);
+      hspdf->SetEvTree(chainMC,fCut);
       hspdf->AddProtoData(GetDataSet());
       //      if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
     }
   }
   SetDataWeight();//if defined weights use them for this dataset
   //CheckRange();
-  //Configured the fir for this bin now do it
-  //if(fModel) TotalPDF();//total PDF defined in parent so also for child
   FitAndStudy(Nfits);
-  // delete rf;
   delete chainData;
   
 }
@@ -811,6 +841,12 @@ void THSRooFit::StudyFit(){
   RooStudyManager mgr(*fWS,this_study);
   mgr.run(TMath::Abs(fNStudyTrials)) ;
 }
+///////////////////////////////////////////////////////////////
+///Attempt many fit swith randomly selected parameters
+///Take the fit result with the best likelihood
+///If using weighted data Sumw2Errors should not be included as an option
+///for these fits or the covariance matrix cannot be used to assess the fit
+//instead you must do another fit after this, with the option set
 void THSRooFit::FitMany(Int_t Nfits){
   if(Nfits==0) return;
   //Do the fit many times with different initial paramters
@@ -827,10 +863,6 @@ void THSRooFit::FitMany(Int_t Nfits){
   //plot result
   if(fIsPlot)PlotDataModel();
   Bool_t nan=TMath::IsNaN(fResult->minNll());
-  //Look for edm which should be small ~10-6 unless weighted data
-  // Bool_t edm=(fResult->edm()<1)*(fResult->covQual()>1);
-  //if(fData->isNonPoissonWeighted()) edm=kTRUE;
-  //check covariance OK or externally provide (SumW2Error) =-1
   Bool_t edm=(fResult->covQual()>1)||(fResult->covQual()==-1);
   Bool_t fail=(fResult->minNll()!=-1e+30);
 
@@ -839,33 +871,29 @@ void THSRooFit::FitMany(Int_t Nfits){
   else loglh[0]=1E300;
   //((TCanvas*)fCanvases->Last())->SetTitle(Form("Fit %d LogL = %lf",0,fChi2));
   fWS->saveSnapshot(Form("ssFit%d",0),RooArgSet(fYields,fParameters),kTRUE);
+
+  //<Ae and aray of fit results
   TObjArray* fitResults=new TObjArray(Nfits);
   fitResults->SetOwner(kTRUE);
   fitResults->AddLast((RooFitResult*)fResult->clone());
+
+  //loop over number of fits
   for(Int_t ifit=1;ifit<Nfits;ifit++){
     Fit(kTRUE);
-    //   fWS->saveSnapshot(Form("ssFit%d",ifit),*(fModel->getVariables()),kTRUE);
     fWS->saveSnapshot(Form("ssFit%d",ifit),RooArgSet(fYields,fParameters),kTRUE);
-    //fWS->saveSnapshot(Form("YssFit%d",ifit),fYields,kTRUE);
-  //plot result
+    //plot result
     if(fIsPlot)PlotDataModel();
-    // ((TCanvas*)fCanvases->Last())->SetTitle(Form("Fit %d LogL = %lf",ifit,fChi2));
+  
     fitResults->AddLast((RooFitResult*)fResult->clone());
-    //Can only get chi2 after PlotDataModel
+    
     nan=TMath::IsNaN(fResult->minNll());
-    //Look for edm which should be small ~10-6 unless weighted data
-    // Bool_t edm=(fResult->edm()<1)*(fResult->covQual()>1);
-    //if(fData->isNonPoissonWeighted()) edm=kTRUE;
     //check covariance OK or externally provide (SumW2Error) =-1
     edm=(fResult->covQual()>1)||(fResult->covQual()==-1);
     fail=(fResult->minNll()!=-1e+30);
     if(fBinnedFit&&!TMath::IsNaN(fChi2)) loglh[ifit]=fChi2; //actually did chi2 fit
     else if((!nan)&&edm&&fail)loglh[ifit]=fResult->minNll();  //loglh[ifit]=fResult->minNll();
     else loglh[ifit]=1E300;
-    // cout<<"MANY FITS "<<fResult->covQual()<<endl;
-    // if(fResult->status()==0)loglh[ifit]=fResult->minNll();
-    //else   loglh[ifit]=1E300;
-
+ 
   }
   cout<<"THSRooFit::FitMany  Likelihoods "<<endl;
   for(Int_t i=0;i<Nfits;i++){

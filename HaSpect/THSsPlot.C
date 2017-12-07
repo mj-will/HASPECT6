@@ -156,10 +156,10 @@ void THSsPlot::sPlot(){
   fParameters.setAttribAll("Constant");
   if(fInWeights) //need to clone datset if want to draw results with in weights
     fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields,RooArgSet(),kTRUE,kTRUE);
-  //fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields);
-  else
+   else
     fSPlot = new RooStats::SPlot("splot_fit", "sPlot Fit", *((RooDataSet*)fData),fModel ,fYields);
-    
+  fParameters.setAttribAll("Constant",kFALSE);
+  
   //Check that the fit was succesfull
   Double_t TotalYield=0;
   for(Int_t iy=0;iy<fYields.getSize();iy++)
@@ -168,6 +168,7 @@ void THSsPlot::sPlot(){
   fFiti++;
   if(TotalYield>0){ //got some weights
     fWeights=new THSWeights("HSsWeights");//initialise weights
+    fWeights->SetIDName(fIDBranchName);
     fWeights->SetTitle(GetName());
     fWeights->SetFile(fOutDir+TString("Weights")+GetName()+".root");
     ExportWeights();
@@ -375,7 +376,8 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
  
   TDirectory *saveDir=gDirectory;
   ctree->GetDirectory()->cd();
-  if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(""));//will use any EntryList
+  if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
+  else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree
   saveDir->cd();
   RFa->SetDataWeight();//if defined weights use them for this dataset
@@ -399,6 +401,7 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
   if(!fModel) TotalPDF();
   FitMany(Nfits);
+  //RooStats::sPlot automoatically adds Sumw2Error() option
   for(Int_t iy=0;iy<fYields.getSize();iy++){
     Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();
     if(thisYield<1E-2){
@@ -437,7 +440,17 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   }
   
 }
+void THSsPlot::FitSavedBins(Int_t Nfits,Bool_t cleanup){
+  //do standard THSRooFit 
+  THSRooFit::FitSavedBins(Nfits,cleanup);
 
+  //in addition combine the weights into 1 and load them
+  THSWeights* wts=new THSWeights("HSsWeights");
+  //Note the output file cannot contain the word Weights (because of Merge), hence Tweights!
+  wts->Merge(fOutDir+"/Weights",fOutDir+"/"+GetName()+"Tweights.root","HSsWeights");
+  fWeights=wts;
+  // fWeights->Save();
+}
 void THSsPlot::DefaultFitOptions(){
   // AddFitOption(RooFit::Extended());
   // if(fData)

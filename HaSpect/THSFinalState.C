@@ -2,7 +2,7 @@
 	\class THSFinalState
 	
 	Class to control particlular analysis
-	Users need to create their own specific project
+	Users need to create their own specific final state class
 	It should operate on 3 classes of data:
 	real, mc rec, mc gen
 	input should be in form of events extracted
@@ -19,182 +19,232 @@
 
 
 #include "THSFinalState.h"
-//ClassImp(THSFinalState)
+#include "THSTopology.h"
 
-//////////////////////////////////////////////////////////////////////////
-///topo should be a pdg particle list seperated by : e.g. "proton:pi+:pi-"
-Int_t THSFinalState::AddTopology(TString topo){
-  vector<Int_t> detpart;
-  TObjArray* OptList = topo.Tokenize(":");
-  for(Int_t i=0;i<OptList->GetEntries();i++){
-    Int_t pdg=0;
-    if(((TObjString*)OptList->At(i))->String()==TString("Rootino+")) pdg=1E6;
-    else if(((TObjString*)OptList->At(i))->String()==TString("Rootino-")) pdg=-1E6;
-    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) pdg=-22;
-    else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSFinalState::AddTopology","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
-    else pdg=TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String())->PdgCode();
-    detpart.push_back(pdg);
-    //Make list of all possible detected types to optimise particle vectors
-    if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end()) fDetTypes.push_back(pdg);
-  }
-  //sort into order for checking
-  std::sort(detpart.begin(),detpart.begin()+detpart.size());
-  cout<<"AddTopology ";
-  for(UInt_t i=0;i<detpart.size();i++)
-    cout<<detpart[i]<<" ";
-  cout<<endl;
-  fTopo.push_back(detpart);
-  fNTopo++;
-  return fNTopo-1;//return index of this topology
+THSFinalState::THSFinalState(){
+  
+  fMapPDGtoParticle[2212]=&fVecProtons;
+  fMapPDGtoParticle[2112]=&fVecNeutrons;
+  fMapPDGtoParticle[211]=&fVecPiPs;
+  fMapPDGtoParticle[-211]=&fVecPiMs;
+  fMapPDGtoParticle[111]=&fVecPi0s;
+  fMapPDGtoParticle[321]=&fVecKPs;
+  fMapPDGtoParticle[-321]=&fVecKMs;
+  fMapPDGtoParticle[11]=&fVecEls;
+  fMapPDGtoParticle[-11]=&fVecPos;
+  fMapPDGtoParticle[22]=&fVecGams;
+  fMapPDGtoParticle[-22]=&fVecBeams;
+  fMapPDGtoParticle[1E6]=&fVecPlus;
+  fMapPDGtoParticle[-1E6]=&fVecMinus;
+  fMapPDGtoParticle[0]=&fVec0;
+
 }
+////////////////////////////////////////////////////////////////////////
+///Add a new topology
+///requires particle string defining particles to be detected
+/// a function intialising the particle iterator
+/// a function defining the specific behaviour for this topology
+/// a string if want to use charge as identiification
+/// a tring if want to look for inclusive topologies
+void THSFinalState::AddTopology(TString topo,FinalState::VoidFuncs funcI,
+				FinalState::VoidFuncs funcE,TString chPID,TString incl){
+  fCurrTopo=new THSTopology(topo,funcE,chPID,incl);
+  fCurrTopo->SetID(fNTopo++);
+  
+  fTopos.push_back(fCurrTopo);
+  fCurrIter=nullptr;
+  funcI();//call the assigned particle iterator initialiser
+  fCurrIter->ConfigureIters();
 
+  if(!fCurrIter)cout<<"THSFinalState::AddTopology warning no Init_Iter working for topology "<<topo<<endl;
+ }
+/////////////////////////////////////////////////////////////////////////
+///Initialse topologies and anything else before analysis starts
+void THSFinalState::InitFS(){
+  for(UInt_t i0=0;i0<fTopos.size()-1;i0++)
+    for(UInt_t i1=i0+1;i1<fTopos.size();i1++)
+      if(fTopos[i0]->CheckExclusiveTopo(fTopos[i1]->Definition())){
+	fTopos[i0]->SetAlternative(fTopos[i1]);
+	break;
+      }
+
+  for(UInt_t i=0;i<fTopos.size();i++)
+    fTopos[i]->Print();
+
+}
 /////////////////////////////////////////////////////////////////////
 ///Note particles with TruthOnly are reserved for undetected particles
 ///which may be kept in simulated data, but shouldn't be included
 ///in final state check
-Int_t THSFinalState::FindTopology(){
+THSTopology* THSFinalState::FindTopology(){
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
-  vector<Int_t> thisTopo;
+
+  fThisTopo.clear();
+
   for(UInt_t ip=0;ip<frDetParts->size();ip++){
-    //    if((frDetParts->At(ip).TruthOnly())==kFALSE)thisTopo.push_back(frDetParts->At(ip).PDG());
-    thisTopo.push_back(frDetParts->at(ip)->PDG());
+    if(!fUseChargePID)fThisTopo.push_back(frDetParts->at(ip)->PDG());
+    else{
+      fThisTopo.push_back(frDetParts->at(ip)->Charge());
+    }
   }
-  std::sort(thisTopo.begin(),thisTopo.begin()+thisTopo.size());
+  std::sort(fThisTopo.begin(),fThisTopo.begin()+fThisTopo.size());
   // cout<<"ThisTopology ";
-  // for(UInt_t i=0;i<thisTopo.size();i++)
-  //   cout<<thisTopo[i]<<" ";
+  // for(UInt_t i=0;i<fThisTopo.size();i++)
+  //   cout<<fThisTopo[i]<<" ";
   // cout<<endl;
 
   //now check to see if this topology matches any of our predefines ones
-  fCurrTopo=-1;
-  for(Int_t itopo=0;itopo<fNTopo;itopo++)
-    if(thisTopo==fTopo[itopo]){
-      fCurrTopo=itopo;
+  fCurrTopo=nullptr;
+  // cout<<"TOPOOPOP "<<fTopos.size()<<endl;
+  for(UInt_t itopo=0;itopo<fTopos.size();itopo++)
+    if(fTopos[itopo]->CheckTopo(&fThisTopo)){
+      fCurrTopo=fTopos[itopo];
+      break;
     }
-  fNParts=thisTopo.size();
-  thisTopo.clear();
+
+  fNParts=fThisTopo.size();
+
   //Init particle vectors, this should only be done once for each event
   //Not for each permuation
-  if(fCurrTopo>-1) InitParticles();
+  if(fCurrTopo) InitParticles();
   
   return fCurrTopo;
 }
 
-//////////////////////////////////////////////////////////////////////
-///Note particles with TruthOnly are reserved for undetected particles
-///which may be kept in simulated data, but shouldn't be included
-///in final state check
-Int_t THSFinalState::FindInclusiveTopology(Int_t incType){
-  if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
-  vector<Int_t> thisTopo;
-  for(UInt_t ip=0;ip<frDetParts->size();ip++){
-    thisTopo.push_back(frDetParts->at(ip)->PDG());
-  }
-  std::sort(thisTopo.begin(),thisTopo.begin()+thisTopo.size());
- 
-  //now check to see if this topology matches any of our predefines ones
-  fCurrTopo=-1;
-  for(Int_t itopo=0;itopo<fNTopo;itopo++){
-    vector<Int_t>ptypes;
-    Bool_t isThis=kTRUE;//assume it is this topo
-    for(UInt_t ipart=0;ipart<fTopo[itopo].size();ipart++){
-      //check if ptypes already includes this type fTopo[itopo][ipart]
-      if(std::find(ptypes.begin(), ptypes.end(), fTopo[itopo][ipart]) == ptypes.end()){
-	ptypes.push_back(fTopo[itopo][ipart]);//Not there so add it
-	//Now see if sufficient number in thisTopo
-	Int_t thiscount = std::count (thisTopo.begin(), thisTopo.end(), fTopo[itopo][ipart]);
-	Int_t topocount = std::count (fTopo[itopo].begin(), fTopo[itopo].end(), fTopo[itopo][ipart]);
-	if(thiscount<topocount)//Not sufficient of this type, not this topo
-	  isThis=kFALSE;
-      }
-    }
-    ptypes.clear();
-    if(isThis){
-      //contains at least the particles we need
-      if(incType!=-1E9){ //if requested only inclusive in 1 particle type check that is case
-       
-	UInt_t thiscount = std::count (thisTopo.begin(), thisTopo.end(), incType);
-	UInt_t topocount = std::count (fTopo[itopo].begin(), fTopo[itopo].end(), incType); //how many incTypes in original topo
-	if(thiscount-topocount!=thisTopo.size()-fTopo[itopo].size())
-	  continue; //not just incType extra particles
-      }
-      fCurrTopo=itopo;
-      break; //don't look for any more    
-    }
-  }
-    
-  fNParts=thisTopo.size();
-  thisTopo.clear();
-  //Init particle vectors, this should only be done once for each event
-  //Not for each permuation
-  if(fCurrTopo>-1) InitParticles();
-  
-  return fCurrTopo;
-}
 
+///////////////////////////////////////////////////////////////////
+///Read in the particles from this input event and
+///Get the first combination from the particle iterator
 void THSFinalState::InitParticles(){
-  //This should be optimised to run 1 loop not number of species loops
-  if(fIsPermutating0==kTRUE) return;
-  //Init all particle type vectors
-  InitDetParts(2212,&fVecProtons);
-  InitDetParts(211,&fVecPiPs);
-  InitDetParts(-211,&fVecPiMs);
-  InitDetParts(321,&fVecKPs);
-  InitDetParts(-321,&fVecKMs);
-  InitDetParts(111,&fVecPi0s);
-  InitDetParts(11,&fVecEls);
-  InitDetParts(-11,&fVecPos);
-  InitDetParts(22,&fVecGams); 
-  InitDetParts(1E6,&fVecPlus); 
-  InitDetParts(-1E6,&fVecMinus);
-  InitDetParts(0,&fVec0); 
-  InitDetParts(-22,&fVecBeams);
-  //start rotations from 0
-  fNProtTurns=0;
-  fNPipTurns=0;
-  fNPimTurns=0;
-  fNPi0Turns=0;
-  fNKpTurns=0;
-  fNKmTurns=0;
-  fNElTurns=0;
-  fNPosTurns=0;
-  fNPlusTurns=0;
-  fNMinusTurns=0;
-  fN0Turns=0;
-  fNBeamTurns=0;
-  fNGamTurns=0;
+  if(fIsPermutating0==kTRUE) return;//already Inited
+  // cout<<" InitParticles() "<<fCurrTopo<<endl;
+  if(!fUseChargePID)
+    //Init all particle type vectors
+    InitDetParts();
+  
+  else//Just use the charge for PID (Need to SetUseChargePID())
+    InitDetPartsCharge(); 
+
+  CheckParticles(); //Make sure all particle vectors are below limits
+  if(!fCurrTopo) return;
+
+  //Get first combination
+  PermutateParticles();
+}
+/////////////////////////////////////////////////////////////////
+///Check Npart limits, to get rid of events were there are too many
+///particles,
+void THSFinalState::CheckParticles(){
+  
+  map< Int_t , vector< THSParticle* >* >::iterator itmap;
+  for (itmap = fMapPDGtoParticle.begin(); itmap != fMapPDGtoParticle.end(); itmap++)
+    {
+      if(itmap->second->size()>fMaxPart) {fCurrTopo=nullptr;return;}
+    }  
+ 
 }
 
 ///////////////////////////////////////////////////////////////////
+///Read in the particles from this input event
 ///Place detected particles in array associated with their pdg type
 ///Loop over detected particles
-void THSFinalState::InitDetParts(Int_t pdg,vector<THSParticle*> *parts){
-  parts->clear();
-  //Comment out line below as it can block inclusive topologies
-  // if(std::find(fDetTypes.begin(), fDetTypes.end(), pdg) == fDetTypes.end())
-  //  return; //not looking for this particle in this project
-  //  for(THSParticle& part:*frDetParts){
+void THSFinalState::InitDetParts(){
+  //parts->clear();
+
+  //Clear all particle vectors
+  map< Int_t , vector< THSParticle* >* >::iterator itmap;
+  for (itmap = fMapPDGtoParticle.begin(); itmap != fMapPDGtoParticle.end(); itmap++)
+    {
+      itmap->second->clear();
+    }  
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle* part=frDetParts->at(ip);
-    if(part->PDG()==pdg) parts->push_back(part);
-  }
-  //order particles in momentum, uses THSParticle::operator<
-  std::sort(parts->begin(),parts->end());
+    fMapPDGtoParticle[part->PDG()]->push_back(part);
+   }
+ 
+}
+//////////////////////////////////////////////////////////////
+///Read in the particles from this input event
+///assign them in vectors corrsponing to their charge
+void THSFinalState::InitDetPartsCharge(){
 
+  fMapPDGtoParticle[Int_t(1E6)]->clear();
+  fMapPDGtoParticle[Int_t(-1E6)]->clear();
+  fMapPDGtoParticle[Int_t(0)]->clear();
+
+  for(UInt_t ip=0;ip<fNParts;ip++){
+    THSParticle* part=frDetParts->at(ip);
+    fMapPDGtoParticle[Int_t(part->Charge()*1E6)]->push_back(part);
+   }
+ }
+
+//////////////////////////////////////////////////////////////////
+///Process one event from the input tree
+void THSFinalState::ProcessEvent(){
+ //Process one input event
+  InitEvent();
+  if(frDetParts)fNDet=frDetParts->size();
+  // Int_t firstuse=1;
+
+  while(FSProcess());
+  
+  FinaliseEvent();
+}
+Bool_t THSFinalState::FSProcess(){
+  
+  if(!WorkOnEvent()) return kFALSE;
+
+  
+  if(IsGoodEvent()){
+    UserProcess(); 
+  }
+
+  PermutateParticles();
+  if(IsPermutating())
+    return kTRUE;
+  
+  return kFALSE;
 }
 
-void THSFinalState::ProcessEvent(){
-  //Process one input event
-  InitEvent();
-   do{
-     WorkOnEvent();
-     if(fFinalTree)
-       if(IsGoodEvent())
-	 fFinalTree->Fill(); //fill for first combination
-   }
-   
-    while(IsPermutating());
-   FinaliseEvent();
+void THSFinalState::UserProcess(){
+  if(fFinalTree) fFinalTree->Fill(); //fill for first combination
+  fUID++;
+  
+}
+
+Bool_t THSFinalState::WorkOnEvent(){
+  //Should this event be saved?
+  THSFinalState::fGoodEvent=kTRUE;
+  THSFinalState::fCorrect=0; //Correct permutation? used for simulation only
+  
+  //If generated MC events
+  Init_Generated();
+  if(!THSFinalState::fIsGenerated){
+    //Look for reconstructed events
+    //if reconstructed Find the detected particles in this event
+    if(FindTopology()==nullptr) {fGoodEvent=kFALSE;return fIsPermutating0=kFALSE;}
+    //Found a topology execute its Topo function
+    fCurrTopo->Exec();
+    THSTopology* OrigTopo=fCurrTopo;
+    //if that topology failed try an alternative if one is linked to this one
+    while(!fGoodEvent&&fCurrTopo->Alternative()){
+      fGoodEvent=kTRUE;
+      fCurrTopo=fCurrTopo->Alternative();
+      fCurrTopo->Exec();
+    }
+    fTopoID=fCurrTopo->ID();
+    fCurrTopo=OrigTopo;
+  }
+  
+  //Calc kinematics
+  Kinematics();
+  
+  //Check if assigned vectors agree with true generated
+  //Simulation only
+  THSFinalState::CheckTruth();
+
+  if(fIsGenerated) return kTRUE; //Generated only 1 permutation
+  return kTRUE;
 }
 
 //////////////////////////////////////////////////////////////
@@ -203,39 +253,16 @@ void THSFinalState::ProcessEvent(){
 ///Check through particle types,
 ///if more than 1 of a type permutate through all combinations
 Bool_t THSFinalState::PermutateParticles(){
+  if(!fTryPerm&&fNPerm>0) return kFALSE; //not permutating in this analysis
+  if(fIsGenerated) return kFALSE; //Truth generated analysis
+  if(!fCurrTopo) return kFALSE; //no valid topology
   fNPerm++;
-  if(!fTryPerm) return kFALSE;
-  if(fIsPermutating1) return kTRUE;
+  if(fIsPermutating1) return kTRUE; //so user can do their own permutation
   fIsPermutating0=kTRUE; //Will be set to false when event over
-  if(RotatePartVector(&fVecProtons,&fNProtTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPiPs,&fNPipTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPiMs,&fNPimTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPi0s,&fNPi0Turns)) return kTRUE;
-  if(RotatePartVector(&fVecKPs,&fNKpTurns)) return kTRUE;
-  if(RotatePartVector(&fVecKMs,&fNKmTurns)) return kTRUE;
-  if(RotatePartVector(&fVecEls,&fNElTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPos,&fNPosTurns)) return kTRUE;
-  if(RotatePartVector(&fVecGams,&fNGamTurns)) return kTRUE;
-  if(RotatePartVector(&fVecPlus,&fNPlusTurns)) return kTRUE;
-  if(RotatePartVector(&fVecMinus,&fNMinusTurns)) return kTRUE;
-  if(RotatePartVector(&fVec0,&fN0Turns)) return kTRUE;
-  if(RotatePartVector(&fVecBeams,&fNBeamTurns)) return kTRUE;  
+  if(fCurrTopo->Iter()->NextCombitorial()){fCurrTopo->Iter()->SortEvent();return kTRUE;}
+  else fCurrTopo->Iter()->SortEvent();
   fIsPermutating0=kFALSE;
   return kFALSE; 
-}
-
-///////////////////////////////////////////////////////////////
-///Move through vector of particles, return false when all done
-Bool_t THSFinalState::RotatePartVector(vector<THSParticle*>* vec,Int_t *Nturns){
-  if(vec->empty()) return kFALSE;
-  if(vec->size()==UInt_t(*Nturns)+1) {
-    std::rotate(vec->begin(),vec->begin()+1,vec->end());//rotate back to start	
-    *Nturns=0;
-    return kFALSE;
-  }//Got to the end, ready to start again
-  std::rotate(vec->begin(),vec->begin()+1,vec->end());
-  *Nturns=(*Nturns)+1;
-  return kTRUE;
 }
 
 ///////////////////////////////////////////////////////
@@ -271,6 +298,7 @@ Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
       match=ip;
     }
   }
+
   if(part->TruthP4()==frGenParts->at(match)->P4()&&part->TruthPDG()==frGenParts->at(match)->PDG())
     return kTRUE;
   return kFALSE;
@@ -292,4 +320,80 @@ void THSFinalState::CheckTruth(){
     fCorrect*=IsCorrectTruth(fFinal[ip]);
   
   if(fCorrect) fGotCorrectOne=kTRUE;
+}
+
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator to previously selected particles
+THSParticleIter* THSFinalState::AddSelectToSelected(THSParticleIter* diter,Int_t ni,Int_t nsel,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
+  if(nsel*ni>diter->GetNSel()) cout<<"WARNING THSFinalState::AddSelectToSelected : trying to select more particles than exist in original iterator "<<nsel*ni<<" "<< diter->GetNSel()<<endl;
+  THSParticleIter *new_iter=AddSelectXofY(ni,nsel,part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  diter->SetSelIter(new_iter);
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator to remaining particles
+THSParticleIter* THSFinalState::AddSelectToRemainder(THSParticleIter* diter,Int_t ni,Int_t nsel,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
+  THSParticleIter *new_iter=AddSelectXofY(ni,nsel,part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  diter->SetRemIter(new_iter);
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator
+THSParticleIter* THSFinalState::AddSelectXofY(Int_t ni,Int_t nsel,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
+  
+  THSParticleIter *new_iter= new THSParticleIter();
+  new_iter->AddEventParticles(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  new_iter->SelectXofY(ni,nsel);
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add permutate iterator to previously selected particles
+THSParticleIter* THSFinalState::AddPermutateToSelected(THSParticleIter* diter,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){ 
+  THSParticleIter *new_iter=AddPermutate(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  diter->SetSelIter(new_iter);
+  return new_iter;
+}
+/////////////////////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add permutate iterator to remaining particles
+THSParticleIter* THSFinalState::AddPermutateToRemainder(THSParticleIter* diter,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
+  THSParticleIter *new_iter=AddPermutate(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  diter->SetRemIter(new_iter);
+  return new_iter;
+}
+/////////////////////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator 
+THSParticleIter* THSFinalState::AddPermutate(THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
+  
+  THSParticleIter *new_iter= new THSParticleIter();
+  new_iter->SetCombi(THSPermutation());
+  new_iter->AddEventParticles(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  return new_iter;
+}
+
+////////////////////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Create particle iterator for a particticular species
+///Given by the particle vector parts (e.g. fVecMinus)
+THSParticleIter* THSFinalState::CreateParticleIter(vector<THSParticle*> *parts,Int_t Nsel){
+  THSParticleIter *diter=nullptr;
+  if(!fCurrIter){
+    diter=fCurrTopo->Iter();
+    fCurrIter=diter;
+  }
+  else{
+    diter= new THSParticleIter();
+    fCurrIter->SetNextInnerIter(diter);
+  }
+  
+  diter->SetCombi(THSSelection());
+  diter->SetParticles(parts);
+  diter->SetNSel(Nsel);
+  
+  return diter;
 }

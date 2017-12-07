@@ -58,12 +58,13 @@ The only real difference is in loading the data.Here we must give the name of th
 We can then run the sWeights fits as before and draw variables.
 
   RF->FitSavedBins(1); //argument = number of test fits with random initial pars
-Before drawing the variables I must merge the weights from th 10 different Eg bins and load them:
 
-  THSWeights* wts=new THSWeights("TotalWeights");
-  wts->Merge("outM1/WeightsMmiss","outM1/WeightsTotal.root","HSsWeights");
-  RF->SetTree(&chain);
-  RF->SetWeights(wts);
+Now I need to reload the original tree so I can draw variables
+    TChain chain2("MyModel");
+  chain2.Add("Data.root");
+  RF->LoadDataSet(&chain2);
+ 
+
 Now I can draw the variables (integrated over all Eg) as before.
   RF->DrawTreeVar("Mmiss",100,0,10);
   RF->DrawTreeVar("M1",100,0,10);

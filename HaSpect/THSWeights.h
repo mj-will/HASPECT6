@@ -19,6 +19,7 @@ class THSWeights : public TNamed{
   TList* fWeightList=nullptr; //list of weight bins which have been merged to make this
   TFile* fFile=nullptr;
   TVectorD fWVals;
+  TString fIDName="UID"; //name of tree branch with event ID
   Long64_t fID;
   Long64_t fCurrEntry;
   Bool_t fGotEntry;
@@ -65,6 +66,9 @@ class THSWeights : public TNamed{
   TString GetSpeciesName(UInt_t isp);
   void SetSpecies(StrIntMap_t species){fSpecies=species;};
   Int_t GetSpeciesID(TString name){if(fSpecies.count(name))return fSpecies[name]; else {cout<<"THSWeights:: GetSpeciesID species not found "<<endl;return -1;}}
+  TString GetIDName(){return fIDName;}
+  void SetIDName(TString name){fIDName=name;}
+
   TList* GetWeightList(){return fWeightList;}
   void PrintWeight();
   Long64_t Merge(TString tempName,TString outName="",TString wmName="WeightMap");
@@ -72,12 +76,10 @@ class THSWeights : public TNamed{
   void BuildIndex();
   void SetFile(TString filename);
   void Save();
-  /* void Mem(); */
-  /* void Disk(); */
-  /* void LoadSavedOld(TString fname,TString wname); */
   void LoadSaved(TString fname,TString wname);
-
-  ClassDef(THSWeights, 2)  // Writeble Weight map  class
+  void WeightBySelection(TTree* tree,TCut cut,Double_t wgt);
+  
+  ClassDef(THSWeights, 3)  // Writeble Weight map  class
 };
 
 #endif //ifdef THSWeights
