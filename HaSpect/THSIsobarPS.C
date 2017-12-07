@@ -3,8 +3,15 @@
 //--Update
 //--Description
 //HASPECT Event Reconstruction
-//THSIsobarPS
-//Class to identify particles which may have come from an isobar and which may not
+
+/**
+	\class THSIsobarPS
+	
+	Class to identify particles which may have come from an isobar and which may not.
+	Assume t-channel process for calculations.
+	
+*/
+
 #include "THSIsobarPS.h"
 #include <TLorentzRotation.h>
 
@@ -28,8 +35,12 @@ THSIsobarPS::THSIsobarPS(Int_t Np){
   // fSector=0;
 }
 
-//Function to determine whether the d1,d2 particles could have formed an isobar
-//from the 3 particle decay with z0 is the 4 
+////////////////////////////////////////////////////////////////////////////////////
+///Function to determine whether the d1,d2 particles could have formed an isobar
+///from the 3 particle decay with z0 as the third particle. \n
+///e.g. if one wants to study gp->p rho->p pi pi: \n
+///In order to check if the two pions could come from an isobar (rho) one would call \n
+///IsIsobar(ProtonVec,PiPlusVec,PiMinusVec,BeamVec)
 Bool_t THSIsobarPS::IsIsobar(TLorentzVector z0,TLorentzVector d1,TLorentzVector d2,TLorentzVector beam){
   //Construct the 3 particle CM
   TLorentzVector CM=z0+d1+d2;
@@ -141,16 +152,19 @@ Bool_t THSIsobarPS::IsIsobar(TLorentzVector z0,TLorentzVector d1,TLorentzVector 
   // if(L1<fOmega&&fOmega<L2) return kTRUE;
   // else return kFALSE;
 }
+
 Double_t THSIsobarPS::BetaPM(double p0, double m0){
   //Warning return -ve if p0<0 
  //beta =p/E
   return p0/sqrt(p0*p0+m0*m0);
 }
+
 // double THSIsobarPS::BetaPM(double p0, double m0){
 //   //Warning return -ve if p0<0 
 //  //beta =p/E
 //   return p0/sqrt(p0*p0+m0*m0);
 // }
+
 Double_t THSIsobarPS::breakupMomentum( double mass0, double mass1, double mass2 ){
    
   Double_t q;
