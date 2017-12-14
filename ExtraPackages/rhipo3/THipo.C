@@ -106,7 +106,10 @@ void THipo::ToRoot(TString filename){
   //if perviously defined by user configuration or previous hipo file
   if(fBanks.size()==0)ConfigBanks();
   // if(fBanks.size()==0)ConfigAllBanks();
-  filename.ReplaceAll(".hipo.3",".root");
+  //filename.ReplaceAll(".hipo.3",".root");
+  // TString append=filename(filename.Last('.')+1,filename.Sizeof());
+  // if(append!=TString("hipo")
+  //    filename=filename(0,filename.Last('.'));
   filename.ReplaceAll(".hipo",".root");
 
   //Append the output directory name
