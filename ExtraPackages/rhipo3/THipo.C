@@ -262,22 +262,24 @@ void THipoBank::InitTree(TTree* tree){
     TString branchname=fName;
     branchname.ReplaceAll("::","_");
     branchname.ReplaceAll(" ","");
-    if(fTypeI[in].Contains("SHORT")){
-      vector<Short_t>* vecptr=reinterpret_cast<vector<Short_t >*>(fVecI.at(in));
+    // if(fTypeI[in].Contains("SHORT")){
+    //   vector<Short_t>* vecptr=reinterpret_cast<vector<Short_t >*>(fVecI.at(in));
+    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    // }
+    // else if(fTypeI[in].Contains("BYTE")){
+    //   vector<Char_t>* vecptr=reinterpret_cast<vector<Char_t >*>(fVecI.at(in));
+    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    // }
+    // else if(fTypeI[in].Contains("INT")){
+    //   vector<Int_t>* vecptr=reinterpret_cast<vector<Int_t >*>(fVecI.at(in));
+    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    // }
+    // else {
+    //   vector<Long_t>* vecptr=(fVecI.at(in));
+    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    // }
+     vector<Long_t>* vecptr=(fVecI.at(in));
       tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    }
-    else if(fTypeI[in].Contains("BYTE")){
-      vector<Char_t>* vecptr=reinterpret_cast<vector<Char_t >*>(fVecI.at(in));
-      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    }
-    else if(fTypeI[in].Contains("INT")){
-      vector<Int_t>* vecptr=reinterpret_cast<vector<Int_t >*>(fVecI.at(in));
-      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    }
-    else {
-      vector<Long_t>* vecptr=(fVecI.at(in));
-      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    }
   }
   //Make a branch for each float item
   for(UInt_t fn=0;fn<NFloat();fn++){
