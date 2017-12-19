@@ -109,13 +109,14 @@ void THSDataManager::ReadWriteChain(TChain* chain,TString OutDirName,TString Fil
   //loop over all files in chain
   TObjArray *files=chain->GetListOfFiles();
 
-  Info("THSDataManager::ReadWriteChain"," Will proceess all files in chain and put in %s with %s appended",OutDirName.Data(),FileAppend.Data());
+  Info("THSDataManager::ReadWriteChain"," Will proceess all %d files in chain and put in %s with %s appended",files->GetEntries(),OutDirName.Data(),FileAppend.Data());
   
   for(Int_t i=0;i<files->GetEntries();i++){
     TString fname=files->At(i)->GetTitle();
     Init(fname,chain->GetName());
     TString outfile=gSystem->BaseName(fname);
-    outfile.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);
+    //  outfile.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);
+    outfile.Append(FileAppend);
     Info("THSDataManager::ReadWriteChain"," Writing to %s",(OutDirName+outfile).Data());
     WriteParticles(OutDirName+"/"+outfile);
     CloseReadTree();
