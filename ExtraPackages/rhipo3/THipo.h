@@ -32,7 +32,8 @@ class THipoBankParser  {
 class THipoItem  {
 
   public:
- THipoItem(vector<Int_t >* vec,Int_t *entry) : fBankEntry(*entry){fItemI=vec;fIsFloat=kFALSE;};
+ THipoItem(vector<Long_t >* vec,Int_t *entry) : fBankEntry(*entry){fItemI=vec;fIsFloat=kFALSE;};
+  //THipoItem(vector<Int_t >* vec,Int_t *entry) : fBankEntry(*entry){fItemI=vec;fIsFloat=kFALSE;};
  THipoItem(vector<Float_t >* vec,Int_t *entry) : fBankEntry(*entry) {fItemF=vec;};
   virtual ~THipoItem(){};
 
@@ -53,7 +54,8 @@ class THipoItem  {
  protected:
   
   private:
-  vector<Int_t >* fItemI=nullptr;
+  vector<Long_t >* fItemI=nullptr;
+  //  vector<Int_t >* fItemI=nullptr;
   vector<Float_t >* fItemF=nullptr;
   Bool_t fIsFloat=kTRUE;
   Int_t &fBankEntry;//Points to THipoBank fEntry
@@ -121,7 +123,8 @@ class THipoBank  {
   protected:
   TString fName;
   Int_t fGroup=0;
-  vector<vector<Int_t>* > fVecI;
+  vector<vector<Long_t>* > fVecI;
+  //  vector<vector<Int_t>* > fVecI;
   vector<vector<Float_t>* > fVecF;
   vector<UInt_t> fIndexI;
   vector<UInt_t> fIndexF;
@@ -164,7 +167,12 @@ inline Bool_t THipoBank::NextEntry(){
 inline  void THipoBank::ReadItemI(hipo::event *event,UInt_t ii){
   // Int_t type= event->getNodeType(event->getNodeAddress(fGroup,IdxI(ii)));
   //cout<<"Type "<<type<<endl; 
-
+  if(fTypeI[ii][0]=='L'){
+    vector<Long_t> vecl=event->getLong(fGroup,IdxI(ii));
+    for(UInt_t iv=0;iv<vecl.size();iv++)
+      (fVecI.at(ii))->push_back(vecl.at(iv));
+    return;
+  }
   vector<Int_t> vec=event->getInt(fGroup,IdxI(ii));
   for(UInt_t iv=0;iv<vec.size();iv++)
     (fVecI.at(ii))->push_back(vec.at(iv));

@@ -243,7 +243,8 @@ THipoBank::~THipoBank(){
 void THipoBank::AddIntItem(TString name,Int_t id,TString type){
   fItemsI.push_back(name);
   fTypeI.push_back(type);
-  fVecI.push_back(new vector<Int_t >);
+  fVecI.push_back(new vector<Long_t >);
+  //  fVecI.push_back(new vector<Int_t >);
   fItemMap[name]=fIndexI.size();
   fIndexI.push_back(id);
   fFloatMap[name]=kFALSE;
@@ -269,8 +270,12 @@ void THipoBank::InitTree(TTree* tree){
       vector<Char_t>* vecptr=reinterpret_cast<vector<Char_t >*>(fVecI.at(in));
       tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
     }
+    else if(fTypeI[in].Contains("INT")){
+      vector<Int_t>* vecptr=reinterpret_cast<vector<Int_t >*>(fVecI.at(in));
+      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    }
     else {
-      vector<Int_t>* vecptr=(fVecI.at(in));
+      vector<Long_t>* vecptr=(fVecI.at(in));
       tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
     }
   }
@@ -320,7 +325,6 @@ Bool_t THipoBankParser::ConfigBank3(THipoBank* bank){
   TString groupname=bankname(1,bankname.First(",")-1);
   bankname=bankname(bankname.First(",")+1,bankname.Sizeof());//just get name
   bank->SetName(bankname);
-  cout<<bankname<<endl;
   TObjArray* use_var=nullptr;
   if(selectname->GetEntries()>1)
     use_var=((TObjString*)selectname->At(1))->String().Tokenize("][");
