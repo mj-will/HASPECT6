@@ -8,56 +8,7 @@ THSHipoReader::THSHipoReader(){
   cout<<"If the hipo file was created by a different version"<<endl;
   cout<<"The detector information may not be correct"<<endl;
   fHipo = new THipo();
-  fHipo->ConfigBank("REC::Particle");
-  fHipo->ConfigBank("REC::Scintillator");
-  fHipo->ConfigBank("REC::Calorimeter");
-  fHipo->ConfigBank("REC::Cherenkov");
-  fHipo->ConfigBank("REC::ForwardTagger");
-  fHipo->ConfigBank("REC::Event");
-  //fHipo->ConfigBank("CVTRec::Tracks");
-  //Get the necessary items from Particle Bank
-  fPBank=fHipo->GetBank("REC::Particle");
-  fPx=fPBank->GetItem("px");
-  fPy=fPBank->GetItem("py");
-  fPz=fPBank->GetItem("pz");
-  fVx=fPBank->GetItem("vx");
-  fVy=fPBank->GetItem("vy");
-  fVz=fPBank->GetItem("vz");
-  fPid=fPBank->GetItem("pid");
-  fBeta=fPBank->GetItem("beta");
-  fCharge=fPBank->GetItem("charge");
-  //Get the necessary items from REC::Scintillator Bank
-  fSBank=fHipo->GetBank("REC::Scintillator");
-  fSPindex=fSBank->GetItem("pindex");
-  fSTime=fSBank->GetItem("time");
-  fSSector=fSBank->GetItem("sector");
-  fSEnergy=fSBank->GetItem("energy");
-  fSPath=fSBank->GetItem("path");
-  fSDet=fSBank->GetItem("detector");
-  //Get the necessary items from REC::Calorimeter Bank
-  fCalBank=fHipo->GetBank("REC::Calorimeter");
-  fCalPindex=fCalBank->GetItem("pindex");
-  fCalEnergy=fCalBank->GetItem("energy");
-  fCalTime=fCalBank->GetItem("time");
-  fCalPath=fCalBank->GetItem("path");
- //Get the necessary items from REC::Cherenkov Bank
-  fChBank=fHipo->GetBank("REC::Cherenkov");
-  fChPindex=fChBank->GetItem("pindex");
-  fChEnergy=fChBank->GetItem("nphe");
-  fChDetector=fChBank->GetItem("detector");
-  //Get the necessary items from REC::FT Bank
-  fFTBank=fHipo->GetBank("REC::ForwardTagger");
-  fFTPindex=fFTBank->GetItem("pindex");
-  fFTTime=fFTBank->GetItem("time");
-  fFTEnergy=fFTBank->GetItem("energy");
-  fFTPath=fFTBank->GetItem("path");
-  fFTDet=fFTBank->GetItem("detector");
 
-  fEvBank=fHipo->GetBank("REC::Event");
-  fEvTime=fEvBank->GetItem("STTime");
- 
-
-  
   //Make vectors to hold pointers to THSParticles
   //These are just used for speed, new THSParticles
   //will be added when required by that event.
@@ -68,20 +19,76 @@ THSHipoReader::THSHipoReader(){
  
 }
 Bool_t THSHipoReader::Init(TString filename,TString name){
-  if(fAddGenerated&&!fMCBank){
-    fHipo->ConfigBank("MC::Particle");
-    fMCBank=fHipo->GetBank("MC::Particle");
-    fMCPx=fMCBank->GetItem("px");
-    fMCPy=fMCBank->GetItem("py");
-    fMCPz=fMCBank->GetItem("pz");
-    fMCVx=fMCBank->GetItem("vx");
-    fMCVy=fMCBank->GetItem("vy");
-    fMCVz=fMCBank->GetItem("vz");
-    fMCPid=fMCBank->GetItem("pid");
-    fReadGenerated=new vector<THSParticle*>;
-  }
   fHipo->InitFile(filename);
-  Info("THSHipoReader","Opened file");
+  //File opened can now configure banks
+  if(!fPBank){
+    Info("THSHipoReader","Opened file");
+    fHipo->ConfigOnlyBank("REC::Particle");
+    fHipo->ConfigOnlyBank("REC::Scintillator");
+    fHipo->ConfigOnlyBank("REC::Calorimeter");
+    fHipo->ConfigOnlyBank("REC::Cherenkov");
+    fHipo->ConfigOnlyBank("REC::ForwardTagger");
+    fHipo->ConfigOnlyBank("REC::Event");
+    if(fAddGenerated&&!fMCBank){
+      fHipo->ConfigOnlyBank("MC::Particle");
+    }
+    fHipo->ConfigBanks();
+    
+    //fHipo->ConfigOnlyBank("CVTRec::Tracks");
+    //Get the necessary items from Particle Bank
+    fPBank=fHipo->GetBank("REC::Particle");
+    fPx=fPBank->GetItem("px");
+    fPy=fPBank->GetItem("py");
+    fPz=fPBank->GetItem("pz");
+    fVx=fPBank->GetItem("vx");
+    fVy=fPBank->GetItem("vy");
+    fVz=fPBank->GetItem("vz");
+    fPid=fPBank->GetItem("pid");
+    fBeta=fPBank->GetItem("beta");
+    fCharge=fPBank->GetItem("charge");
+    //Get the necessary items from REC::Scintillator Bank
+    fSBank=fHipo->GetBank("REC::Scintillator");
+    fSPindex=fSBank->GetItem("pindex");
+    fSTime=fSBank->GetItem("time");
+    fSSector=fSBank->GetItem("sector");
+    fSEnergy=fSBank->GetItem("energy");
+    fSPath=fSBank->GetItem("path");
+    fSDet=fSBank->GetItem("detector");
+    //Get the necessary items from REC::Calorimeter Bank
+    fCalBank=fHipo->GetBank("REC::Calorimeter");
+    fCalPindex=fCalBank->GetItem("pindex");
+    fCalEnergy=fCalBank->GetItem("energy");
+    fCalTime=fCalBank->GetItem("time");
+    fCalPath=fCalBank->GetItem("path");
+    //Get the necessary items from REC::Cherenkov Bank
+    fChBank=fHipo->GetBank("REC::Cherenkov");
+    fChPindex=fChBank->GetItem("pindex");
+    fChEnergy=fChBank->GetItem("nphe");
+    fChDetector=fChBank->GetItem("detector");
+    //Get the necessary items from REC::FT Bank
+    fFTBank=fHipo->GetBank("REC::ForwardTagger");
+    fFTPindex=fFTBank->GetItem("pindex");
+    fFTTime=fFTBank->GetItem("time");
+    fFTEnergy=fFTBank->GetItem("energy");
+    fFTPath=fFTBank->GetItem("path");
+    fFTDet=fFTBank->GetItem("detector");
+    
+    fEvBank=fHipo->GetBank("REC::Event");
+    fEvTime=fEvBank->GetItem("STTime");
+    
+    
+    if(fAddGenerated&&!fMCBank){
+      fMCBank=fHipo->GetBank("MC::Particle");
+      fMCPx=fMCBank->GetItem("px");
+      fMCPy=fMCBank->GetItem("py");
+      fMCPz=fMCBank->GetItem("pz");
+      fMCVx=fMCBank->GetItem("vx");
+      fMCVy=fMCBank->GetItem("vy");
+      fMCVz=fMCBank->GetItem("vz");
+      fMCPid=fMCBank->GetItem("pid");
+      fReadGenerated=new vector<THSParticle*>;
+    }
+  }
   return kTRUE;
 }
 void THSHipoReader::CloseReadTree(){

@@ -4,7 +4,7 @@
   reader->SetWriteGenBranch("Generated");
 
   TChain chain("hipo");
-  chain.Add(HSin()+"/*.hipo");
+  chain.Add(HSin()+"/*.hipo*");
 
   //Create output directory and make sure it is OK to continue of it
   //already exists
