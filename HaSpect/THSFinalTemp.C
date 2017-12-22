@@ -15,46 +15,38 @@
 
 
 THSFinalTemp::THSFinalTemp(){
-  //Set final state
+  SetVerbose(1);
+  CheckCombi(); //comment out to remove messages
+  
+  //Set final state detected particles
+  //AddParticle(particle,true/false you want to write in final vector, genID for linking to generated truth value)
+  //Note if particle is added to final with a valid genID it will be used
+  //to determine the correct permutation of the simulated event
 
-  SetUseChargePID();//If want to only use charge for IDing
+  //Set final state parents
+  
+  
+  
+  TString PID("NONE"); //set this to which particles you want to id via pdg code alone, or set it in individual AddTopology
+  TString INCLUSIVE("");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
 
   //include topology for analysis and get index
- 
-
- THSFinalState::InitFS();
+  
+  
+  THSFinalState::InitFS();
 }
 
-
-void THSFinalTemp::Init_Generated(){
-  if(!THSFinalState::frGenParts) return;
-  if(THSFinalState::frGenParts->size()!=REPLACE_WITH_N_GENERATED_PARTICLES) {fGoodEvent=kFALSE;return;}
-  //Fill our data member particles
-  //User is responsible for indicing right
-  //comes from order in generated file (e.g LUND)
-  if(THSFinalState::fIsGenerated){
-    //fElectron=*frGenParts->at(0);
-  }
-  else{//Just assign truth values
-    //fElectron.SetTruth(frGenParts->at(0));
-  }
-}
 
 //Define topology Iterator functions
 // void THSFinalTemp::Init_IterX(){
 //  THSParticleIter* diter=CreateParticleIter(fTID_X,&fVecY,NPARTICLES);
 //  ...
 // }
-//Or if iterator the same as a previous one
-// void THSFinalTemp::Init_IterY(){
-//   fDetIter[fTID_1]=fDetIter[fTID_0];
-// }
 //Define topology functions
 // void THSFinalTemp::Topo_X(){
 // }
 
 void THSFinalTemp::Kinematics(){
-  if(!THSFinalState::fGoodEvent) return;//don't do calculations
   //Do calculations if Good Event
 
 }
@@ -63,5 +55,8 @@ void THSFinalTemp::FinalStateOutTree(TTree* tree){
   THSFinalState::fFinalTree=tree;
   //tree->Branch("Final",&fFinal);//If you want to save the final THSParticles
   tree->Branch("MissMass",&fMissMass,"MissMass/D");
+  tree->Branch("Topo",&fTopoID,"Topo/I");
+  tree->Branch("NPerm",&fNPerm,"NPerm/I");
+  tree->Branch("NDet",&fNDet,"NDet/I");
 
 }

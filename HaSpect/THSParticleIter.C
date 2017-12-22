@@ -30,6 +30,8 @@ Bool_t THSParticleIter::Testing(){
 ///by a call to SortEvent();
 
 Bool_t THSParticleIter::NextCombitorial(){
+  // Print();
+  // if(fEvParts.size()>0)fEvParts[0]->PDG();
   // cout<<fAllParticles->size()<<" "<<fNSel<<endl;
   //  if(!fUseCombi) return kFALSE;
   //Make sure Iterator fully configured
@@ -175,10 +177,12 @@ void THSParticleIter::SelectXofY(Int_t _X, Int_t _Y, THSCombitorial* sel_iter){
   cout<<"SelectXofY "<<_X<<" "<<_Y<<endl;
   //recursively create iterators
   if(fEvParts.size()!=UInt_t(_X*_Y)) cout<<"Warning ParticleIter::SelectXofY not sufficeint Event Particles Set "<<fEvParts.size()<<" when we need "<<_X*_Y<<endl;
+  if(fEvParts[0])fPDG=fEvParts[0]->PDG();
   SetCombi(THSSelection());
   SetNSel(_Y);
   SetNIdentical(_X);
-  
+  SetName(TString(Form("Select: %d of %d of type %d ",fNIdentical,fNSel,fEvParts[0]->PDG())) + TString(" after ")+GetName());
+
   //Now sort the event particles
   //Take the first _Y for those selected here
   //if(fEvParts.size()<_Y) cout<<"Warning ParticleIter::SelectXofY insufficient particles in Event Particles to cover "<<endl;
@@ -191,11 +195,13 @@ void THSParticleIter::SelectXofY(Int_t _X, Int_t _Y, THSCombitorial* sel_iter){
     fSelIter=new THSParticleIter();
     fSelIter->SetEventParticles(selParts);
     fSelIter->SetCombi(*sel_iter);
+    fSelIter->SetPDG(fPDG);
   }
   if(_X>1){
     fRemIter=new THSParticleIter();
     fRemIter->SetEventParticles(remParts);
     fRemIter->SelectXofY(_X-1,_Y,sel_iter);
+    fRemIter->SetPDG(fPDG);
   }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -214,7 +220,6 @@ void THSParticleIter::SortEvent(){
     	if(isel<fSelected.size()){
 	  fEvParts[isel]->CopyParticle(fSelected[isel],kFALSE);
 	  fEvParts[isel]->TakePDGMass();
-	  // if(fEvParts[isel]->Charge()==-1) cout<<"Sort "<< fEvParts[isel]->P4p()->Theta()<<endl;
 	}
 	else{
 	  fEvParts[isel]->P4p()->SetE(0);
@@ -255,12 +260,14 @@ void THSParticleIter::AddEventParticles(THSParticle* part0,THSParticle* part1,TH
 
 }
 
-void THSParticleIter::Print(){
+void THSParticleIter::Print(Int_t verbose){
+  if (verbose==1&&fEvParts.size()==0) {if(fInnerIter) fInnerIter->Print(verbose); return;}
 
   cout<<" THSParticleIter::Print() "<<endl;
-  cout<<" Type : "<<fCombi.GetType()<<" EvParts "<<fEvParts.size()<<endl;
-  if(fCombi.GetType()==2)cout<<" NSel "<<fNSel<<" Nidentical "<<fNIdentical<<" SelIter "<<fSelIter<<" RemIter "<<fRemIter<<endl; 
-  if(fInnerIter) fInnerIter->Print();
+  if(verbose>1) cout<<GetName()<<endl;
+  cout<<"     Type : "<<fCombi.GetType()<<" number chosen "<<fNSel*fNIdentical<<" of id  "<<fPDG<<" and number used here = "<<fEvParts.size()<<endl;
+  if(verbose==0&&fCombi.GetType()==2)cout<<"     NSel "<<fNSel<<" Nidentical "<<fNIdentical<<" SelIter "<<(fSelIter!=nullptr)<<" RemIter "<<(fRemIter!=nullptr)<<endl; 
+  if(fInnerIter) fInnerIter->Print(verbose);
   else cout<<endl;
     
 }

@@ -13,6 +13,7 @@ class THSParticleIter{
   virtual ~ THSParticleIter(){delete fExtraParticle;if(fInnerIter) delete fInnerIter;}//if(fSelIter) delete fSelIter; if(fRemIter) delete fRemIter;};
   
  private:
+  TString fName;
   Int_t fPDG=0; //PDG code for particles in this iterator
   THSCombitorial fCombi; //handler for the combination/permuations
   THSParticleIter *fInnerIter=nullptr;  //recursive iterator
@@ -67,7 +68,12 @@ class THSParticleIter{
   
   Bool_t Testing();
 
-  void Print();
+  Int_t PDG(){return fPDG;}
+  void SetPDG(Int_t pdg){fPDG=pdg;}; 
+  void Print(Int_t verbose);
+  void SetName(TString name){fName=name;}
+  TString GetName(){return fName;}
+  
 };
 
 #endif

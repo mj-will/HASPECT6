@@ -24,6 +24,7 @@
 THSFinalState::THSFinalState(){
   
   fMapPDGtoParticle[2212]=&fVecProtons;
+  fMapPDGtoParticle[-2212]=&fVecAntiProtons;
   fMapPDGtoParticle[2112]=&fVecNeutrons;
   fMapPDGtoParticle[211]=&fVecPiPs;
   fMapPDGtoParticle[-211]=&fVecPiMs;
@@ -58,6 +59,34 @@ void THSFinalState::AddTopology(TString topo,FinalState::VoidFuncs funcI,
 
   if(!fCurrIter)cout<<"THSFinalState::AddTopology warning no Init_Iter working for topology "<<topo<<endl;
  }
+//////////////////////////////////////////////////////////////////
+///Used to configure iterators and generated particles
+void THSFinalState::AddParticle(THSParticle* part,Bool_t AddToFinal,Int_t genID){
+  THSParticleConfig* pc=new THSParticleConfig(part,genID);
+  fConfigs.push_back(pc);
+  if(AddToFinal) fFinal.push_back(part);
+}
+/////////////////////////////////////////////////////////////////////
+///Add a child particle to the THSParticleConfig of parent
+void THSFinalState::ConfigParent(THSParticle* parent,THSParticle* child){
+  UInt_t i=0;
+  THSParticleConfig* parentConfig=nullptr;
+  for(i=0;i<fConfigs.size();i++){
+    if(fConfigs[i]->Particle()==parent){
+      parentConfig=fConfigs[i];
+      parentConfig->AddChild(child);
+    }
+  }
+  if(!parentConfig)cout<<"WARNING THSFinalState::ConfigParent parent not found, has it been configured yet?"<<endl;
+  for(i=0;i<fConfigs.size();i++)
+    if(fConfigs[i]->Particle()==child)
+      fConfigs[i]->SetParent(parentConfig);
+
+  if(i!=fConfigs.size())cout<<"WARNING THSFinalState::ConfigParent child not found, has it been configured yet? "<<i<<" "<<fConfigs.size()<<endl;
+
+  
+}
+
 /////////////////////////////////////////////////////////////////////////
 ///Initialse topologies and anything else before analysis starts
 void THSFinalState::InitFS(){
@@ -69,7 +98,7 @@ void THSFinalState::InitFS(){
       }
 
   for(UInt_t i=0;i<fTopos.size();i++)
-    fTopos[i]->Print();
+    fTopos[i]->Print(fPrintVerbose);
 
 }
 /////////////////////////////////////////////////////////////////////
@@ -77,16 +106,17 @@ void THSFinalState::InitFS(){
 ///which may be kept in simulated data, but shouldn't be included
 ///in final state check
 THSTopology* THSFinalState::FindTopology(){
+  // if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
 
   fThisTopo.clear();
 
+  //Assume all topologies have the same particle ID scheme
+  //So here just use the first one
   for(UInt_t ip=0;ip<frDetParts->size();ip++){
-    if(!fUseChargePID)fThisTopo.push_back(frDetParts->at(ip)->PDG());
-    else{
-      fThisTopo.push_back(frDetParts->at(ip)->Charge());
-    }
+    fThisTopo.push_back(fTopos[0]->ParticleID(frDetParts->at(ip)->PDG()));
   }
+  
   std::sort(fThisTopo.begin(),fThisTopo.begin()+fThisTopo.size());
   // cout<<"ThisTopology ";
   // for(UInt_t i=0;i<fThisTopo.size();i++)
@@ -95,19 +125,22 @@ THSTopology* THSFinalState::FindTopology(){
 
   //now check to see if this topology matches any of our predefines ones
   fCurrTopo=nullptr;
-  // cout<<"TOPOOPOP "<<fTopos.size()<<endl;
-  for(UInt_t itopo=0;itopo<fTopos.size();itopo++)
-    if(fTopos[itopo]->CheckTopo(&fThisTopo)){
-      fCurrTopo=fTopos[itopo];
+  if(fTopoID!=-1) {fNTried++;}
+  for(;fTopoID<(Int_t)fTopos.size()-1;){
+    fTopoID++;
+    if(fTopos[fTopoID]->CheckTopo(&fThisTopo)){
+      fCurrTopo=fTopos[fTopoID];
       break;
     }
-
+  }
   fNParts=fThisTopo.size();
 
   //Init particle vectors, this should only be done once for each event
   //Not for each permuation
+  InitDetected();//make all final state particles missing
   if(fCurrTopo) InitParticles();
-  
+
+
   return fCurrTopo;
 }
 
@@ -159,7 +192,9 @@ void THSFinalState::InitDetParts(){
     }  
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle* part=frDetParts->at(ip);
-    fMapPDGtoParticle[part->PDG()]->push_back(part);
+    //cout<<part->PDG()<< " "<<fCurrTopo->ParticleID(part->PDG())<<endl;
+    //Find the particle vector given by this topology
+    fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())]->push_back(part);
    }
  
 }
@@ -185,12 +220,17 @@ void THSFinalState::ProcessEvent(){
   InitEvent();
   if(frDetParts)fNDet=frDetParts->size();
   // Int_t firstuse=1;
+  
+  // if(FindTopology()==nullptr) {fGoodEvent=kFALSE;return;}
 
-  while(FSProcess());
+  while(FindTopology()) //Find all valid topologies
+    while(FSProcess()); //Process all combitorials
   
   FinaliseEvent();
 }
 Bool_t THSFinalState::FSProcess(){
+
+  if(fCheckCombi) CheckCombitorial();
   
   if(!WorkOnEvent()) return kFALSE;
 
@@ -205,6 +245,21 @@ Bool_t THSFinalState::FSProcess(){
   
   return kFALSE;
 }
+// Bool_t THSFinalState::FSProcess(){
+  
+//   if(!WorkOnEvent()) return kFALSE;
+
+  
+//   if(IsGoodEvent()){
+//     UserProcess(); 
+//   }
+
+//   PermutateParticles();
+//   if(IsPermutating())
+//     return kTRUE;
+  
+//   return kFALSE;
+// }
 
 void THSFinalState::UserProcess(){
   if(fFinalTree) fFinalTree->Fill(); //fill for first combination
@@ -218,30 +273,20 @@ Bool_t THSFinalState::WorkOnEvent(){
   THSFinalState::fCorrect=0; //Correct permutation? used for simulation only
   
   //If generated MC events
-  Init_Generated();
-  if(!THSFinalState::fIsGenerated){
+  InitGenerated();
+  if(!fIsGenerated){
     //Look for reconstructed events
     //if reconstructed Find the detected particles in this event
-    if(FindTopology()==nullptr) {fGoodEvent=kFALSE;return fIsPermutating0=kFALSE;}
     //Found a topology execute its Topo function
     fCurrTopo->Exec();
-    THSTopology* OrigTopo=fCurrTopo;
-    //if that topology failed try an alternative if one is linked to this one
-    while(!fGoodEvent&&fCurrTopo->Alternative()){
-      fGoodEvent=kTRUE;
-      fCurrTopo=fCurrTopo->Alternative();
-      fCurrTopo->Exec();
-    }
-    fTopoID=fCurrTopo->ID();
-    fCurrTopo=OrigTopo;
-  }
+   }
   
   //Calc kinematics
   Kinematics();
   
   //Check if assigned vectors agree with true generated
   //Simulation only
-  THSFinalState::CheckTruth();
+  CheckTruth();
 
   if(fIsGenerated) return kTRUE; //Generated only 1 permutation
   return kTRUE;
@@ -287,7 +332,6 @@ void THSFinalState::MatchWithGen(THSParticle *part){
 Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
   if(!frGenParts) return kFALSE;
   if(!frGenParts->size())return kFALSE;
-  
   UInt_t match=0;
   Double_t mindist=1E10;
   for(UInt_t ip=0;ip<frGenParts->size();ip++){
@@ -316,18 +360,53 @@ void THSFinalState::CheckTruth(){
   if(fGotCorrectOne) return;
   //Check if our final vectors match with truth
   fCorrect=1;
-  for(UInt_t ip=0;ip<fFinal.size();ip++)
-    fCorrect*=IsCorrectTruth(fFinal[ip]);
+  // for(UInt_t ip=0;ip<fFinal.size();ip++)
+  //   fCorrect*=IsCorrectTruth(fFinal[ip]);
+  for(UInt_t ip=0;ip<fConfigs.size();ip++)
+    if(fConfigs[ip]->GenID()>-1) //only check particles assigned via ConfigParticle
+      fCorrect*=IsCorrectTruth(fConfigs[ip]->Particle());
   
   if(fCorrect) fGotCorrectOne=kTRUE;
 }
-
+////////////////////////////////////////////////////////////////
+///Read the Generated particles if assigned via ConfigParticle
+void THSFinalState::InitGenerated(){
+  if(!THSFinalState::frGenParts) return;
+  if(THSFinalState::frGenParts->size()==0) {return;}
+  for(UInt_t ip=0;ip<fConfigs.size();ip++)
+    if(fConfigs[ip]->GenID()>-1){ //only check particles assigned via ConfigParti
+      if(fIsGenerated)
+	fConfigs[ip]->SetParticleVal(frGenParts->at(fConfigs[ip]->GenID()));
+      else
+	fConfigs[ip]->Particle()->SetTruth(frGenParts->at(fConfigs[ip]->GenID()));
+    }
+  
+}
+////////////////////////////////////////////////////////////////
+///Initialise all particles as missing
+void THSFinalState::InitDetected(){
+  for(UInt_t i=0;i<fConfigs.size();i++)
+    fConfigs[i]->Particle()->SetDetector(fMISSING);
+}
 //////////////////////////////////////////////////
 ///Interface to THSParticleIter
 ///Add selected iterator to previously selected particles
 THSParticleIter* THSFinalState::AddSelectToSelected(THSParticleIter* diter,Int_t ni,Int_t nsel,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
   if(nsel*ni>diter->GetNSel()) cout<<"WARNING THSFinalState::AddSelectToSelected : trying to select more particles than exist in original iterator "<<nsel*ni<<" "<< diter->GetNSel()<<endl;
   THSParticleIter *new_iter=AddSelectXofY(ni,nsel,part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  new_iter->SetName(new_iter->GetName()+" sel parent is "+diter->GetName());
+  if(part0) new_iter->SetPDG(part0->PDG());
+  diter->SetSelIter(new_iter);
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator to previously selected particles
+THSParticleIter* THSFinalState::AddSelectToSelected(THSParticleIter* diter,Int_t ni,Int_t nsel,vector<THSParticle*> *parts){
+  if(nsel*ni>diter->GetNSel()) cout<<"WARNING THSFinalState::AddSelectToSelected : trying to select more particles than exist in original iterator "<<nsel*ni<<" "<< diter->GetNSel()<<endl;
+  THSParticleIter *new_iter=AddSelectXofY(ni,nsel,parts);
+  new_iter->SetName(new_iter->GetName()+" sel parent is "+diter->GetName());
+  if(parts->at(0)) new_iter->SetPDG(parts->at(0)->PDG());
   diter->SetSelIter(new_iter);
   return new_iter;
 }
@@ -336,6 +415,23 @@ THSParticleIter* THSFinalState::AddSelectToSelected(THSParticleIter* diter,Int_t
 ///Add selected iterator to remaining particles
 THSParticleIter* THSFinalState::AddSelectToRemainder(THSParticleIter* diter,Int_t ni,Int_t nsel,THSParticle* part0,THSParticle* part1,THSParticle* part2,THSParticle* part3,THSParticle* part4,THSParticle* part5,THSParticle* part6,THSParticle* part7,THSParticle* part8,THSParticle* part9){
   THSParticleIter *new_iter=AddSelectXofY(ni,nsel,part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
+  new_iter->SetName(Form("Select: %d of %d",ni,nsel));
+  new_iter->SetName(new_iter->GetName()+" rem parent is "+diter->GetName());
+  if(part0) new_iter->SetPDG(part0->PDG());
+  diter->SetRemIter(new_iter);
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator to remaining particles
+THSParticleIter* THSFinalState::AddSelectToRemainder(THSParticleIter* diter,Int_t ni,Int_t nsel){
+  THSParticleIter *new_iter=new THSParticleIter();
+  new_iter->SetName(Form("Select: %d of %d",ni,nsel));
+  new_iter->SetName(new_iter->GetName()+" rem parent is "+diter->GetName());
+  new_iter->SetCombi(THSSelection());
+  new_iter->SetNSel(nsel);
+  new_iter->SetNIdentical(ni);
+  
   diter->SetRemIter(new_iter);
   return new_iter;
 }
@@ -347,6 +443,19 @@ THSParticleIter* THSFinalState::AddSelectXofY(Int_t ni,Int_t nsel,THSParticle* p
   THSParticleIter *new_iter= new THSParticleIter();
   new_iter->AddEventParticles(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
   new_iter->SelectXofY(ni,nsel);
+  if(part0) new_iter->SetPDG(part0->PDG());
+  return new_iter;
+}
+//////////////////////////////////////////////////
+///Interface to THSParticleIter
+///Add selected iterator
+THSParticleIter* THSFinalState::AddSelectXofY(Int_t ni,Int_t nsel,vector<THSParticle*> *parts){
+  
+  THSParticleIter *new_iter= new THSParticleIter();
+  // new_iter->SetName(Form("Select: %d of %d %d",ni,nsel,parts->at(0)->PDG()));
+  new_iter->SetEventParticles(*parts);
+  new_iter->SelectXofY(ni,nsel);
+  if(parts->at(0)) new_iter->SetPDG(parts->at(0)->PDG());
   return new_iter;
 }
 //////////////////////////////////////////////////
@@ -375,7 +484,6 @@ THSParticleIter* THSFinalState::AddPermutate(THSParticle* part0,THSParticle* par
   new_iter->AddEventParticles(part0,part1,part2,part3,part4,part5,part6,part7,part8,part9);
   return new_iter;
 }
-
 ////////////////////////////////////////////////////////////////
 ///Interface to THSParticleIter
 ///Create particle iterator for a particticular species
@@ -396,4 +504,200 @@ THSParticleIter* THSFinalState::CreateParticleIter(vector<THSParticle*> *parts,I
   diter->SetNSel(Nsel);
   
   return diter;
+}
+//////////////////////////////////////////////////////////////////
+///Automatically generate iterator based on topology and particle configs
+void THSFinalState::AutoIter(){
+  //Topo definition will be list of PDG values expect for particles
+  //specified by charge, where the charge will be given instead
+  vector<Int_t >* thisTopo = fCurrTopo->Definition();
+
+  cout<<" WARNING running THSFinalState::AutoIter() you  should check the topology print output and make sure the displayed iterator is waht you want .."<<endl;
+  
+  for(UInt_t ip=0;ip<thisTopo->size();){
+    //Loop over all the declared particles in the topology
+    //group like particles according to their particle ID (PDG or charge)
+    Int_t pid=thisTopo->at(ip);
+    Int_t N_pid=std::count (thisTopo->begin(), thisTopo->end(), pid);
+    if(N_pid==0){ip++;continue;}
+    ip+=N_pid;
+    
+    THSParticleIter* diter0=CreateParticleIter((fMapPDGtoParticle[pid]),N_pid);
+    diter0->SetName(Form("PITER:%d",pid));
+    diter0->SetPDG(pid);
+    
+    //Look for which particle can belong to this particle ID
+    //(==which pdg have this charge)
+    //if particle ID is the PDG value there will only be 1 type
+    
+    vector<vector<THSParticleConfig*>> subConfigs;
+    Int_t ntype=0;
+    Int_t Nconfig_pid=0;
+    vector<Int_t> types;
+    cout<<"Look through configs "<<fConfigs.size()<<endl;
+    for(UInt_t jp=0;jp<fConfigs.size();jp++){
+      if(fConfigs[jp]->GetNChild())continue; //not a detected particle
+      //found a particle with this particle identification
+      if(fCurrTopo->ParticleID(fConfigs[jp]->PDG())==pid){
+	Nconfig_pid++;
+	if(std::count(types.begin(),types.end(),fConfigs[jp]->PDG())==0){
+	  //Found a new PDG type
+	  cout<<"new type "<<endl;
+	  ntype++;
+	  types.push_back(fConfigs[jp]->PDG());
+	  vector<THSParticleConfig* > new_one;
+	  new_one.push_back(fConfigs[jp]);
+	  subConfigs.push_back(new_one);
+	}
+	else{//same type
+	  subConfigs[ntype-1].push_back(fConfigs[jp]);
+	}
+      }
+    }
+    //   subEvents contains final state particles with same topology ID
+    //   each element contains a vector of different actual PDG particles 
+    //   Now need to loop over subEvnts and select them from diter
+    for(Int_t it=0;it<ntype;it++){
+      Int_t typePDG=subConfigs[it][0]->PDG();
+      Int_t NtruePDG=fCurrTopo->HowManyTrue(typePDG);//number of this pdg in curr topo
+      
+      //Look for particles of this type which may have parents
+      //And first select those
+      Bool_t NotEnough=kFALSE;
+      for(UInt_t ic=0;ic<subConfigs[it].size();){
+       	THSParticleConfig* parent=nullptr;
+      	THSParticleConfig* child = subConfigs[it][0];
+       	if((parent=child->Parent())){
+	  //get children from this parent with same PDG
+      	  vector<THSParticle* > child_pdg=parent->Children(child->PDG());
+	  N_pid-=child_pdg.size();
+	  Nconfig_pid-=child_pdg.size();
+ 	  //Now look to see if there are identical particle of this parent type
+	  //We do not want to double count these
+	  vector<THSParticleConfig* > all_parents=HowManyParticles(parent->PDG());
+	  Int_t NUsedParents=1;
+	  for(UInt_t io=0;io<all_parents.size();io++){
+	    if(all_parents[io]==parent)continue; //don't count this one again
+	    vector<THSParticle* > child_other=all_parents[io]->Children(child->PDG());
+	    //   if(child_pdg.size()+child_other.size()>N_pid)//not enough for all parents
+	    if(N_pid==0)//not enough for all parents
+	      {
+		cout<<"WARNING AutoIter Not enough "<<child->PDG()<<" detected particles for all parents "<<parent->PDG()<<endl;
+		NotEnough=kTRUE;
+		break;
+	      }
+	    for(UInt_t ioc=0;ioc<child_other.size();ioc++){
+	      
+	      if(child_pdg.size()<fCurrTopo->HowManyTrue(typePDG)){
+		child_pdg.push_back(child_other[ioc]);
+		N_pid--; //number of this pid left in topo
+		Nconfig_pid--; //number of configured particles left
+		if(N_pid==0) break;
+		if(Nconfig_pid==0) break;
+		NtruePDG--;  //number of this pdg left in curr topo
+	      }	
+	    }
+	    NUsedParents++;
+	  }
+	  Int_t NtheseChild=child_pdg.size();
+	  ic+=NtheseChild;
+	  //remove the children from the subconfigs
+	  for(UInt_t isp=0;isp<subConfigs[it].size();){
+	    for(UInt_t ich=0;ich<child_pdg.size();ich++){
+	      if(child_pdg[ich]==subConfigs[it][isp]->Particle()){
+		subConfigs[it].erase(subConfigs[it].begin()+isp);
+		break;
+	      }
+	      if(ich==child_pdg.size()-1)isp++; //didn't find one, ove to next one
+	    }
+	    //Don't incerement isp in case we removed one, this will move on to the next one
+	  }
+	  
+	  THSParticleIter* diter_s=AddSelectToSelected(diter0,NUsedParents,NtheseChild/NUsedParents,&child_pdg);
+	    
+	  // Nconfig_pid-=NtheseChild;
+	  // N_pid-=NtheseChild;
+	  if(Nconfig_pid==0) break; //selected everything already
+	  
+	  if(NotEnough){
+	    if(N_pid>0){
+	      //might be the odd one or two left
+	      THSParticleIter* diter_r=AddSelectToRemainder(diter_s,1,N_pid);
+	      diter0=diter_r;
+	      NotEnough=kFALSE;
+	    }
+	    else break;
+	  }
+	  // else {
+	  if(N_pid>0){
+	    THSParticleIter* diter_r=AddSelectToRemainder(diter_s,1,Nconfig_pid);
+	    diter0=diter_r;
+	  }
+	  
+	  
+      	}
+      	ic++;
+	//continue;
+      }
+      
+      if(NotEnough) break;
+      if(Nconfig_pid==0) break; //selected everything already
+      if(N_pid==0) break; //selected everything already
+      //Once all particle with parents have been selected, select the remainder
+      vector<THSParticle* > evtparts;
+      for(UInt_t isp=0;isp<subConfigs[it].size();isp++){
+	if(evtparts.size()<fCurrTopo->HowManyTrue(typePDG)){ evtparts.push_back(subConfigs[it][isp]->Particle());
+	  N_pid--; //number of this pid left in topo
+	  Nconfig_pid--; //number of configured particles left
+	  if(N_pid==0) break;
+	  if(Nconfig_pid==0) break;
+	  NtruePDG--;  //number of this pdg left in curr topo
+	}
+      }
+      // if(NtruePDG==0) continue;
+      if(evtparts.size()==0)continue;
+      THSParticleIter* diter_s=AddSelectToSelected(diter0,1,evtparts.size(),&evtparts);
+      
+      // Nconfig_pid-=evtparts.size();
+      // N_pid-=evtparts.size();
+      if(Nconfig_pid==0) break; //selected everything already
+      if(N_pid==0) break; //selected everything already
+      //pass the remainder on for selection
+      THSParticleIter* diter_r=AddSelectToRemainder(diter_s,1,Nconfig_pid);
+      diter0=diter_r;
+      
+    }
+    
+  }
+}
+//////////////////////////////////////////////////////////////
+///Print permuations to screen for debugging
+void THSFinalState::CheckCombitorial(){
+  cout<<endl<<fUID<<" Printing Perm "<<fNPerm<<" of topology "<<fTopoID<<endl;
+  for(UInt_t i=0;i<fConfigs.size();i++){
+    THSParticle *part=fConfigs[i]->Particle();
+    if(IsMissing(part))continue;
+    cout<<" PDG("<<part->PDG()<<")Th("<<part->P4p()->Theta()<<") ";
+  }
+  cout<<endl;
+}
+
+
+/////////////////////////////////////////////////////////////
+///Return configured particles with this pdg
+///used to work out how many identical particles to iterate over
+vector<THSParticleConfig* > THSFinalState::HowManyParticles(Int_t pdg){
+  Int_t np=0;
+  vector<THSParticleConfig* > configs;
+  for(UInt_t i=0;i<fConfigs.size();i++){
+    if(fConfigs[i]->PDG()==pdg) configs.push_back(fConfigs[i]);
+  }
+  return configs;
+}
+vector<THSParticle* >  THSParticleConfig::Children(Int_t pdg){
+  vector<THSParticle*> children;
+  for(UInt_t i=0;i<fChildren.size();i++)
+    if(fChildren[i]->PDG()==pdg)
+      children.push_back(fChildren[i]);
+  return children;
 }

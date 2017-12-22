@@ -590,6 +590,16 @@ void THSSkeleton::CreateMyFinalState(){
   for(Int_t io=0;io<finals->GetEntries();io++){
     TString sparticle=finals->At(io)->GetName();
     ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.Sizeof())).Data()));
+  }  //if(fFinalParents!=TString("")) parents=fFinalParents.Tokenize(",");
+
+   //Now do parents
+  TObjArray* parents=0;
+  if(fFinalParents!=TString("")) parents=fFinalParents.Tokenize(",");
+  fPlace=0;
+  FindNextLineLike("//Final Parents");
+  for(Int_t io=0;io<parents->GetEntries();io++){
+    TString sparticle=parents->At(io)->GetName();
+    ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.First(";")-sparticle.First(":")-1)).Data()));
   }
   
   fCurMacro.SaveSource(TString("THS")+fFinalName+".h");
@@ -605,7 +615,7 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter(Form("  AddTopology(\"%s\",",topos->At(io)->GetName()));
     ContinueLineAfter(Form("             bind(&THS%s::Init_Iter%d, this),",fFinalName.Data(),io));
     ContinueLineAfter(Form("             bind(&THS%s::Topo_%d, this),",fFinalName.Data(),io));
-    ContinueLineAfter(Form("             \"ALL\",\"\");"));
+    ContinueLineAfter(Form("             PID,INCLUSIVE);"));
     ContinueLineAfter("");
   }
   
@@ -617,6 +627,7 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter("  //THSParticle iterator initialisation");
     ContinueLineAfter(Form("  //For topology %s",topos->At(io)->GetName()));
     ContinueLineAfter("");
+    ContinueLineAfter("   AutoIter(); //Let finalstate try and work out the iterattor for you, you can remove this if you want to do it yourself");
     ContinueLineAfter("}");
     
   }
@@ -625,7 +636,7 @@ void THSSkeleton::CreateMyFinalState(){
   for(Int_t io=0;io<topos->GetEntries();io++){
     ContinueLineAfter(Form("void THS%s::Topo_%d(){",fFinalName.Data(),io));
     ContinueLineAfter(Form("  //For topology %s",topos->At(io)->GetName()));
-    ContinueLineAfter("  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle");
+    // ContinueLineAfter("  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle");
     ContinueLineAfter("  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors");
     ContinueLineAfter("");
     ContinueLineAfter("  //Reconstruct missing or combined particles");
@@ -635,12 +646,22 @@ void THSSkeleton::CreateMyFinalState(){
   }
   fPlace=0;
   FindNextLineLike("//Set final state");
-  ContinueLineAfter("  //Note for CheckTruth algorithm to work all particles added ");
-  ContinueLineAfter("  //to fFinal should have been in Generated ");
+  fPlace+=3;
   for(Int_t io=0;io<finals->GetEntries();io++){
     TString sparticle=finals->At(io)->GetName();
-    ContinueLineAfter(Form("  fFinal.push_back(&f%s);",TString(sparticle(0,sparticle.First(":"))).Data()));
+    ContinueLineAfter(Form("  AddParticle(&f%s,kTRUE,-1);",TString(sparticle(0,sparticle.First(":"))).Data()));
   }
+
+    
+  FindNextLineLike("//Set final state parents");
+  for(Int_t io=0;io<parents->GetEntries();io++){
+    TString sparticle=parents->At(io)->GetName();
+    ContinueLineAfter(Form("  AddParticle(&f%s,kTRUE,-1);",TString(sparticle(0,sparticle.First(":"))).Data()));
+    TObjArray *childs=sparticle.Tokenize(";");
+    for(Int_t ic=1;ic<childs->GetEntries();ic++)
+      ContinueLineAfter(Form("  ConfigParent(&f%s,&f%s);",TString(sparticle(0,sparticle.First(":"))).Data(),childs->At(ic)->GetName()));
+  }
+ 
   fPlace=0;
 
   fCurMacro.SaveSource(TString("THS")+fFinalName+".C");

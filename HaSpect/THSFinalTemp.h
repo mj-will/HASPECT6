@@ -24,7 +24,10 @@ class THSFinalTemp : public THSFinalState{
   //Initial state
   TLorentzVector fBeam=TLorentzVector(0,0,10.6,10.6);
   TLorentzVector fTarget=TLorentzVector(0,0,0,0.938272);
-  //Final Particles
+
+  //Final Particles Detected
+ 
+  //Final Parents
  
   //Observables
   Double_t f_t;

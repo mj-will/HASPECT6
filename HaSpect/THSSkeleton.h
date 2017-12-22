@@ -43,6 +43,7 @@ class THSSkeleton :public TObject  {
   TString fFinalName;
   TString fFinalTopo;
   TString fFinalParts;
+  TString fFinalParents;
   
  public :
   
@@ -58,6 +59,7 @@ class THSSkeleton :public TObject  {
   void SetFinalState(TString proj,Bool_t perm=kFALSE){fFinalName=proj;fIsFinalState=kTRUE;fIsFinalStatePerm=perm;}
   void SetFinalStateTopo(TString topos){fFinalTopo=topos;};
   void SetFinalStateParts(TString finals){fFinalParts=finals;};
+  void SetFinalStateParents(TString finals){fFinalParents=finals;};
   void SetFileName(TString name){fFileName=name;}
   void SetSelName(TString name){fSelName=name;}
   void CreateSelector(TString selname,TString filename,TString treename,TString opt="");

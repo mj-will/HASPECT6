@@ -32,8 +32,9 @@ class THSTopology{
   FinalState::VoidFuncs Exec;
  private:
 
-  vector<Int_t> fDefinition; //particle codes needed for this topology
-  THSParticleIter *fIter=nullptr;
+  vector<Int_t> fTrueDefinition; //pdg codes needed for this topology
+  vector<Int_t> fActualDefinition; //pids needed for this topology
+   THSParticleIter *fIter=nullptr;
   vector<Int_t> fIncParts; //particle allowed to be inclusive
   vector<Int_t> fChargeParts; //particle allowed be IDed by charge
 
@@ -59,7 +60,8 @@ class THSTopology{
 
   void SetAlternative(THSTopology* alt){fAlternative=alt;}
   THSTopology*  Alternative(){return fAlternative;}
-  vector<Int_t>* Definition() {return &fDefinition;}
+  vector<Int_t>* Definition() {return &fActualDefinition;}
+  vector<Int_t>* True() {return &fTrueDefinition;}
 
   void SetID(Int_t id){fID=id;}
   Int_t ID(){return fID;}
@@ -68,7 +70,9 @@ class THSTopology{
   Int_t ParticleID(Int_t pdg);
   void TopoToCharge(vector<Int_t> *thisTopo);
   
-  void Print();
+  UInt_t HowManyTrue(Int_t pdg);
+  
+  void Print(Int_t verbose);
 };
 
 #endif
