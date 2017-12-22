@@ -1,6 +1,6 @@
 //root --hsdata --hsfinal=THSep_omegap RunFSRoot.C
 //You need to replace ep_omegap with your final state class name
-{
+{ 
   //Create FinalState
   THSep_omegap* fs=new THSep_omegap();
   fs->SetPermutate(); //turn on permuations

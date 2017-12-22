@@ -15,154 +15,131 @@
 
 
 THSep_omegap::THSep_omegap(){
-  //Set final state
-  //Note for CheckTruth algorithm to work all particles added 
-  //to fFinal should have been in Generated 
-  fFinal.push_back(&fElectron);
-  fFinal.push_back(&fProton);
-  fFinal.push_back(&fPip);
-  fFinal.push_back(&fPim);
-  fFinal.push_back(&fPi0);
+  SetVerbose(1);
+  CheckCombi(); //comment out to remove messages
+  
+  //Set final state detected particles
+  //AddParticle(particle,true/false you want to write in final vector, genID for linking to generated truth value)
+  //Note if particle is added to final with a valid genID it will be used
+  //to determine the correct permutation of the simulated event
+  AddParticle(&fElectron,kTRUE,4);
+  AddParticle(&fProton,kTRUE,3);
+  AddParticle(&fPip,kTRUE,1);
+  AddParticle(&fPim,kTRUE,0);
+  AddParticle(&fGamma1,kTRUE,-1);
+  AddParticle(&fGamma2,kTRUE,-1);
 
-  SetUseChargePID();//If want to only use charge for IDing
+  //Set final state parents
+  AddParticle(&fPi0,kTRUE,2);
+  ConfigParent(&fPi0,&fGamma1);
+  ConfigParent(&fPi0,&fGamma2);
+  AddParticle(&fOmega,kTRUE,-1);
+  ConfigParent(&fOmega,&fPip);
+  ConfigParent(&fOmega,&fPim);
+  ConfigParent(&fOmega,&fPi0);
+  
+  
+  
+  TString PID("NONE"); //set this to which particles you want to id via pdg code alone, or set it in individual AddTopology
+  TString INCLUSIVE("");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
 
   //include topology for analysis and get index
   AddTopology("pi+:pi-:gamma:gamma:proton:e-",
              bind(&THSep_omegap::Init_Iter0, this),
              bind(&THSep_omegap::Topo_0, this),
-             "ALL","");
+             PID,INCLUSIVE);
 
   AddTopology("pi+:pi-:proton:e-",
              bind(&THSep_omegap::Init_Iter1, this),
              bind(&THSep_omegap::Topo_1, this),
-             "ALL","");
+             PID,INCLUSIVE);
 
- 
+  
+  
   THSFinalState::InitFS();
 }
 
-
-void THSep_omegap::Init_Generated(){
-  if(!THSFinalState::frGenParts) return;
-  if(THSFinalState::frGenParts->size()!=5) {fGoodEvent=kFALSE;return;}
-  //Fill our data member particles
-  //User is responsible for indicing right
-  //comes from order in generated file (e.g LUND)
-  if(THSFinalState::fIsGenerated){
-    fPip=*frGenParts->at(0);
-    fPim=*frGenParts->at(1);
-    fPi0=*frGenParts->at(2);
-    fProton=*frGenParts->at(3);
-    fElectron=*frGenParts->at(4);
-  }
-  else{//Just assign truth values
-    //fElectron.SetTruth(frGenParts->at(0));
-    fPip.SetTruth(frGenParts->at(0));
-    fPim.SetTruth(frGenParts->at(1));
-    fPi0.SetTruth(frGenParts->at(2));
-    fProton.SetTruth(frGenParts->at(3));
-    fElectron.SetTruth(frGenParts->at(4));
- 
-  }
-}
 
 //Define topology Iterator functions
 void THSep_omegap::Init_Iter0(){
   //THSParticle iterator initialisation
   //For topology pi+:pi-:gamma:gamma:proton:e-
- //THSParticle iterator initialisation
-   ////////////-ve particles
-   THSParticleIter* diter=CreateParticleIter(&fVecMinus,2);
-   AddPermutateToSelected(diter,&fElectron,&fPim);
-   ////////////+ve particles
-   diter=CreateParticleIter(&fVecPlus,2);
-   AddPermutateToSelected(diter,&fProton,&fPip);
-   ///////////neutral particles
-   diter=CreateParticleIter(&fVec0,2);
-   AddSelectToSelected(diter,1,2,&fGamma1,&fGamma2);
+
+   AutoIter(); //Let finalstate try and work out the iterattor for you, you can remove this if you want to do it yourself
 }
 void THSep_omegap::Init_Iter1(){
   //THSParticle iterator initialisation
   //For topology pi+:pi-:proton:e-
-  Init_Iter0();
+
+   AutoIter(); //Let finalstate try and work out the iterattor for you, you can remove this if you want to do it yourself
 }
 // void THSep_omegap::Init_IterX(){
 //  THSParticleIter* diter=CreateParticleIter(fTID_X,&fVecY,NPARTICLES);
 //  ...
 // }
-//Or if iterator the same as a previous one
-// void THSep_omegap::Init_IterY(){
-//   fDetIter[fTID_1]=fDetIter[fTID_0];
-// }
 //Define topology functions
 void THSep_omegap::Topo_0(){
   //For topology pi+:pi-:gamma:gamma:proton:e-
-  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle
   //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors
-//I can put a cut on the electron, for example on the Detector
-   if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;}
-   //Reconstruct missing or combined particles
-   TLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4()-fGamma1.P4()-fGamma2.P4();
 
-   fPi0.Add(&fGamma1,&fGamma2,fPi0.PDG());
-
-   fMissMass=miss.M();
-   fPi0Mass=fPi0.MassDiff();
-   //I could place a cut on the 2gamma invariant mass if I wanted
-   //  if(TMath::Abs(fPi0Mass)>0.02){fGoodEvent=kFALSE;return;}
-
+  //Reconstruct missing or combined particles
+  TLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4()-fGamma1.P4()-fGamma2.P4();
+  
+  fPi0.Add(&fGamma1,&fGamma2,fPi0.PDG());
+  
+  fMissMass=miss.M();
+  fPi0Mass=fPi0.MassDiff();
+  //I could place a cut on the 2gamma invariant mass if I wanted
+  //  if(TMath::Abs(fPi0Mass)>0.02){fGoodEvent=kFALSE;return;}
 }
 void THSep_omegap::Topo_1(){
   //For topology pi+:pi-:proton:e-
-  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle
-  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors
+   //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors
 
- if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;}
-    //Reconstruct missing or combined particles
-   TLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4();
-   fPi0.SetP4(miss);
-   fPi0.SetMeasMass(fPi0.P4().M());
-   fPi0.TakePDGMass();
-
-   fMissMass=miss.M();
-   fPi0Mass=fPi0.MassDiff();
+  //Reconstruct missing or combined particles
+  TLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4();
+  fPi0.SetP4(miss);
+  fPi0.SetMeasMass(fPi0.P4().M());
+  fPi0.TakePDGMass();
+  
+  fMissMass=miss.M();
+  fPi0Mass=fPi0.MassDiff();
+  
 }
 // void THSep_omegap::Topo_X(){
 // }
 
 void THSep_omegap::Kinematics(){
- if(!THSFinalState::fGoodEvent) return;//don't do calculations
-   //Do calculations if Good Event
-   //missing mass off proton
-   TLorentzVector missP=fBeam+fTarget-fElectron.P4()-fProton.P4();
-   fMissMassP=missP.M();
-   //invariant mass of 3pi
-   fOmega.SetP4(fPip.P4()+fPim.P4()+fPi0.P4());
-   fOmega.SetMeasMass(fOmega.P4p()->M());
-   fOmega.TakePDGMass();
-   fOMass=fOmega.MassDiff();
-
-  //Set the initial and scattered electron and target 4-vectors
-   fKine.SetElecsTarget(fBeam,fElectron.P4(),fTarget);
-   //set the final state meson and baryon 4-vectors
-   fKine.SetMesonBaryon(fOmega.P4(),fProton.P4());
-   //Get electron scattering variables
-   f_W=fKine.W();
-   f_Q2=fKine.Q2();
-   f_Pol=fKine.GammaPol();
-  //Get Omega production variables
-   fKine.ElectroCMDecay();
-   fCMCosTh=fKine.CosTheta();
-   fCMPhi=fKine.Phi();
-   f_t=fKine.t(); //t for Omega meson production
+  //Do calculations if Good Event
+    //missing mass off proton
+       TLorentzVector missP=fBeam+fTarget-fElectron.P4()-fProton.P4();
+       fMissMassP=missP.M();
+       //invariant mass of 3pi
+       fOmega.SetP4(fPip.P4()+fPim.P4()+fPi0.P4());
+       fOmega.SetMeasMass(fOmega.P4p()->M());
+       fOmega.TakePDGMass();
+       fOMass=fOmega.MassDiff();
+  
+      //Set the initial and scattered electron and target 4-vectors
+       fKine.SetElecsTarget(fBeam,fElectron.P4(),fTarget);
+       //set the final state meson and baryon 4-vectors
+       fKine.SetMesonBaryon(fOmega.P4(),fProton.P4());
+       //Get electron scattering variables
+       f_W=fKine.W();
+       f_Q2=fKine.Q2();
+       f_Pol=fKine.GammaPol();
+      //Get Omega production variables
+       fKine.ElectroCMDecay();
+       fCMCosTh=fKine.CosTheta();
+       fCMPhi=fKine.Phi();
+       f_t=fKine.t(); //t for Omega meson production
 }
 
 void THSep_omegap::FinalStateOutTree(TTree* tree){
   THSFinalState::fFinalTree=tree;
   //tree->Branch("Final",&fFinal);//If you want to save the final THSParticles
   tree->Branch("MissMass",&fMissMass,"MissMass/D");
-  tree->Branch("MissMassP",&fMissMassP,"MissMassP/D");
-  tree->Branch("Topo",&fCurrTopo,"Topo/I");
+  tree->Branch("Topo",&fTopoID,"Topo/I");
   tree->Branch("NPerm",&fNPerm,"NPerm/I");
   tree->Branch("NDet",&fNDet,"NDet/I");
   tree->Branch("Correct",&fCorrect,"Correct/I");
@@ -174,4 +151,5 @@ void THSep_omegap::FinalStateOutTree(TTree* tree){
   tree->Branch("Pol",&f_Pol,"Pol/D");
   tree->Branch("CMCosTh",&fCMCosTh,"CMCosTh/D");
   tree->Branch("CMPhi",&fCMPhi,"CMPhi/D"); 
+
 }

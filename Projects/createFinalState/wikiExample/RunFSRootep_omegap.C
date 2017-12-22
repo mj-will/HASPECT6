@@ -8,7 +8,8 @@
   //create datamanager
   THSDataManager* dm=new THSDataManager();
   dm->SetReadGenBranch("Generated");
-  dm->Init("/home/dglazier/Dropbox/hsana/Events/HASPECT6/Projects/finalstates/omega/data/hs_4_8_3/out_gemc_32975713.farmpbs14_t-1_s1.root","HSParticles");
+  //  dm->Init("INPUT.root","HSParticles");
+  dm->Init("/home/dglazier/Dropbox/hsana/Events/HASPECT6/Projects/finalstates/omega/data/hs_4_8_3/out_gemc_32975714.farmpbs14_t-1_s1.root","HSParticles");
   //connect Project to HSParticles
   fs->SetDetParts(dm->GetParticles());
   fs->SetGenParts(dm->GetGenerated());
