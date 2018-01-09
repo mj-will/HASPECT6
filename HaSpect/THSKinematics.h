@@ -98,6 +98,8 @@ class THSKinematics{
   //Decay angles
   void MesonDecayHelicity();
   void MesonDecayGJ();
+  void BaryonDecayHelicity();
+  void BaryonDecayGJ();
   void omegaMesonDecayHelicity();
   void omegaMesonDecayGJ();
   void ElectroCMDecay();
