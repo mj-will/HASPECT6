@@ -150,7 +150,7 @@ Bool_t RooHS1StepStudy::execute()
   fGeni=PDF->GetGeni();
 
   Info("RooHS1StepStudy::execute()","Done Got to event %lld in tree",fGeni);
-  fHSRooFit->SetName(TString(GetName())+Form("_Study_%d_",summaryData()->numEntries()));
+  fHSRooFit->SetTitle(TString(GetName())+Form("_Study_%d_",summaryData()->numEntries()));
   if(fIsPlot){fHSRooFit->SavePlots("");fHSRooFit->GetPlots()->Clear();}
   delete DS ;
   return kFALSE ;

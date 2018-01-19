@@ -400,7 +400,8 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   //Create new fit and load the new bin data tree
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
   if(!fModel) TotalPDF();
-  FitMany(Nfits);
+  if(fFitMethod==2) Fit();
+  else FitMany(Nfits);
   //RooStats::sPlot automoatically adds Sumw2Error() option
   for(Int_t iy=0;iy<fYields.getSize();iy++){
     Double_t  thisYield=((RooRealVar*)&fYields[iy])->getVal();

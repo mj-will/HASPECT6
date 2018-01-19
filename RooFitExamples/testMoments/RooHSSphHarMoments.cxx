@@ -154,6 +154,7 @@ Double_t RooHSSphHarMoments::evalRealSphHarmonic(Double_t _Z,Double_t _Phi,Int_t
   return val;
 }
 Double_t RooHSSphHarMoments::evalLegendre(Double_t _Z,Int_t _L,Int_t _M) const{
+ 
 #ifdef R__HAS_MATHMORE
   Double_t r = 1;
   Double_t ctheta = std::max(-1., std::min((double)_Z, +1.));
@@ -180,7 +181,7 @@ Double_t RooHSSphHarMoments::evalLegendre(Double_t _Z,Int_t _L,Int_t _M) const{
        //  cout<<"L M "<<iL<<" "<<iM<<" "<<YLM<<" "<<evalRealSphHarmonic(Z,Phi,iL,iM)<<endl;
        val+= YLM*evalRealSphHarmonic(Z,Phi,iL,iM);
      }
-   //cout<<Z<<" "<<Phi<<" "<<val<<endl;
+   //  cout<<Z<<" "<<Phi<<" "<<val<<endl;
    return val;
  }
 
@@ -198,7 +199,6 @@ Double_t RooHSSphHarMoments::evaluateMC() const {
        //  cout<<"L M "<<iL<<" "<<iM<<" "<<YLM<<" "<<evalRealSphHarmonic(Z,Phi,iL,iM)<<endl;
        val+= YLM*evalRealSphHarmonic(mcZ,mcPhi,iL,iM);
      }
-   //  cout<<mcZ<<" "<<mcPhi<<" "<<val<<endl;
    return val;
  
 }

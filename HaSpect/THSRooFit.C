@@ -13,9 +13,14 @@
 #include <RooChi2Var.h>
 #include <RooHist.h>
 #include <RooConstVar.h>
+#include "RooMinimizer.h"
+#include "RooMinuit.h"
 #include "RooHSEventsPDF.h"
 #include "RooHS1StepStudy.h"
+#include "RooRandom.h"
 #include <RooStudyManager.h>
+#include <RooStats/SequentialProposal.h>
+#include "RooStats/RooStatsUtils.h"
 #include <algorithm>      // std::sort
 #include <list>     
 
@@ -50,7 +55,7 @@ THSRooFit::THSRooFit(THSRooFit* rf){
   //  THSRooFit();
    //copy constructor, but do not copy the data tree, load that explicitly
   fOwnWorkSpace=kTRUE;
-   LoadWorkSpace(rf->GetWorkSpace(),rf->GetName());
+  LoadWorkSpace(rf->GetWorkSpace(),rf->GetName());
  
   if(rf->GetBins())fDataBins=(THSBins*)rf->GetBins()->Clone();
   //if(rf->fID) fID=rf->fID;
@@ -64,6 +69,7 @@ THSRooFit::THSRooFit(THSRooFit* rf){
   fNStudyTrials=rf->fNStudyTrials;
   fInWeights=rf->fInWeights;
   fWeightName=rf->fWeightName;
+  fFitMethod=rf->fFitMethod;
 }
 
 THSRooFit::~THSRooFit(){
@@ -75,6 +81,7 @@ THSRooFit::~THSRooFit(){
   if(fDataBins) {delete fDataBins;fDataBins=nullptr;}
   if(fMCIntTree) {delete fMCIntTree;fMCIntTree=nullptr;}
   if(fMCGenTree) {delete fMCGenTree;fMCGenTree=nullptr;}
+  if(fModelConfig) {delete fModelConfig;fModelConfig=nullptr;}
   if(fInWeights&&fOwnWorkSpace) {delete fInWeights;fInWeights=nullptr;}
  }
 
@@ -129,23 +136,28 @@ void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
     //e.g. for ToyStudies
     rfname=GetName();
   }
+  cout<<"WS "<<rfname<<" "<<fWS<<" "<<ws<<endl;
   //else the given name is used
   //this is useful for creating subfits when binning etc
   //and the new RF has a different name to the RF which created the workspace
   //load model from workspace, does not load data
   //This allows to create a new THSRooFit object for different trees
+
   if(!ws) {cout<<"Warning void THSRooFit::LoadWorkSpace NULL workspace supplied returning"<<endl; return;}
   if(fWS){ delete fWS;fWS=nullptr;} //replace the one made in constructor
   fWS=ws;
-  if(fWS->pdf(rfname+"TotalPDF0")){fModel=fWS->pdf(rfname+"TotalPDF0");fModel->SetName(TString(GetName())+"TotalPDF0");}
-  //  if(fWS->set(rfname+"Variables")){fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables);}
-  if(fWS->set(rfname+"Variables")){fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables);}
-  if(fWS->set(rfname+"AuxVars"))fAuxVars.add(*(fWS->set(rfname+"AuxVars")));
-  if(fWS->set(rfname+"BinVars"))fBinVars.add(*(fWS->set(rfname+"BinVars")));
-  if(fWS->set(rfname+"Parameters"))fParameters.add(*(fWS->set(rfname+"Parameters")));
-  if(fWS->set(rfname+"Yields"))fYields.add(*(fWS->set(rfname+"Yields")));
-  if(fWS->set(rfname+"PDFs"))fPDFs.add(*(fWS->set(rfname+"PDFs")));
-  if(fWS->set(rfname+"Constraints"))fConstraints.add(*(fWS->set(rfname+"Constraints")));
+  fWS->Print();
+  //  fVariables.Print();
+  // if(fWS->set(rfname+"Variables")){fVariables.removeAll();fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables,RooFit::RecycleConflictNodes());}
+  fWS->set(rfname+"Variables")->Print();
+  // if(fWS->set(rfname+"Variables")){fVariables.removeAll();fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables);}
+  if(fWS->set(rfname+"Variables")){fVariables.removeAll();fVariables.add(*(fWS->set(rfname+"Variables")));}
+  if(fWS->set(rfname+"AuxVars")){fAuxVars.removeAll();fAuxVars.add(*(fWS->set(rfname+"AuxVars")));}
+  if(fWS->set(rfname+"BinVars")){fBinVars.removeAll();fBinVars.add(*(fWS->set(rfname+"BinVars")));}
+  if(fWS->set(rfname+"Parameters")){fParameters.removeAll();fParameters.add(*(fWS->set(rfname+"Parameters")));}
+  if(fWS->set(rfname+"Yields")){fYields.removeAll();fYields.add(*(fWS->set(rfname+"Yields")));}
+  if(fWS->set(rfname+"PDFs")){fPDFs.removeAll();fPDFs.add(*(fWS->set(rfname+"PDFs")));}
+  if(fWS->set(rfname+"Constraints")){fConstraints.removeAll();fConstraints.add(*(fWS->set(rfname+"Constraints")));}
   // if(fWS->set("FitOptions"))fFitOptions.add(*(fWS->set("FitOptions")));
   if(fWS->set("ID")) {
     fIDBranchName=(fWS->set("ID"))->first()->GetName();
@@ -154,6 +166,72 @@ void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
   }
   else fGotID=kFALSE;
     if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();//Will be tagged with new rf name
+  // fWS->Print();
+}
+
+void THSRooFit::LoadPartSet(TString setname, RooArgList *list){
+  cout<<setname<<endl;
+  if(fWS->set(setname)){
+    RooArgSet newset;
+    RooArgSet wsset=*(fWS->set(setname));
+    wsset.Print();
+    //list->Print();
+    //newset.add(*list->selectCommon(wsset));
+    list->removeAll();
+    //list->add(newset);
+    list->add(wsset);
+  }
+  list->Print();
+}
+void THSRooFit::MergeWorkSpace(THSRooFit* rf){
+  RooWorkspace* ws=rf->GetWorkSpace();
+  TString rfname=rf->GetName();
+  fWS->defineSet(rfname+"Variables",*ws->set(rfname+"Variables"),kTRUE);
+  fWS->defineSet(rfname+"AuxVars",*ws->set(rfname+"AuxVars"),kTRUE);
+  fWS->defineSet(rfname+"BinVars",*ws->set(rfname+"BinVars"),kTRUE);
+  fWS->defineSet(rfname+"Parameters",*ws->set(rfname+"Parameters"),kTRUE);
+  fWS->defineSet(rfname+"Yields",*ws->set(rfname+"Yields"),kTRUE);
+  fWS->defineSet(rfname+"PDFs",*ws->set(rfname+"PDFs"),kTRUE);
+  fWS->defineSet(rfname+"Constraints",*ws->set(rfname+"Constraints"),kTRUE);
+  
+}
+void THSRooFit::LoadOverlapWorkSpace(RooWorkspace* ws,TString rfname){
+  fOwnWorkSpace=kFALSE;
+  rfname=GetName();
+  cout<<"WS "<<rfname<<" "<<fWS<<" "<<ws<<" "<<GetName()<<endl;
+  //else the given name is used
+  //this is useful for creating subfits when binning etc
+  //and the new RF has a different name to the RF which created the workspace
+  //load model from workspace, does not load data
+  //This allows to create a new THSRooFit object for different trees
+
+  if(!ws) {cout<<"Warning void THSRooFit::LoadWorkSpace NULL workspace supplied returning"<<endl; return;}
+  RooWorkspace *oldWS=nullptr;
+  if(fWS) oldWS=fWS;
+  //  if(fWS){ delete fWS;fWS=nullptr;} //replace the one made in constructor
+  fWS=ws;
+  fWS->Print();
+  //fVariables.Print();
+  // if(fWS->set(rfname+"Variables")){fVariables.removeAll();fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables,RooFit::RecycleConflictNodes());}
+  fWS->set(rfname+"Variables")->Print();
+  // if(fWS->set(rfname+"Variables")){fVariables.removeAll();fVariables.add(*(fWS->set(rfname+"Variables")));fWS->import(fVariables);}
+  LoadPartSet(rfname+"Variables",&fVariables);
+  LoadPartSet(rfname+"AuxVars",&fAuxVars);
+  LoadPartSet(rfname+"BinVars",&fBinVars);
+  LoadPartSet(rfname+"Parameters",&fParameters);
+  LoadPartSet(rfname+"Yields",&fYields);
+  LoadPartSet(rfname+"PDFs",&fPDFs);
+  LoadPartSet(rfname+"Constraints",&fConstraints);
+  // if(fWS->set("FitOptions"))fFitOptions.add(*(fWS->set("FitOptions")));
+  if(fWS->set("ID")) {
+    fIDBranchName=(fWS->set("ID"))->first()->GetName();
+    fID=fWS->var(fIDBranchName);
+    fGotID=kTRUE;
+  }
+  else fGotID=kFALSE;
+  
+  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();//Will be tagged with new rf name
+  // if(oldWS){ delete oldWS;oldWS=nullptr;}
   // fWS->Print();
 }
 void THSRooFit::DefineSets(){
@@ -334,28 +412,35 @@ void THSRooFit::LoadSpeciesPDF(TString opt,Int_t Scale0){
   fYields.add(*(fWS->factory(fYld+opt+Form("[%d,0,1E12]",Scale0))));//default yields limits
 }
 void THSRooFit::TotalPDF(){
+  cout<<"THSRooFit::TotalPDF()"<<endl;
+  fPDFs.Print();
+  fYields.Print();
   //Construct a total PDF whcih is the sum of the species PDFs
   RooAddPdf model(fName+"TotalPDF","total model",
 		  fPDFs, 
 		  fYields);
+  model.Print();
   Int_t Nm=0;
   //can't delete from workspace!
   while(fWS->pdf(TString(fName)+Form("TotalPDF%d",Nm++)));
   model.SetName(TString(fName)+Form("TotalPDF%d",Nm-1));
-    
-  fWS->import(model); //and replace any existing model memory leak?
+  cout<<"THSRooFit::TotalPDF() "<<model.GetName()<<endl;
+  // fWS->Print();
+  // fWS->import(model); //and replace any existing model, memory leak?
+  fWS->import(model,RooFit::RecycleConflictNodes()); //and replace any existing model, memory leak?
   fModel=fWS->pdf(model.GetName());
   fModel->Print();
   fYields[0].Print();
   AddFitOption(RooFit::Extended());
-}
+  fWS->Print();
+ }
 void THSRooFit::Fit(Bool_t randPar){   
   Info("THSRooFit::Fit()"," Starting");
   if(!fData){
     Error("THSRooFit::Fit"," no dataset loaded");
     return;
   }
-  fModel->Print();
+  if(fModel)fModel->Print();
   if(randPar) RandomisePars();
   if (fResult) {delete fResult;fResult=0;}
   //Initialise yield fit parameters
@@ -406,12 +491,205 @@ void THSRooFit::Fit(Bool_t randPar){
     delete hist;
     
   }
-  else
-    fResult=fModel->fitTo(*fData,fFitOptions);
-  
+  else{
+    if(fFitMethod==0)
+      fResult=FitMinuit1();
+    else if(fFitMethod==1)
+      fResult=FitMinuit2();
+    else if(fFitMethod==2)
+      fResult=FitMCMC();
+    else Warning("THSRooFit::Fit","Fit method not defined");
+  }
+  //    fResult=fModel->fitTo(*fData,fFitOptions);
+  fNllval.setVal(fResult->minNll());
   fFiti++;
+ //plot result
+  if(fIsPlot)PlotDataModel();
 
 }
+///////////////////////////////////////////////////////////////
+///Fit with standard HSMCMC class
+RooFitResult *THSRooFit::FitMCMC(){
+  if(!fModel) TotalPDF();
+  RooStats:: SequentialProposal sp(0.1);
+  if(fMCMC) delete fMCMC;
+  fMCMC=new HSMCMC(*GetData(), *GetModelConfig());
+  fMCMC->SetNumBurnInSteps(100);
+  fMCMC->SetNumIters(fNMCMC);
+  fMCMC->SetProposalFunction(sp);
+  //make the markov chain
+  fMCMC->MakeChain();
+  fNllval.setVal(fMCMC->NLL());
+  return fMCMC->Save();
+}
+///////////////////////////////////////////////////////////////
+///Fit with standard RooFit
+RooFitResult *THSRooFit::FitMinuit1(){
+  return fModel->fitTo(*fData,fFitOptions);
+}
+///////////////////////////////////////////////////////////////
+///Fit with weights by multiplying by alpha=SumW/SumW^2
+///More or less a copy of RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList) 
+
+RooFitResult *THSRooFit::FitMinuit2(){
+    // Select the pdf-specific commands 
+  RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
+
+  RooLinkedList fitCmdList(fFitOptions) ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood") ;
+
+  pc.defineString("fitOpt","FitOptions",0,"") ;
+  pc.defineInt("optConst","Optimize",0,2) ;
+  pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("doSave","Save",0,0) ;
+  pc.defineInt("doTimer","Timer",0,0) ;
+  pc.defineInt("plevel","PrintLevel",0,1) ;
+  pc.defineInt("strat","Strategy",0,1) ;
+  pc.defineInt("initHesse","InitialHesse",0,0) ;
+  pc.defineInt("hesse","Hesse",0,1) ;
+  pc.defineInt("minos","Minos",0,0) ;
+  pc.defineInt("ext","Extended",0,2) ;
+  pc.defineInt("numcpu","NumCPU",0,1) ;
+  pc.defineInt("numee","PrintEvalErrors",0,10) ;
+  pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
+  pc.defineInt("doWarn","Warnings",0,1) ;
+  pc.defineInt("doSumW2","SumW2Error",0,-1) ;
+  pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
+  pc.defineString("mintype","Minimizer",0,"Minuit") ;
+  pc.defineString("minalg","Minimizer",1,"minuit") ;
+  pc.defineObject("minosSet","Minos",0,0) ;
+  pc.defineSet("cPars","Constrain",0,0) ;
+  pc.defineSet("extCons","ExternalConstraints",0,0) ;
+  pc.defineMutex("FitOptions","Verbose") ;
+  pc.defineMutex("FitOptions","Save") ;
+  pc.defineMutex("FitOptions","Timer") ;
+  pc.defineMutex("FitOptions","Strategy") ;
+  pc.defineMutex("FitOptions","InitialHesse") ;
+  pc.defineMutex("FitOptions","Hesse") ;
+  pc.defineMutex("FitOptions","Minos") ;
+  pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("InitialHesse","Minimizer") ;
+  
+  // Process and check varargs 
+  pc.process(fitCmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Decode command line arguments
+  const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
+  Int_t optConst = pc.getInt("optConst") ;
+  Int_t verbose  = pc.getInt("verbose") ;
+  Int_t doSave   = pc.getInt("doSave") ;
+  Int_t doTimer  = pc.getInt("doTimer") ;
+  Int_t plevel    = pc.getInt("plevel") ;
+  Int_t strat    = pc.getInt("strat") ;
+  Int_t initHesse= pc.getInt("initHesse") ;
+  Int_t hesse    = pc.getInt("hesse") ;
+  Int_t minos    = pc.getInt("minos") ;
+  Int_t numee    = pc.getInt("numee") ;
+  Int_t doEEWall = pc.getInt("doEEWall") ;
+  Int_t doWarn   = pc.getInt("doWarn") ;
+  Int_t doSumW2  = pc.getInt("doSumW2") ;
+  const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+#ifdef __ROOFIT_NOROOMINIMIZER
+  const char* minType =0 ;
+#else
+  const char* minType = pc.getString("mintype","Minuit") ;
+  const char* minAlg = pc.getString("minalg","minuit") ;
+#endif
+
+  // Determine if the dataset has weights  
+  Bool_t weightedData = fData->isNonPoissonWeighted() ;
+  if(fNll) {delete fNll;fNll=nullptr;}
+  //if(fResult) {delete fResult;fResult=nullptr;}
+  fNll=fModel->createNLL(*fData,nllCmdList) ;
+  RooFitResult *ret = 0 ;    
+
+  //add in sumw/sumw2 term
+  if(fData->isNonPoissonWeighted()){
+    Double_t SumW=SumWeights();
+    Double_t SumW2=SumWeights2();
+    RooFormulaVar *alphanll=new RooFormulaVar("alphanll",Form("%lf*%s",SumW/SumW2,fNll->GetName()),RooArgSet(*fNll));
+    fNll=alphanll;
+  }
+  
+  //Use Minuit minimiser
+  RooMinuit m(*fNll) ;
+  
+  m.setEvalErrorWall(doEEWall) ;
+  if (doWarn==0) {
+    m.setNoWarn() ;
+  }
+  
+  m.setPrintEvalErrors(numee) ;
+  if (plevel!=1) {
+    m.setPrintLevel(plevel) ;
+  }
+  
+  if (optConst) {
+    // Activate constant term optimization
+    m.optimizeConst(optConst) ;
+  }
+  
+  if (fitOpt) {
+    
+    // Play fit options as historically defined
+    ret = m.fit(fitOpt) ;
+    
+  } else {
+    
+    if (verbose) {
+      // Activate verbose options
+	m.setVerbose(1) ;
+    }
+    if (doTimer) {
+      // Activate timer options
+      m.setProfile(1) ;
+    }
+    
+    if (strat!=1) {
+      // Modify fit strategy
+      m.setStrategy(strat) ;
+    }
+    
+    if (initHesse) {
+      // Initialize errors with hesse
+      m.hesse() ;
+    }
+    
+    // Minimize using migrad
+    m.migrad() ;
+    
+    if (hesse) {
+      // Evaluate errors with Hesse
+      m.hesse() ;
+    }
+    
+    if (minos) {
+      // Evaluate errs with Minos
+      if (minosSet) {
+	m.minos(*minosSet) ;
+      } else {
+	m.minos() ;
+      }
+    }
+    // Optionally return fit result
+    if (doSave) {
+      string name = Form("fitresult_%s_%s",fModel->GetName(),fData->GetName()) ;
+      string title = Form("Result of fit of p.d.f. %s to dataset %s",fModel->GetName(),fData->GetName()) ;
+      ret = m.save(name.c_str(),title.c_str()) ;
+    } 
+    
+  }
+  
+  if (optConst) {
+    m.optimizeConst(0) ;
+  }
+  return ret ;
+
+}
+
 void THSRooFit::RandomisePars(){
   //randomise fit parameters
   for(Int_t ip=0;ip<fParameters.getSize();ip++){
@@ -461,9 +739,20 @@ void THSRooFit::PlotDataModel(){
   TCanvas *canvas0=0;
   TCanvas *canvas1=0;
   if(!fCanvases){fCanvases=new TList();fCanvases->SetOwner();fCanvases->SetName(TString("RFPlots")+GetTitle());}
+  //make sure chi2 created
+  if(fChi2s.getSize()==0){
+    for(Int_t idr=0;idr<fVariables.getSize();idr++){
+      RooRealVar* var=dynamic_cast<RooRealVar*>(fWS->var(fVariables[idr].GetName()));//get variable
+       RooRealVar* chi2var=new RooRealVar(TString("Chi2")+var->GetName(),TString("Chi2")+var->GetName(),0);
+       fChi2s.add(*chi2var);
+    }
+  }
   //Loop over variables
   for(Int_t idr=0;idr<fVariables.getSize();idr++){
     RooRealVar* var=dynamic_cast<RooRealVar*>(fWS->var(fVariables[idr].GetName()));//get variable
+    cout<< fChi2s.getSize()<<fChi2s.at(idr)<<endl;
+    fChi2s.at(idr)->GetName();
+    RooRealVar* chi2=dynamic_cast<RooRealVar*>(fChi2s.at(idr));//get variable
     
     if(!var) continue;
     fCanvases->Add(canvas0=new TCanvas(TString(GetTitle())+fVariables[idr].GetName()+Form("%d",fFiti),TString(GetTitle())+fVariables[idr].GetName()));//create new canvas for drawing on
@@ -473,6 +762,7 @@ void THSRooFit::PlotDataModel(){
     //    fModel->plotOn(frame,LineColor(kRed),Precision(1E-2)) ; //model = signal + back fit result 
     //Get the chi2
     fChi2=frame->chiSquare();
+    chi2->setVal(fChi2);
     cout<<fFiti<<" THSRooFit::PlotDataModel() chi2 = "<<fChi2<<endl;
     fModel->paramOn(frame,
 		    Layout(0.1, 0.4, 0.9),
@@ -602,8 +892,19 @@ void THSRooFit::SavePlots(TString filename){
   file=new TFile(fOutDir+TString("Results")+GetTitle()+".root","recreate");
   if(fCanvases) fCanvases->Write();
   if(fResult) fResult->Write("HSFitResult");
+  if(fMCMC) fMCMC->GetTree()->Write();
+
+  //save paramters and chi2s in  dataset (for easy merging)
+  RooArgSet saveArgs(fParameters,fChi2s);
+  saveArgs.add(fNllval);
+  RooDataSet saveDS("HSResults","HSResults",saveArgs);
+  saveDS.add(saveArgs);
+  saveDS.Write();
+  TTree* treeDS=RooStats::GetAsTTree("ResultsTree","ResultsTree",saveDS);
+   treeDS->Write();
   file->Close();
   delete file;
+  
 }
 void THSRooFit::MakeBins(){
   //also include fit variables in bins as THSBins can then be used to check events
@@ -665,33 +966,7 @@ void THSRooFit::ConfigureSavedBins(TString dirname,TString pdfname){
   if(!fDataBins->GetN()) {Error("THSRooFit::ConfigureSavedBins()","No bins found in directory = %s",fBinDir.Data());return;}
   return;
 }
-// void THSRooFit::FitWithBins(Int_t Nfits){
-//   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
-//   MakeBins();
-//   cout<<"THSRooFit::FitWithBins(); number of bins "<<fDataBins->GetN()<<endl;
-//   TDirectory *saveDir=gDirectory;
-//   //Open made bins file (safer saving to harddrive)
-//   THSBins* savedBins=new THSBins("HSDataBins",fOutDir+"DataEntries.root");
-//   fTree->SetBranchStatus("*",0);
-//   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//     fTree->SetBranchStatus(fVariables[i].GetName(),1);
-//   }
-//   //but always need ID branch
-//   if(fTree->GetBranch(fIDBranchName)){
-//    fTree->SetBranchStatus(fIDBranchName,1);
-//   }
-//   for(Int_t i=0;i<fDataBins->GetN();i++){
-//     THSRooFit* rf=CreateSubFitBins(savedBins->GetBinnedTree(fTree,i),savedBins->GetBinName(i),kFALSE);
-  
-//     if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
-//     rf->FitMany(Nfits);
-//     rf->SavePlots(fOutDir+TString("Results")+fDataBins->GetBinName(i)+".root");
 
-//     delete rf;
-//   }
-//   cout<<"THSRooFit::FitWithBins() Done all Fits "<<endl;
-//   ///??delete savedBins;
-// }
 void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
   if(!fDataBins->GetN()) return;
   Info("THSRooFit::FitSaved","Goint to run %d fits from %s",Nfits,fBinDir.Data());
@@ -806,7 +1081,8 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
 void THSRooFit::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
-  FitMany(Nfits);
+  if(fFitMethod==2) Fit();
+  else FitMany(Nfits);
 
   if(fData&&Nfits)
     if(fData->isNonPoissonWeighted()){
@@ -860,8 +1136,6 @@ void THSRooFit::FitMany(Int_t Nfits){
   //first fit use initial paramter values
   if(!fModel) fModel=(RooAbsPdf*)&(fPDFs[0]);//Not ideal, will just take the fist PDF loaded by LoadSpecies unless TotalPDF has already been called.
   Fit();
-  //plot result
-  if(fIsPlot)PlotDataModel();
   Bool_t nan=TMath::IsNaN(fResult->minNll());
   Bool_t edm=(fResult->covQual()>1)||(fResult->covQual()==-1);
   Bool_t fail=(fResult->minNll()!=-1e+30);
@@ -881,9 +1155,7 @@ void THSRooFit::FitMany(Int_t Nfits){
   for(Int_t ifit=1;ifit<Nfits;ifit++){
     Fit(kTRUE);
     fWS->saveSnapshot(Form("ssFit%d",ifit),RooArgSet(fYields,fParameters),kTRUE);
-    //plot result
-    if(fIsPlot)PlotDataModel();
-  
+   
     fitResults->AddLast((RooFitResult*)fResult->clone());
     
     nan=TMath::IsNaN(fResult->minNll());
@@ -1011,4 +1283,71 @@ void THSRooFit::DefaultFitOptions(){
   AddFitOption(RooFit::Warnings(kFALSE));
 
 
+}
+Double_t  THSRooFit::SumWeights(){
+  // Otherwise sum the weights in the event
+  Double_t sumw(0), carry(0);
+  Int_t i ;
+  for (i=0 ; i<fData->numEntries() ; i++) {
+    fData->get(i) ;
+ 
+    Double_t y = fData->weight() - carry;
+    Double_t t = sumw + y;
+    carry = (t - sumw) - y;
+    sumw = t;
+  }
+  return sumw;
+}
+Double_t  THSRooFit::SumWeights2(){
+  // Otherwise sum the weights in the event
+  Double_t sumw(0), carry(0);
+  Int_t i ;
+  for (i=0 ; i<fData->numEntries() ; i++) {
+    fData->get(i) ;
+ 
+    Double_t y = fData->weight()*fData->weight() - carry;
+    Double_t t = sumw + y;
+    carry = (t - sumw) - y;
+    sumw = t;
+  }
+  return sumw;
+}
+RooStats::ModelConfig*  THSRooFit::GetModelConfig(){
+  cout<<"ModelConfig*  THSRooFit::GetModelConfig()"<<endl;
+  if(fModelConfig)return fModelConfig;
+  fModelConfig =new RooStats::ModelConfig(fWS);
+  if(!fModel) fModel=(RooAbsPdf*)&(fPDFs[0]);//Not ideal, will just take the fist PDF loaded by LoadSpecies unless TotalPDF has already been called.
+  fModelConfig->SetPdf(*fModel);
+  fModelConfig->SetParametersOfInterest(GetParameters());
+  return fModelConfig;
+}
+void  THSRooFit::ClearRF(){
+  fVariables.removeAll();
+  fAuxVars.removeAll();
+  fBinVars.removeAll();
+  fParameters.removeAll();
+  fYields.removeAll();
+  fPDFs.removeAll();
+  fConstraints.removeAll();
+  delete fModel;fModel=nullptr;
+  CleanWSDataSets();
+  RemoveDataSet();
+  // if(fWS)delete fWS;fWS=nullptr;
+  fID=nullptr;
+}
+//////////////////////////////////////////////////
+///Create data sets for batch ToyMC analysis
+void  THSRooFit::GenerateToys(Int_t Ntoys){
+  if(!fModel) TotalPDF();
+  for(Int_t i=0;i<Ntoys;i++){
+    //Number of events to generate
+    Long64_t nexp=RooRandom::randomGenerator()->Poisson(GetModel()->expectedEvents(GetVariables()));
+    cout<<nexp<<endl;
+    RooDataSet* DS=GetModel()->generate(GetVariables(),nexp);
+    DS->SetName("ToyData");
+    TFile* outfile=new TFile(GetOutDir()+Form("/Toy_%d.root",i),"recreate");
+    DS->Write();
+    outfile->Close();
+    delete outfile;
+  }
 }

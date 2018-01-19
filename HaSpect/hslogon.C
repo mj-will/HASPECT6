@@ -125,6 +125,7 @@ void hslogon(){
     if((opt==TString("--hssel"))) HSselector(); //Load selector classes
     if((opt.Contains("--hsfinal"))) HSFinal(TString(opt(10,opt.Sizeof()))); //Load finalstate classes
     if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+    if(opt.Contains("--")&&opt.Contains(".cpp")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
     if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
     
   }	
@@ -176,6 +177,7 @@ void HSfit(){
   LoadMacro("THSWeights.C");
   LoadMacro("RooHSEventsPDF.C");
   LoadMacro("RooHSEventsHistPDF.C");
+  LoadMacro("HSMCMC.C");
   LoadMacro("THSRooFit.C");
   LoadMacro("THSsPlot.C");
   LoadMacro("RooHS1StepStudy.C");

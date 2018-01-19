@@ -1,10 +1,9 @@
-//To run : root --hsfit --RooHSSphHarMoments.cxx TestAccFit.C
-//Note you need $HSANA set to the HASPECT6 code dir
 {
 
  //Create THSRooFit manager 
   THSRooFit* RF=new THSRooFit("AFit");
-  RF->SetOutDir("outAcc3/"); //give output directory
+  TString filedir=gSystem->Getenv("PWD");
+  RF->SetOutDir(filedir); //give output directory
 
   //Load the variables for fitting, these should be branches in you tree
   //see MakeEventsRes.C
@@ -20,25 +19,18 @@
 
   //Construct Moments PDF for generating/Fitting with
   RooHSSphHarMoments* pdf=new RooHSSphHarMoments("YLM","YLM",*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),LMAX,MMAX,*RF->GetWorkSpace()->set("Moments"));
-  //Add data (see MakeEventsRes.C)
-  TChain chain("decayAngles");
-  chain.Add("accepted_res.root");
-  pdf->SetEvTree(&chain,RF->GetCut());
+  //Add data (see MakeEventsRes.C
+  TChain *chain=new TChain("decayAngles");
+  // chain.Add("accepted_res.root");
+  // chain->Add("phasespace_res.root");
+  pdf->SetEvTree(chain,RF->GetCut());
   pdf->SetNInt(100000);//Number of events to use in integration calc.
   pdf->SetUseWeightsGen(kFALSE); //Use accept/reject not weights
-  cout<<"HERE "<<RF->GetWorkSpace()->set("Moments")<<endl;
-  pdf->Print();
   RF->GetWorkSpace()->import(*pdf); //import pdf into workspace
-  cout<<"HERE "<<endl;
-  RF->LoadSpeciesPDF("YLM",1000);
-RooAddPdf model("TotalPDF","total model",
-		RF->GetPDFs(), 
-		RF->GetYields());
- model.Print();
- cout<<"DONE TEST "<<endl;
+
   //Load PDF into RooFit Manager and set to generate 1000 events
+  RF->LoadSpeciesPDF("YLM",10000);
   RF->TotalPDF(); //Make extended PDF
-  exit(0);
   //Choose generated moments
   //Warning some combinations of moments can give negative PDFs
   //It would be good if we could check for this before running?
@@ -47,21 +39,5 @@ RooAddPdf model("TotalPDF","total model",
   RF->GetWorkSpace()->var("MomY_4_2")->setVal(0.1);
   RF->GetWorkSpace()->var("MomY_4_1")->setVal(-0.2);
 
-  //Justr draw the PDF with given moments
-  new TCanvas();
-  ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
-  //Run :
-  //Generate events
-  RooDataSet *ds1=RF->GetModel()->generate(RF->GetVariables(),1000);
-  RF->LoadDataSet(ds1);
-  new TCanvas();
-  ds1->createHistogram(*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),50,50)->Draw("col1");					  
-
-  //Try 1 fit with different starting paramters
-  RF->FitAndStudy(1);
-
-  //Plot the PDF for the last fit result
-  new TCanvas();
-  ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
 
 }

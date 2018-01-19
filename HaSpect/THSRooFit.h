@@ -13,6 +13,9 @@
 #include <RooAbsArg.h>
 #include <RooAbsData.h>
 #include <RooPlot.h>
+#include "RooCmdConfig.h"
+#include "RooGlobalFunc.h"
+#include <RooStats/ModelConfig.h>
 #include <TNamed.h>
 #include <TSystem.h>
 #include <TChain.h>
@@ -21,6 +24,7 @@
 #include <TFile.h>
 #include "THSBins.h"
 #include "THSWeights.h"
+#include "HSMCMC.h"
 #include <vector>
 #include <map>
 using namespace RooFit;
@@ -38,9 +42,14 @@ class THSRooFit : public TNamed {
   RooArgList fPDFs;//species pdfs
   RooArgList fParameters;//model parameters
   RooArgList fConstraints;//constraints on  parameters
+  RooArgList fChi2s;//chi2 of plotted model for each parameter
   RooRealVar *fID=nullptr;
   RooAbsPdf* fModel=nullptr; //model to be fitted to data
   RooAbsData* fData=nullptr; //dataset to be fitted
+  RooStats::ModelConfig *fModelConfig=nullptr;
+  RooAbsReal* fNll=nullptr;
+  RooRealVar fNllval=RooRealVar("NLL","NLL",0);
+  
   TList* fCanvases=nullptr;  //canvases for plotting fitted variables
   TList* fHists=nullptr;  //histograms for plotting weighted variables
   TList* fRooFits=nullptr;  //collection of sub fits
@@ -55,6 +64,10 @@ class THSRooFit : public TNamed {
   TString fWeightName; //Input Weight species for this dataset
   TString fStudyPDF; //pdf to be studied
   TString fCut; //Apply cut to data tree and RooHSEventsPDF
+  Int_t fFitMethod=0;
+
+  HSMCMC* fMCMC=nullptr;
+  Long64_t fNMCMC=1000;
   
   RooFitResult* fResult=nullptr;   //RooFit result
   THSWeights* fInWeights=nullptr; //! //input weights for dataset to be fitted
@@ -92,9 +105,13 @@ public:
   void LoadWeights(TString wfile,TString wname);
   void LoadWeights(THSWeights* wts){fInWeights=wts;};
   void SetDataWeight(); //Add a weight to RooFit dataset
-  void SetDataWeightFast(); //Add a weight to RooFit dataset without ID 
+  void SetDataWeightFast(); //Add a weight to RooFit dataset without ID
+  void SetFitMethod(Int_t meth){fFitMethod=meth;}
   void LoadWorkSpace(RooWorkspace* ws,TString rfname=""); //load a workspace without data
   void LoadWorkSpaceData(RooWorkspace* ws,TString rfname=""); //load a workspace with data
+  void LoadOverlapWorkSpace(RooWorkspace* ws,TString rfname);
+  void LoadPartSet(TString setname, RooArgList *list);
+  void MergeWorkSpace(THSRooFit* rf);
   void TotalPDF(); //sum different PDFs if different species
   RooArgList GetVariables(){return fVariables;}
   RooRealVar* GetVariable(TString name){return dynamic_cast<RooRealVar*>(fVariables.find(name));}
@@ -117,6 +134,7 @@ public:
   TList* GetFits(){return fRooFits;}
   THSRooFit* GetSubFit(Int_t ii){THSRooFit *rf=((THSRooFit*)GetFits()->At(ii));GetWorkSpace()->loadSnapshot(TString("FinalResults")+rf->GetName());return rf;};
   RooFitResult* GetResult(){return fResult;}
+  HSMCMC* GetMCMC(){return fMCMC;}
   TList* GetPlots(){return fCanvases;};
   void AddVariables(RooArgList list){fVariables=list;}
   void AddAuxVars(RooArgList list){fAuxVars=list;}
@@ -139,6 +157,7 @@ public:
   void SetParVals(RooArgList pars);
   void RemoveDataSet();
   void CleanWSDataSets();
+  void ClearRF();
   void RemoveConstraints(){fConstraints.removeAll();};
   TTree* GetTree(){return fTree;}
   RooWorkspace* GetWorkSpace(){return fWS;}
@@ -147,6 +166,11 @@ public:
   void PlotModel(TString varName,TString pdfName);
   void Factory(TString opt){fWS->factory(opt);}
   void Fit(Bool_t randPar=kFALSE);
+  RooFitResult* FitMinuit1();
+  RooFitResult* FitMinuit2();
+  RooFitResult* FitMCMC();
+  void  GenerateToys(Int_t Ntoys);
+
   virtual Bool_t  InitialiseFit();
   //  THSRooFit*  CreateSubFit(TNamed cut); //allow individual cuts
   //THSRooFit*  CreateSubFitBins(TNamed cut);//from predefined entrylists
@@ -173,11 +197,15 @@ public:
   void SetBinnedFit(Bool_t bf=kTRUE){fBinnedFit=bf;}
   void SetInWeights(THSWeights* wts){fInWeights=wts;}
   void SetWeightName(TString WName);
+  Double_t SumWeights();
+  Double_t SumWeights2();
+  RooStats::ModelConfig*  GetModelConfig();
   virtual void DefaultFitOptions();
   void AddFitOption(RooCmdArg cmd){fFitOptions.Add((RooCmdArg*)cmd.Clone());}
   RooLinkedList GetFitOptions(){return fFitOptions;}
   void SetPlot(Bool_t plot=kTRUE){fIsPlot=plot;}
- 
+  void SetNMCMC(Long64_t nmcmc) {fNMCMC=nmcmc;}
+  
   void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}
   void SetStudyPDF(TString pdfn){fStudyPDF=pdfn;}

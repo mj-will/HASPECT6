@@ -4,7 +4,7 @@
 
  //Create THSRooFit manager 
   THSRooFit* RF=new THSRooFit("AFit");
-  RF->SetOutDir("outAcc3/"); //give output directory
+  RF->SetOutDir("outAcc100/"); //give output directory
 
   //Load the variables for fitting, these should be branches in you tree
   //see MakeEventsRes.C
@@ -22,14 +22,15 @@
   RooHSSphHarMoments* pdf=new RooHSSphHarMoments("YLM","YLM",*(RF->GetWorkSpace()->var("Z")) ,*(RF->GetWorkSpace()->var("Phi")),LMAX,MMAX,*RF->GetWorkSpace()->set("Moments"));
   //Add data (see MakeEventsRes.C
   TChain chain("decayAngles");
-  chain.Add("accepted_res.root");
+  // chain.Add("accepted_res.root");
+  chain.Add("phasespace_res.root");
   pdf->SetEvTree(&chain,RF->GetCut());
-  pdf->SetNInt(10000);//Number of events to use in integration calc.
+  pdf->SetNInt(100000);//Number of events to use in integration calc.
   pdf->SetUseWeightsGen(kFALSE); //Use accept/reject not weights
   RF->GetWorkSpace()->import(*pdf); //import pdf into workspace
 
   //Load PDF into RooFit Manager and set to generate 1000 events
-  RF->LoadSpeciesPDF("YLM",1000);
+  RF->LoadSpeciesPDF("YLM",10000);
   RF->TotalPDF(); //Make extended PDF
   //Choose generated moments
   //Warning some combinations of moments can give negative PDFs
@@ -38,16 +39,15 @@
   RF->GetWorkSpace()->var("MomY_2_0")->setVal(-0.2);
   RF->GetWorkSpace()->var("MomY_4_2")->setVal(0.1);
   RF->GetWorkSpace()->var("MomY_4_1")->setVal(-0.2);
-
-  //Justr draw the PDF with given moments
+   //Justr draw the PDF with given moments
   new TCanvas();
   ((TH2F*)RF->GetModel()->createHistogram("Z,Phi",50,50))->Draw("col1");
   //Set to to fit study 
   RF->SetStudyPDF("YLM");
   //Make a plot for every study fit (remove if doing lots of fits)
-  RF->SetStudyPlot();
+  //RF->SetStudyPlot();
   //Set the number of trials you would like
-  RF->SetNStudyTrials(10);
+  RF->SetNStudyTrials(20);
   //Run :
   //Generate events and fit for given number of trials
   RF->StudyFit();
