@@ -20,6 +20,7 @@ class THSHipoTrigger: public THSHipoReader{
 
   //banks
   THipoBank* fRunConBank=nullptr;
+  THipoBank* fRecEvBank=nullptr;
 
   //items in banks
   THipoItem* fRunTrig=nullptr;

@@ -9,7 +9,6 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRunConBank){
     //Add the trigger banks to those to be configured
     Info("THSHipoTrigger","Opened file");
-    fHipo->ConfigOnlyBank("REC::Event");
     fHipo->ConfigOnlyBank("RUN::config");
   }
   THSHipoReader::Init(filename,name);
@@ -17,18 +16,19 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRunConBank){
     
     fRunConBank=fHipo->GetBank("RUN::config");
+    fRecEvBank=fHipo->GetBank("RUN::config");
 
-    fRecEvNRun=fEvBank->GetItem("NRUN");
-    fRecEvNEVENT=fEvBank->GetItem("NEVENT");
-    fRecEvTYPE=fEvBank->GetItem("TYPE");
-    fRecEvTRG=fEvBank->GetItem("TRG");
-    fRecEvHelic=fEvBank->GetItem("Helic");
-    fRecEvEVNTime=fEvBank->GetItem("EVNTime");
-    fRecEvBCG=fEvBank->GetItem("BCG");
-    fRecEvLT=fEvBank->GetItem("LT");
-    //fRecEvSTTime=fEvBank->GetItem("STTime");
-    fRecEvRFTime=fEvBank->GetItem("RFTime");
-    fRecEvPTIME=fEvBank->GetItem("PTIME");
+    fRecEvNRun=fRecEvBank->GetItem("NRUN");
+    fRecEvNEVENT=fRecEvBank->GetItem("NEVENT");
+    fRecEvTYPE=fRecEvBank->GetItem("TYPE");
+    fRecEvTRG=fRecEvBank->GetItem("TRG");
+    fRecEvHelic=fRecEvBank->GetItem("Helic");
+    fRecEvEVNTime=fRecEvBank->GetItem("EVNTime");
+    fRecEvBCG=fRecEvBank->GetItem("BCG");
+    fRecEvLT=fRecEvBank->GetItem("LT");
+    fRecEvSTTime=fRecEvBank->GetItem("STTime");
+    fRecEvRFTime=fRecEvBank->GetItem("RFTime");
+    fRecEvPTIME=fRecEvBank->GetItem("PTIME");
 
     
     fRunTrig=fRunConBank->GetItem("trigger");
@@ -58,10 +58,8 @@ void THSHipoTrigger::InitOutput(TString filename){
 
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
-  if(!THSHipoReader::ReadEvent()){
-    fEntry++; //no hsparticle event, but write trigger info anyway
-    fEvBank->NextEntry();//only get EvBank if didn't in HipoReader
-  }
+  if(!THSHipoReader::ReadEvent()) return kFALSE;
+    
   fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
   
   fNRun=fRecEvNRun->Val();
@@ -72,7 +70,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fEvTime=fRecEvEVNTime->Val();
   fBCG=fRecEvBCG->Val();
   fLT=fRecEvLT->Val();
-  fSTTime=fEvSTTime->Val();
+  fSTTime=fRecEvSTTime->Val();
   fRFTime=fRecEvRFTime->Val();
   fPTime=fRecEvPTIME->Val();
 
