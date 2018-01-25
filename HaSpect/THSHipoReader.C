@@ -83,7 +83,7 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fRecEvEVNTime=fEvBank->GetItem("EVNTime");
     fRecEvBCG=fEvBank->GetItem("BCG");
     fRecEvLT=fEvBank->GetItem("LT");
-    fRecEvSTTime=fEvBank->GetItem("STTime");
+    //fRecEvSTTime=fEvBank->GetItem("STTime");
     fRecEvRFTime=fEvBank->GetItem("RFTime");
     fRecEvPTIME=fEvBank->GetItem("PTIME");
 
