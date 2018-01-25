@@ -65,7 +65,7 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fFTDet=nullptr;
   THipoItem* fFTPath=nullptr;
 
-  THipoItem* fEvTime=nullptr;
+  THipoItem* fEvSTTime=nullptr;
   /* THipoItem* fFTPid=nullptr; */
   /* THipoItem* fFTTime=nullptr; */
   /* THipoItem* fFTPx=nullptr; */
