@@ -106,6 +106,7 @@ void THSFinalState::InitFS(){
 ///which may be kept in simulated data, but shouldn't be included
 ///in final state check
 THSTopology* THSFinalState::FindTopology(){
+  if(fIsGenerated) return nullptr;
   // if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
 
@@ -225,6 +226,7 @@ void THSFinalState::ProcessEvent(){
 
   while(FindTopology()) //Find all valid topologies
     while(FSProcess()); //Process all combitorials
+  if(fIsGenerated) FSProcess(); //If only analysing generated events
   
   FinaliseEvent();
 }
@@ -245,21 +247,6 @@ Bool_t THSFinalState::FSProcess(){
   
   return kFALSE;
 }
-// Bool_t THSFinalState::FSProcess(){
-  
-//   if(!WorkOnEvent()) return kFALSE;
-
-  
-//   if(IsGoodEvent()){
-//     UserProcess(); 
-//   }
-
-//   PermutateParticles();
-//   if(IsPermutating())
-//     return kTRUE;
-  
-//   return kFALSE;
-// }
 
 void THSFinalState::UserProcess(){
   if(fFinalTree) fFinalTree->Fill(); //fill for first combination

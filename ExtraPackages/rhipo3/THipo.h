@@ -169,6 +169,7 @@ inline  void THipoBank::ReadItemI(hipo::event *event,UInt_t ii){
   //cout<<"Type "<<type<<endl; 
   if(fTypeI[ii][0]=='L'){
     vector<Long_t> vecl=event->getLong(fGroup,IdxI(ii));
+     cout<<vecl.size()<<endl;
     for(UInt_t iv=0;iv<vecl.size();iv++)
       (fVecI.at(ii))->push_back(vecl.at(iv));
     return;

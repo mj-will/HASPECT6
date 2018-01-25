@@ -54,9 +54,9 @@ void THSSkeleton::AddHSOutput(){
   if(fIsHisto) HSHisto();
   if(fIsAppendTree) HSAppend();
   if(fIsNewTree) HSNewTree();
-  if(fIsWeights) HSWeights();
   if(fNLPS) HSLPS();
   if(fIsFinalState) HSFinalState();
+  if(fIsWeights) HSWeights();
   // AddLineAfter(,,1);
   // AddLineAfter(,,1);
   // AddLineAfter(,,1);
@@ -381,7 +381,14 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter(Form("void %s::UserProcess(){",fSelName.Data()),-2);
   ContinueLineAfter("   THSOutput::HSProcessFill();");
   ContinueLineAfter("}");
-  
+
+  fPlace=0; 
+  if(fIsHisto){
+    AddLineAfter("THSOutput::HSProcessFill();"," //below you can give vars corresponding to fBins axis",-1);
+    ContinueLineAfter("   //if(fBins) fCurrBin=fBins->FindBin(var1,var2,...);//if fBins is defined need to give this meaningful arguments");
+    ContinueLineAfter("   FillHistograms(\"Cut1\");");
+  }
+
   //If newtree need to link project tree
   if(fIsNewTree){
     AddLineAfter("fOutTree=new TTree",TString("   ")+fFinalName+"::FinalStateOutTree(fOutTree);");
@@ -556,7 +563,6 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
 /// Set fFinalParts with SetFinalStateParts() \n
 /// Set fFinalName with SetFinalState() \n
 void THSSkeleton::CreateMyFinalState(){
-
   TObjArray* topos=0;
   if(fFinalTopo==TString(""))cout<<"Warning No finalstate topologies set, you will have to edit the files yourself"<<endl;
   else{
@@ -576,7 +582,7 @@ void THSSkeleton::CreateMyFinalState(){
   UpperFinalName.ToUpper();
   ReplaceAllMacroText("FINALTEMP",UpperFinalName);
 
-
+ 
   fPlace=0;
   FindNextLineLike("//Init functions");
   for(Int_t io=0;io<topos->GetEntries();io++)
@@ -594,14 +600,15 @@ void THSSkeleton::CreateMyFinalState(){
 
    //Now do parents
   TObjArray* parents=0;
-  if(fFinalParents!=TString("")) parents=fFinalParents.Tokenize(",");
-  fPlace=0;
-  FindNextLineLike("//Final Parents");
-  for(Int_t io=0;io<parents->GetEntries();io++){
-    TString sparticle=parents->At(io)->GetName();
-    ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.First(";")-sparticle.First(":")-1)).Data()));
+  if(fFinalParents!=TString("")){ parents=fFinalParents.Tokenize(",");
+    fPlace=0;
+    FindNextLineLike("//Final Parents");
+    for(Int_t io=0;io<parents->GetEntries();io++){
+      TString sparticle=parents->At(io)->GetName();
+      ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.First(";")-sparticle.First(":")-1)).Data()));
+    }
   }
-  
+ 
   fCurMacro.SaveSource(TString("THS")+fFinalName+".h");
   ///////////////////////////////////////////////////////
   
@@ -644,6 +651,7 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter("}");
     
   }
+
   fPlace=0;
   FindNextLineLike("//Set final state");
   fPlace+=3;
@@ -652,16 +660,16 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter(Form("  AddParticle(&f%s,kTRUE,-1);",TString(sparticle(0,sparticle.First(":"))).Data()));
   }
 
-    
-  FindNextLineLike("//Set final state parents");
-  for(Int_t io=0;io<parents->GetEntries();io++){
-    TString sparticle=parents->At(io)->GetName();
-    ContinueLineAfter(Form("  AddParticle(&f%s,kTRUE,-1);",TString(sparticle(0,sparticle.First(":"))).Data()));
-    TObjArray *childs=sparticle.Tokenize(";");
-    for(Int_t ic=1;ic<childs->GetEntries();ic++)
-      ContinueLineAfter(Form("  ConfigParent(&f%s,&f%s);",TString(sparticle(0,sparticle.First(":"))).Data(),childs->At(ic)->GetName()));
+  if(parents){ 
+    FindNextLineLike("//Set final state parents");
+    for(Int_t io=0;io<parents->GetEntries();io++){
+      TString sparticle=parents->At(io)->GetName();
+      ContinueLineAfter(Form("  AddParticle(&f%s,kTRUE,-1);",TString(sparticle(0,sparticle.First(":"))).Data()));
+      TObjArray *childs=sparticle.Tokenize(";");
+      for(Int_t ic=1;ic<childs->GetEntries();ic++)
+	ContinueLineAfter(Form("  ConfigParent(&f%s,&f%s);",TString(sparticle(0,sparticle.First(":"))).Data(),childs->At(ic)->GetName()));
+    }
   }
- 
   fPlace=0;
 
   fCurMacro.SaveSource(TString("THS")+fFinalName+".C");
@@ -672,6 +680,7 @@ void THSSkeleton::CreateMyFinalState(){
   fCurMacro=TMacro(TString("RunFSLund")+fFinalName+".C");
   fPlace=0;
   ReplaceAllMacroText("XXX",fFinalName);
+
 
   fCurMacro.SaveSource(TString("RunFSLund")+fFinalName+".C");
 

@@ -278,8 +278,9 @@ void THipoBank::InitTree(TTree* tree){
     //   vector<Long_t>* vecptr=(fVecI.at(in));
     //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
     // }
-     vector<Long_t>* vecptr=(fVecI.at(in));
-      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    //vector<Long_t>* vecptr=(fVecI.at(in));
+    // tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+    tree->Branch(branchname+"_"+fItemsI.at(in),&(fVecI.at(in)));   
   }
   //Make a branch for each float item
   for(UInt_t fn=0;fn<NFloat();fn++){
