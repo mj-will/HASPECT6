@@ -4,7 +4,7 @@ THSHipoTrigger::THSHipoTrigger(){
  
   
 }
-Bool_t THSHipoReader::Init(TString filename,TString name){
+Bool_t THSHipoTrigger::Init(TString filename,TString name){
 
   THSHipoReader::Init(filename,name);
   
