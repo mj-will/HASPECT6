@@ -16,21 +16,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRunConBank){
     
     fRunConBank=fHipo->GetBank("RUN::config");
-    fRecEvBank=fHipo->GetBank("REC::Event");
-
-    fRecEvNRun=fRecEvBank->GetItem("NRUN");
-    fRecEvNEVENT=fRecEvBank->GetItem("NEVENT");
-    fRecEvTYPE=fRecEvBank->GetItem("TYPE");
-    fRecEvTRG=fRecEvBank->GetItem("TRG");
-    fRecEvHelic=fRecEvBank->GetItem("Helic");
-    fRecEvEVNTime=fRecEvBank->GetItem("EVNTime");
-    fRecEvBCG=fRecEvBank->GetItem("BCG");
-    fRecEvLT=fRecEvBank->GetItem("LT");
-    fRecEvSTTime=fRecEvBank->GetItem("STTime");
-    fRecEvRFTime=fRecEvBank->GetItem("RFTime");
-    fRecEvPTIME=fRecEvBank->GetItem("PTIME");
-
-    
+   
     fRunTrig=fRunConBank->GetItem("trigger");
   }
   return kTRUE;
@@ -70,7 +56,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fEvTime=fRecEvEVNTime->Val();
   fBCG=fRecEvBCG->Val();
   fLT=fRecEvLT->Val();
-  fSTTime=fRecEvSTTime->Val();
+  fSTTime=fEvSTTime->Val();
   fRFTime=fRecEvRFTime->Val();
   fPTime=fRecEvPTIME->Val();
 

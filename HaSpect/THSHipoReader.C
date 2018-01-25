@@ -75,7 +75,19 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     
     fEvBank=fHipo->GetBank("REC::Event");
     fEvSTTime=fEvBank->GetItem("STTime");
-    
+    fRecEvNRun=fEvBank->GetItem("NRUN");
+    fRecEvNEVENT=fEvBank->GetItem("NEVENT");
+    fRecEvTYPE=fEvBank->GetItem("TYPE");
+    fRecEvTRG=fEvBank->GetItem("TRG");
+    fRecEvHelic=fEvBank->GetItem("Helic");
+    fRecEvEVNTime=fEvBank->GetItem("EVNTime");
+    fRecEvBCG=fEvBank->GetItem("BCG");
+    fRecEvLT=fEvBank->GetItem("LT");
+    fRecEvSTTime=fEvBank->GetItem("STTime");
+    fRecEvRFTime=fEvBank->GetItem("RFTime");
+    fRecEvPTIME=fEvBank->GetItem("PTIME");
+
+ 
     
     if(fAddGenerated&&!fMCBank){
       fMCBank=fHipo->GetBank("MC::Particle");
