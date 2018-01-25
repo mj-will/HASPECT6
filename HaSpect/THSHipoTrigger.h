@@ -18,36 +18,19 @@ class THSHipoTrigger: public THSHipoReader{
  private :
 
   //banks
-  THipoBank* fFTCalBank=nullptr;
-  THipoBank* fFTHodoBank=nullptr;
+  THipoBank* fRunConBank=nullptr;
 
   //items in banks
-  THipoItem* fFTCal_E=nullptr;
-  THipoItem* fFTCal_Emax=nullptr;
-  THipoItem* fFTCal_Erec=nullptr;
-  
-  THipoItem* fFTHodo_E=nullptr;
-
+  THipoItem* fRunTrig=nullptr;
+ 
   
   //Trigger variables
-  Float_t fFTEsum=0;
-  Float_t fFTE_clust=0;
-  Float_t fFTEmax_clust=0;
-  Float_t fFTErec_clust=0;
- 
-  Int_t fFT_clust_count = 0;
-  Int_t fFT_clust_count_Emax_cond = 0;
-  Int_t fFT_clust_count_Erec_cond = 0;
-
-  // FT Hodo: 
-  Float_t fFTE_hodo=0;
-  Int_t fFT_hodo_count = 0;
-
-  // Trigger:
-  Bool_t fPassTrig_Esum=kFALSE;
-  Bool_t fPassTrig_cluster_max=kFALSE;
-  Bool_t fPassTrig_cluster_rec=kFALSE;
+  Int_t fFTHigh=0; 
+  Int_t fFTLow=0;
   
+  Int_t fTrigBits[sizeof(int) * 8];
+
+   void CreateBitPattern(long val);
  public :
   
  
