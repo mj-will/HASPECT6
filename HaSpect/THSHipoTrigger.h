@@ -14,6 +14,7 @@ class THSHipoTrigger: public THSHipoReader{
   //  virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
   virtual void InitOutput(TString filename);
+  virtual Bool_t Init(TString filename,TString name);
 
  private :
 
@@ -50,7 +51,7 @@ class THSHipoTrigger: public THSHipoReader{
   Float_t fSTTime=0;;//Event Start Time (ns)
   Float_t fRFTime=0;;//RF Time (ns)
   Int_t fHelic=0;;//Helicity of Event
-  Float_t PTime=0;;//Event Processing Time (UNIX Time = seconds)
+  Float_t fPTime=0;;//Event Processing Time (UNIX Time = seconds)
   
 
   
