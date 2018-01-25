@@ -47,6 +47,7 @@ class THSHipoTrigger: public THSHipoReader{
   Int_t fTrig=0;;//Trigger Type (CLAS12_e-, FT_CLAS12_h,CLAS12_H,...) + Prescale Factor for that Trigger"}
   Float_t fBCG=0;;//Faraday Cup Gated (Coulomb)
   Float_t fLT=0;;//Clock
+  Float_t fSTTime=0;;//Event Start Time (ns)
   Float_t fRFTime=0;;//RF Time (ns)
   Int_t fHelic=0;;//Helicity of Event
   Float_t fPTime=0;;//Event Processing Time (UNIX Time = seconds)
