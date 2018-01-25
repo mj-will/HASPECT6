@@ -16,7 +16,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRunConBank){
     
     fRunConBank=fHipo->GetBank("RUN::config");
-    fRecEvBank=fHipo->GetBank("RUN::config");
+    fRecEvBank=fHipo->GetBank("REC::Event");
 
     fRecEvNRun=fRecEvBank->GetItem("NRUN");
     fRecEvNEVENT=fRecEvBank->GetItem("NEVENT");
