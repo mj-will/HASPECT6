@@ -252,9 +252,10 @@ void HSdata(){
   LoadMacro(THSPARTICLE);
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
-  if(gSystem->Getenv("RHIPO"))
+  if(gSystem->Getenv("RHIPO")){
     LoadMacro("THSHipoReader.C");
-
+    LoadMacro("THSHipoTrigger.C");
+  }
 }
 
 //////////////////////////////////
