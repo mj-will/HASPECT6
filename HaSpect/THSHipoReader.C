@@ -74,20 +74,8 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fFTDet=fFTBank->GetItem("detector");
     
     fEvBank=fHipo->GetBank("REC::Event");
-    fEvSTTime=fEvBank->GetItem("STTime");
-    fRecEvNRun=fEvBank->GetItem("NRUN");
-    fRecEvNEVENT=fEvBank->GetItem("NEVENT");
-    fRecEvTYPE=fEvBank->GetItem("TYPE");
-    fRecEvTRG=fEvBank->GetItem("TRG");
-    fRecEvHelic=fEvBank->GetItem("Helic");
-    fRecEvEVNTime=fEvBank->GetItem("EVNTime");
-    fRecEvBCG=fEvBank->GetItem("BCG");
-    fRecEvLT=fEvBank->GetItem("LT");
-    //fRecEvSTTime=fEvBank->GetItem("STTime");
-    fRecEvRFTime=fEvBank->GetItem("RFTime");
-    fRecEvPTIME=fEvBank->GetItem("PTIME");
-
- 
+    fEvTime=fEvBank->GetItem("STTime");
+    
     
     if(fAddGenerated&&!fMCBank){
       fMCBank=fHipo->GetBank("MC::Particle");
@@ -157,7 +145,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       
       while(fSPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle->SetTime(fSTime->Val()-fEvSTTime->Val());
+	particle->SetTime(fSTime->Val()-fEvTime->Val());
 	particle->SetDeltaE(fSEnergy->Val());
 	particle->SetPath(fSPath->Val()/100);
 	particle->SetDetector(1000*fSSector->Val());
@@ -166,8 +154,8 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fCalPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
 	particle->SetEdep(fCalEnergy->Val()+particle->Edep());
-	if(particle->Time()==-(fEvSTTime->Val())){
-	  particle->SetTime(fCalTime->Val()-fEvSTTime->Val());
+	if(particle->Time()==-(fEvTime->Val())){
+	  particle->SetTime(fCalTime->Val()-fEvTime->Val());
 	  particle->SetPath(fCalPath->Val()/100);
 	}
 	particle->SetDetector(particle->Detector()+100);
@@ -180,7 +168,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
  	
       while(fFTPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle->SetTime(fFTTime->Val()-fEvSTTime->Val());
+	particle->SetTime(fFTTime->Val()-fEvTime->Val());
 	particle->SetEdep(fFTEnergy->Val());
 	//	particle->SetDeltaE();
 	particle->SetPath(fFTPath->Val()/100);

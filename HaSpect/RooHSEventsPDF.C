@@ -39,6 +39,7 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fUseEvWeights=other.fUseEvWeights;
     fEvWeights=other.fEvWeights;
     fWgtSpecies=other.fWgtSpecies;
+    fMaxValue=other.fMaxValue;
   }
 RooHSEventsPDF::~RooHSEventsPDF(){
   //RooFit clones everything so I need to give the original

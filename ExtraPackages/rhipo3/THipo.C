@@ -222,7 +222,7 @@ void THipo::CloseOutput(){
 THipoBank* THipo::GetBank(TString name){
   auto it=fBankMap.find(name);
   if(it==fBankMap.end()){
-    cout<<"Error THipo* GetBank( No bank comfigured with name = "<<name<<endl;
+    cout<<"Error THipo* GetBank( No bank configured with name = "<<name<<endl;
     return nullptr;
   }
   return fBanks[fBankMap[name]];

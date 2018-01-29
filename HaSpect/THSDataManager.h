@@ -71,6 +71,7 @@ class THSDataManager{
   Bool_t fAddGenerated=kFALSE; //also generated vector?
   Bool_t fInGenerated=kFALSE; //also generated vector?
   //default THSParticles tree writer
+  Bool_t fWriteThis=kTRUE; //write this event?
   TFile* fWriteFile=0;
   TTree* fWriteTree=0;
   

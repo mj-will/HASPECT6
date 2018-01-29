@@ -65,18 +65,7 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fFTDet=nullptr;
   THipoItem* fFTPath=nullptr;
 
-  THipoItem* fEvSTTime=nullptr;
-  THipoItem* fRecEvNRun=nullptr;
-  THipoItem* fRecEvNEVENT=nullptr;
-  THipoItem* fRecEvTYPE=nullptr;
-  THipoItem* fRecEvTRG=nullptr;
-  THipoItem* fRecEvHelic=nullptr;
-  THipoItem* fRecEvEVNTime=nullptr;
-  THipoItem* fRecEvBCG=nullptr;
-  THipoItem* fRecEvLT=nullptr;
-  //THipoItem* fRecEvSTTime=nullptr;
-  THipoItem* fRecEvRFTime=nullptr;
-  THipoItem* fRecEvPTIME=nullptr;
+  THipoItem* fEvTime=nullptr;
   /* THipoItem* fFTPid=nullptr; */
   /* THipoItem* fFTTime=nullptr; */
   /* THipoItem* fFTPx=nullptr; */

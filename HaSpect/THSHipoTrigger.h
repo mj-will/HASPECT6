@@ -16,6 +16,8 @@ class THSHipoTrigger: public THSHipoReader{
   virtual void InitOutput(TString filename);
   virtual Bool_t Init(TString filename,TString name);
 
+  void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
+  Int_t GetSoftFTTrig(){return fSoftFTTrig;}
  private :
 
   //banks
@@ -27,6 +29,7 @@ class THSHipoTrigger: public THSHipoReader{
   
   
   //Trigger variables
+  Int_t fSoftFTTrig=0;
   Int_t fFTHigh=0; 
   Int_t fFTLow=0;
 
