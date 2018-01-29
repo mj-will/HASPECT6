@@ -58,7 +58,7 @@ class THipoItem  {
   //  vector<Int_t >* fItemI=nullptr;
   vector<Float_t >* fItemF=nullptr;
   Bool_t fIsFloat=kTRUE;
-  Int_t &fBankEntry;//Points to THipoBank fEntry
+  Int_t &fBankEntry=0;//Points to THipoBank fEntry
   Int_t fPos=0;
 
 };
