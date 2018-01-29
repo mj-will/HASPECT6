@@ -75,6 +75,10 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   
   //Now check Event Builder Banks, retunr false if end of events
   if(!THSHipoReader::ReadEvent()) return kFALSE;
+
+
+  //now other event scalars
+  fRecEvBank->NextEntry();
   fNRun=fRecEvNRun->Val();
   fNEvent=fRecEvNEVENT->Val();
   fType=fRecEvTYPE->Val();
