@@ -26,7 +26,18 @@ class THSHipoTrigger: public THSHipoReader{
 
   //items in banks
   THipoItem* fRunTrig=nullptr;
-  
+   THipoItem* fEvSTTime=nullptr;
+￼ -  THipoItem* fRecEvNRun=nullptr;
+￼ -  THipoItem* fRecEvNEVENT=nullptr;
+￼ -  THipoItem* fRecEvTYPE=nullptr;
+￼ -  THipoItem* fRecEvTRG=nullptr;
+￼ -  THipoItem* fRecEvHelic=nullptr;
+￼ -  THipoItem* fRecEvEVNTime=nullptr;
+￼ -  THipoItem* fRecEvBCG=nullptr;
+￼ -  THipoItem* fRecEvLT=nullptr;
+￼ -  //THipoItem* fRecEvSTTime=nullptr;
+￼ -  THipoItem* fRecEvRFTime=nullptr;
+￼ -  THipoItem* fRecEvPTIME=nullptr;
   
   //Trigger variables
   Int_t fSoftFTTrig=0;
@@ -38,6 +49,18 @@ class THSHipoTrigger: public THSHipoReader{
   Float_t fEvTime=0;;//Event Time
   Int_t fType=0;;//Event Type (Data or MC)
   Int_t fTrig=0;;//Trigger Type (CLAS12_e-, FT_CLAS12_h,CLAS12_H,...) + Prescale Factor for that Trigger"}
+  //THipoItem* fEvSTTime=nullptr;
+  THipoItem* fRecEvNRun=nullptr;
+  THipoItem* fRecEvNEVENT=nullptr;
+  THipoItem* fRecEvTYPE=nullptr;
+  THipoItem* fRecEvTRG=nullptr;
+  THipoItem* fRecEvHelic=nullptr;
+  THipoItem* fRecEvEVNTime=nullptr;
+  THipoItem* fRecEvBCG=nullptr;
+  THipoItem* fRecEvLT=nullptr;
+  //THipoItem* fRecEvSTTime=nullptr;
+  THipoItem* fRecEvRFTime=nullptr;
+  THipoItem* fRecEvPTIME=nullptr;
   Float_t fBCG=0;;//Faraday Cup Gated (Coulomb)
   Float_t fLT=0;;//Clock
   Float_t fSTTime=0;;//Event Start Time (ns)
