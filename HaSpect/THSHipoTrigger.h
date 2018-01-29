@@ -35,7 +35,7 @@ class THSHipoTrigger: public THSHipoReader{
   THipoItem* fRecEvEVNTime=nullptr;
   THipoItem* fRecEvBCG=nullptr;
   THipoItem* fRecEvLT=nullptr;
-  //THipoItem* fRecEvSTTime=nullptr;
+  THipoItem* fRecEvSTTime=nullptr;
   THipoItem* fRecEvRFTime=nullptr;
   THipoItem* fRecEvPTIME=nullptr;
    //Trigger variables
