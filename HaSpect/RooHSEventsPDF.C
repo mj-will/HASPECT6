@@ -145,14 +145,17 @@ void RooHSEventsPDF::initGenerator(Int_t code)
       Warning("RooHSEventsPDF::initGenerator"," No gen branches found will use standard for %s",fCatSet[i]->GetName());
     }
   }
-  Double_t value=0;
-  if(code==1){
-    //Brute force find maximum value
-    //for(Int_t i=0;i<fEvTree->GetEntries();i++){
-    for(Int_t i=1;i<fEvTree->GetEntries();i++){
-      fEvTree->GetEntry(i);
+  if(fMaxValue==0||CheckChange()){
+    Double_t value=0;
+    if(code==1){
+      //Brute force find maximum value
+      fMaxValue=0;
+      //for(Int_t i=0;i<fEvTree->GetEntries();i++){
+      for(Int_t i=1;i<fEvTree->GetEntries();i++){
+	fEvTree->GetEntry(i);
         value=evaluateMC();
-      if(value>fMaxValue)fMaxValue=value;
+	if(value>fMaxValue)fMaxValue=value;
+      }
     }
   }
   //construct entry list so can reproduce full tree branches,
