@@ -295,6 +295,7 @@ void THipoBank::Print(){
   cout<<"Printing Hipo Bank"<<endl;
   cout<<"Name = "<<fName<<endl;
   cout<<"Group = "<<fGroup<<endl;
+  cout<<"Entry :"<<fEntry<<endl;
   cout<<"Int Items :"<<endl;
   for(UInt_t i=0;i<fItemsI.size();i++)
     cout<<"  "<<fItemsI[i]<<" with type "<<fTypeI[i]<<endl;
