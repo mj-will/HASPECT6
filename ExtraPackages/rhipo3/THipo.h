@@ -38,6 +38,7 @@ class THipoItem  {
   virtual ~THipoItem(){};
 
   Float_t Val(UInt_t entry){
+    cout <<" "<<entry<<" "<<fBankEntry<<endl;
     if(fIsFloat)
       return fItemF->at(entry);
     return fItemI->at(entry);
@@ -51,6 +52,7 @@ class THipoItem  {
   UInt_t Size(){if(fIsFloat) return fItemF->size();return fItemI->size();}
   Bool_t FindEntry(Float_t val);
   void Reset(){fPos=0;}
+  Int_t GetBankEntry(){return fBankEntry;}
  protected:
   
   private:
@@ -150,6 +152,7 @@ inline   void THipoBank::ClearEvent(){
   fEntry=-1;
 }
 inline Bool_t THipoBank::NextEntry(){
+  //  cout<<"NEXt Entry for "<<GetName()<<" "<<fEntry<<" "<<fVecI[0]->size()<<endl;
   //try to iterate using first integer vector
   if((Int_t)fVecI[0]->size()>fEntry+1){
     fEntry++;
@@ -161,6 +164,7 @@ inline Bool_t THipoBank::NextEntry(){
     fEntry++;
     return kTRUE;
   }
+  
   return kFALSE;
 }
 

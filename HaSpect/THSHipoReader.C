@@ -100,8 +100,10 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 // Header (Event Info):
 // # of Particles, # of e, particle id, parent, daughter, p_x, p_y, p_z, E, mass, x vertex, y vertex, z vertex
 // type is 1 for particles in the detector
-  if(!fHipo->NextEvent()) return kFALSE;
-  fEntry++;
+  if(entry!=-1){
+    if(!fHipo->NextEvent()) return kFALSE;
+    fEntry++;
+  }
   //  cout<<fEntry<<endl;
   fParticles.clear();//reset fParticles
   if(fAddGenerated) fGenerated.clear();//reset fGenerated

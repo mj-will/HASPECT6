@@ -44,7 +44,7 @@ void THSHipoTrigger::InitOutput(TString filename){
 
   fWriteTree->Branch("NRun",&fNRun,"NRun/I");
   fWriteTree->Branch("NEvent",&fNEvent,"NEvent/I");
-  fWriteTree->Branch("EvTime",&fEvTime,"EvTime/F");
+  fWriteTree->Branch("EvTime",&fEventTime,"EvTime/F");
   fWriteTree->Branch("Type",&fType,"Type/I");
   fWriteTree->Branch("Trig",&fTrig,"Trig/I");
   fWriteTree->Branch("BCG",&fBCG,"BCG/F");
@@ -58,13 +58,23 @@ void THSHipoTrigger::InitOutput(TString filename){
 
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
-    
-  fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
+  //cout<<"THSHipoTrigger::ReadEvent("<<endl;    
 
+  if(!fHipo->NextEvent()) return kFALSE;
+  fEntry++;
+  fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
+  //  cout<<"Bit Pattern "<<endl;
+  // fRunConBank->Print();
   //FT trigger
+  //cout<<"entry "<<fRunConBank->GetEntry()<<endl;
+  if(fRunConBank->GetEntry()<0) return kTRUE; 
+
   CreateBitPattern(fRunTrig->Val());
   fFTHigh=fTrigBits[30];
   fFTLow=fTrigBits[29];
+  //cout<<"Try trigger"<<endl;
+  // if(fEntry>3) exit(0);
+  //return kTRUE;
   //Apply filter on FT trigger
   //fSofFTTrig==1 either Low or High
   //fSofFTTrig==2 only High
@@ -72,23 +82,28 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   if(fSoftFTTrig==2&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
 
   //Similarily using fWriteThis can apply other trigger filters
-  
-  //Now check Event Builder Banks, retunr false if end of events
-  if(!THSHipoReader::ReadEvent()) return kFALSE;
+  //cout<<"HipoReder"<<endl;
+  //Now check Event Builder Banks, -1 =>we have all ready got event
+  //Note that this will call fRecEvBank->NextEntry()
+  THSHipoReader::ReadEvent(-1); 
 
-  cout<<"READING SCALARS"<<endl;
+  //cout<<"READING SCALARS"<<endl;
   //now other event scalars
-  fRecEvBank->NextEntry();
-  fRecEvBank->Print();
+  //  fRecEvBank->NextEntry();
+  //  fRecEvBank->Print();
+  //fRecEvBank->Print();
+  if(fRecEvBank->GetEntry()<0) return kTRUE;
+
+  cout<<"WWWWWWWWWWWWWWWWWWWWWWWWWWW "<<fRecEvBank->GetEntry()<<" "<<fRecEvNRun->GetBankEntry()<<endl;
   fNRun=fRecEvNRun->Val();
   fNEvent=fRecEvNEVENT->Val();
   fType=fRecEvTYPE->Val();
   fTrig=fRecEvTRG->Val();
   fTrig=fRecEvHelic->Val();
-  fEvTime=fRecEvEVNTime->Val();
+  fEventTime=fRecEvEVNTime->Val();
   fBCG=fRecEvBCG->Val();
   fLT=fRecEvLT->Val();
-  fSTTime=fRecEvSTTime->Val();
+  fSTTime=fEvTime->Val();
   fRFTime=fRecEvRFTime->Val();
   fPTime=fRecEvPTIME->Val();
 
