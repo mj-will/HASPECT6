@@ -16,19 +16,18 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRunConBank){
     
     fRunConBank=fHipo->GetBank("RUN::config");
-    fRecEvBank=fHipo->GetBank("REC::Event");
-
-    fRecEvNRun=fRecEvBank->GetItem("NRUN");
-    fRecEvNEVENT=fRecEvBank->GetItem("NEVENT");
-    fRecEvTYPE=fRecEvBank->GetItem("TYPE");
-    fRecEvTRG=fRecEvBank->GetItem("TRG");
-    fRecEvHelic=fRecEvBank->GetItem("Helic");
-    fRecEvEVNTime=fRecEvBank->GetItem("EVNTime");
-    fRecEvBCG=fRecEvBank->GetItem("BCG");
-    fRecEvLT=fRecEvBank->GetItem("LT");
-    fRecEvSTTime=fRecEvBank->GetItem("STTime");
-    fRecEvRFTime=fRecEvBank->GetItem("RFTime");
-    fRecEvPTIME=fRecEvBank->GetItem("PTIME");
+ 
+    fRecEvNRun=fEvBank->GetItem("NRUN");
+    fRecEvNEVENT=fEvBank->GetItem("NEVENT");
+    fRecEvTYPE=fEvBank->GetItem("TYPE");
+    fRecEvTRG=fEvBank->GetItem("TRG");
+    fRecEvHelic=fEvBank->GetItem("Helic");
+    fRecEvEVNTime=fEvBank->GetItem("EVNTime");
+    fRecEvBCG=fEvBank->GetItem("BCG");
+    fRecEvLT=fEvBank->GetItem("LT");
+    fRecEvSTTime=fEvBank->GetItem("STTime");
+    fRecEvRFTime=fEvBank->GetItem("RFTime");
+    fRecEvPTIME=fEvBank->GetItem("PTIME");
 
     
     fRunTrig=fRunConBank->GetItem("trigger");
@@ -84,17 +83,17 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   //Similarily using fWriteThis can apply other trigger filters
   //cout<<"HipoReder"<<endl;
   //Now check Event Builder Banks, -1 =>we have all ready got event
-  //Note that this will call fRecEvBank->NextEntry()
+  //Note that this will call fEvBank->NextEntry()
   THSHipoReader::ReadEvent(-1); 
 
   //cout<<"READING SCALARS"<<endl;
   //now other event scalars
-  //  fRecEvBank->NextEntry();
-  //  fRecEvBank->Print();
-  //fRecEvBank->Print();
-  if(fRecEvBank->GetEntry()<0) return kTRUE;
+  //  fEvBank->NextEntry();
+  //  fEvBank->Print();
+  //fEvBank->Print();
+  if(fEvBank->GetEntry()<0) return kTRUE;
 
-  cout<<"WWWWWWWWWWWWWWWWWWWWWWWWWWW "<<fRecEvBank->GetEntry()<<" "<<fRecEvNRun->GetBankEntry()<<endl;
+  cout<<"WWWWWWWWWWWWWWWWWWWWWWWWWWW "<<fEvBank->GetEntry()<<" "<<fRecEvNRun->GetBankEntry()<<endl;
   fNRun=fRecEvNRun->Val();
   fNEvent=fRecEvNEVENT->Val();
   fType=fRecEvTYPE->Val();
@@ -103,7 +102,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fEventTime=fRecEvEVNTime->Val();
   fBCG=fRecEvBCG->Val();
   fLT=fRecEvLT->Val();
-  fSTTime=fEvTime->Val();
+  fSTTime=fRecEvSTTime->Val();
   fRFTime=fRecEvRFTime->Val();
   fPTime=fRecEvPTIME->Val();
 

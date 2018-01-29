@@ -74,7 +74,7 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fFTDet=fFTBank->GetItem("detector");
     
     fEvBank=fHipo->GetBank("REC::Event");
-    fEvTime=fEvBank->GetItem("STTime");
+    fRecEvSTTime=fEvBank->GetItem("STTime");
     
     
     if(fAddGenerated&&!fMCBank){
@@ -147,7 +147,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       
       while(fSPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle->SetTime(fSTime->Val()-fEvTime->Val());
+	particle->SetTime(fSTime->Val()-fRecEvSTTime->Val());
 	particle->SetDeltaE(fSEnergy->Val());
 	particle->SetPath(fSPath->Val()/100);
 	particle->SetDetector(1000*fSSector->Val());
@@ -156,8 +156,8 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fCalPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
 	particle->SetEdep(fCalEnergy->Val()+particle->Edep());
-	if(particle->Time()==-(fEvTime->Val())){
-	  particle->SetTime(fCalTime->Val()-fEvTime->Val());
+	if(particle->Time()==-(fRecEvSTTime->Val())){
+	  particle->SetTime(fCalTime->Val()-fRecEvSTTime->Val());
 	  particle->SetPath(fCalPath->Val()/100);
 	}
 	particle->SetDetector(particle->Detector()+100);
@@ -170,7 +170,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
  	
       while(fFTPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle->SetTime(fFTTime->Val()-fEvTime->Val());
+	particle->SetTime(fFTTime->Val()-fRecEvSTTime->Val());
 	particle->SetEdep(fFTEnergy->Val());
 	//	particle->SetDeltaE();
 	particle->SetPath(fFTPath->Val()/100);
