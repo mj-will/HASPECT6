@@ -168,18 +168,20 @@ void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
     if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();//Will be tagged with new rf name
   // fWS->Print();
 }
-
+TTree* THSRooFit::GetFileTree(TString filename,TString treename){
+  TDirectory* saveDir=gDirectory;
+  TFile* file=new TFile(filename);
+  TTree* tree=(TTree*)file->Get(treename);
+  return tree; 
+}
 void THSRooFit::LoadPartSet(TString setname, RooArgList *list){
   cout<<setname<<endl;
   if(fWS->set(setname)){
     RooArgSet newset;
     RooArgSet wsset=*(fWS->set(setname));
     wsset.Print();
-    //list->Print();
-    //newset.add(*list->selectCommon(wsset));
     list->removeAll();
-    //list->add(newset);
-    list->add(wsset);
+     list->add(wsset);
   }
   list->Print();
 }

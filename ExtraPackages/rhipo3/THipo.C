@@ -343,11 +343,11 @@ Bool_t THipoBankParser::ConfigBank3(THipoBank* bank){
     TString item_type=((TObjString*)item->At(2))->String();
     TString item_name=((TObjString*)item->At(1))->String();
     TString item_id=((TObjString*)item->At(0))->String();
-     if(item_type.Contains("FLOAT")||item_type.Contains("DOUBLE")||item_type.Contains("VECTOR3F"))
+    if(item_type.Contains("FLOAT")||item_type.Contains("DOUBLE")||item_type.Contains("VECTOR3F"))
       bank->AddFloatItem(item_name,item_id.Atoi());
     else 
       bank->AddIntItem(item_name,item_id.Atoi(),item_type);
-
+    
     delete item; item=nullptr;
     
   }
