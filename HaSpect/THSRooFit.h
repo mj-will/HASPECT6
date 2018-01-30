@@ -100,6 +100,8 @@ public:
   void DefineSets();                  // define sets in the workspace
   void LoadDataSet(TTree* tree,Bool_t toWS=kFALSE);    //Import a tree into a RooDataSet
   void LoadDataSet(RooAbsData* data,Bool_t toWS=kFALSE);    //Import a tree into a RooDataSet
+
+  TTree* GetFileTree(TString filename,TString treename);
   void LoadMCIntTree(TTree* tree){fMCIntTree=tree;}
   void LoadMCGenTree(TTree* tree){fMCGenTree=tree;}
   void LoadWeights(TString wfile,TString wname);
