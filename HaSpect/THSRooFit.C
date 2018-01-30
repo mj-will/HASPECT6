@@ -172,6 +172,7 @@ TTree* THSRooFit::GetFileTree(TString filename,TString treename){
   TDirectory* saveDir=gDirectory;
   TFile* file=new TFile(filename);
   TTree* tree=(TTree*)file->Get(treename);
+  saveDir->cd();
   return tree; 
 }
 void THSRooFit::LoadPartSet(TString setname, RooArgList *list){
