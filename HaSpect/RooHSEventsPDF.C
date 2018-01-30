@@ -146,18 +146,22 @@ void RooHSEventsPDF::initGenerator(Int_t code)
       Warning("RooHSEventsPDF::initGenerator"," No gen branches found will use standard for %s",fCatSet[i]->GetName());
     }
   }
-  if(fMaxValue==0||CheckChange()){
-    Double_t value=0;
-    if(code==1){
-      //Brute force find maximum value
+  //Calculate the max value for accept reject purposes
+  //Note we use parent to make sure this is only done once
+  //RooFit creates a clone PDF instance each time it wants to generate
+  if(fParent->GetMaxValue()==0||fParent->CheckChange()){	
+    Double_t value=0;		
+    if(code==1){	
+       //Brute force find maximum value
       fMaxValue=0;
       //for(Int_t i=0;i<fEvTree->GetEntries();i++){
       for(Int_t i=1;i<fEvTree->GetEntries();i++){
 	fEvTree->GetEntry(i);
         value=evaluateMC();
-	if(value>fMaxValue)fMaxValue=value;
+	if(value>fMaxValue)fMaxValue=value*1.01;//make it a little larger
       }
-    }
+      fParent->SetMaxValue(fMaxValue);
+      }
   }
   //construct entry list so can reproduce full tree branches,
   //not jist those loaded as variables

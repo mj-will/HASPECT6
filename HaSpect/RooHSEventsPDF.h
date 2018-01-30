@@ -106,7 +106,9 @@ class RooHSEventsPDF : public RooAbsPdf {
   Bool_t AddProtoData(RooDataSet* data);
   void SetCut(TString cut){fCut=cut;};
   TString GetCut(){return fCut;}
-  
+  Double_t GetMaxValue(){return fMaxValue;}
+  void SetMaxValue(Double_t val){fMaxValue=val;}
+
   ClassDef(RooHSEventsPDF,1) // Yor description goes here...
 };
  
