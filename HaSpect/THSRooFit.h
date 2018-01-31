@@ -68,6 +68,7 @@ class THSRooFit : public TNamed {
 
   HSMCMC* fMCMC=nullptr;
   Long64_t fNMCMC=1000;
+  Long64_t fBurnMCMC=100;
   
   RooFitResult* fResult=nullptr;   //RooFit result
   THSWeights* fInWeights=nullptr; //! //input weights for dataset to be fitted
@@ -206,7 +207,7 @@ public:
   void AddFitOption(RooCmdArg cmd){fFitOptions.Add((RooCmdArg*)cmd.Clone());}
   RooLinkedList GetFitOptions(){return fFitOptions;}
   void SetPlot(Bool_t plot=kTRUE){fIsPlot=plot;}
-  void SetNMCMC(Long64_t nmcmc) {fNMCMC=nmcmc;}
+  void SetNMCMC(Long64_t nmcmc,Long64_t burn=100) {fNMCMC=nmcmc;fBurnMCMC=burn;}
   
   void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}

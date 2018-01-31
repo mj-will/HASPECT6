@@ -517,7 +517,7 @@ RooFitResult *THSRooFit::FitMCMC(){
   RooStats:: SequentialProposal sp(0.1);
   if(fMCMC) delete fMCMC;
   fMCMC=new HSMCMC(*GetData(), *GetModelConfig());
-  fMCMC->SetNumBurnInSteps(100);
+  fMCMC->SetNumBurnInSteps(fBurnMCMC);
   fMCMC->SetNumIters(fNMCMC);
   fMCMC->SetProposalFunction(sp);
   //make the markov chain
@@ -1315,6 +1315,8 @@ Double_t  THSRooFit::SumWeights2(){
   }
   return sumw;
 }
+///////////////////////////////////////////////////
+///Make a ModelConfig from THSRooFit for RooStats purposes
 RooStats::ModelConfig*  THSRooFit::GetModelConfig(){
   cout<<"ModelConfig*  THSRooFit::GetModelConfig()"<<endl;
   if(fModelConfig)return fModelConfig;
