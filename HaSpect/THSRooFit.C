@@ -15,7 +15,6 @@
 #include <RooConstVar.h>
 #include "RooMinimizer.h"
 #include "RooMinuit.h"
-#include "RooHSEventsPDF.h"
 #include "RooHS1StepStudy.h"
 #include "RooRandom.h"
 #include <RooStudyManager.h>
@@ -501,6 +500,8 @@ void THSRooFit::Fit(Bool_t randPar){
       fResult=FitMinuit2();
     else if(fFitMethod==2)
       fResult=FitMCMC();
+
+
     else Warning("THSRooFit::Fit","Fit method not defined");
   }
   //    fResult=fModel->fitTo(*fData,fFitOptions);
@@ -656,10 +657,12 @@ RooFitResult *THSRooFit::FitMinuit2(){
       m.setStrategy(strat) ;
     }
     
-    if (initHesse) {
+    ////////////////////////////////////////////////////
+    //Now standard minimisation algorithm
+    if (initHesse) {	
       // Initialize errors with hesse
       m.hesse() ;
-    }
+      }
     
     // Minimize using migrad
     m.migrad() ;
@@ -672,11 +675,15 @@ RooFitResult *THSRooFit::FitMinuit2(){
     if (minos) {
       // Evaluate errs with Minos
       if (minosSet) {
-	m.minos(*minosSet) ;
+	  m.minos(*minosSet) ;
       } else {
 	m.minos() ;
       }
-    }
+      
+    
+    
+    }	
+
     // Optionally return fit result
     if (doSave) {
       string name = Form("fitresult_%s_%s",fModel->GetName(),fData->GetName()) ;
@@ -1103,6 +1110,40 @@ void THSRooFit::FitAndStudy(Int_t Nfits){
   StudyFit();
   
 }
+void THSRooFit::FitSplitIntegral(Int_t Nfits){
+  //Create new fit and load the new bin data tree
+  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
+  fWS->saveSnapshot(Form("StartRangeFit"),RooArgSet(fYields,fParameters),kTRUE);
+  TString title=GetTitle();
+  //Loop over integration event ranges in RooHSEventsPDF   
+  for(Int_t isplits=0;isplits<fNIntRanges;isplits++){
+    fWS->loadSnapshot(Form("StartRangeFit"));
+
+    for(UInt_t ip=0;ip<fHSPDF_Ranges.size();ip++){
+      fHSPDF_Ranges[ip]->SetNRanges(fNIntRanges);
+      fHSPDF_Ranges[ip]->SetNextRange(isplits);
+    }
+
+    if(fFitMethod==2) Fit();
+    else FitMany(Nfits);
+
+    if(fData&&Nfits&&fFitMethod==0)
+      if(fData->isNonPoissonWeighted()){
+	//Need to calculate correction to covariance matrix
+	//Only do it at the end so FitMany can check real covariance
+	//matrix to make sure its status is OK
+	//if SumW2Error(kTRUE) is set the the covQual is not useful
+	//just says set extrnally
+	if(!(GetFitOptions().find("SumW2Error")))
+	  AddFitOption(RooFit::SumW2Error(kTRUE));
+	Fit();
+      }
+
+    SetTitle(title+Form("_Range_%d",isplits));
+    Info("THSRooFit::FitSplitIntegral;","Save to %s",(fOutDir+TString("Results")+GetTitle()).Data());
+    SavePlots("");	
+  } 
+}
 void THSRooFit::StudyFit(){
   if(!fNStudyTrials) return;
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
@@ -1190,77 +1231,7 @@ void THSRooFit::FitMany(Int_t Nfits){
 
 }
 
-// void THSRooFit::PrepareForFarm(){
-//   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
-//   MakeBins();
-//   cout<<"THSRooFit::PrepareForFarm(); number of bins "<<fDataBins->GetN()<<endl;
-//   TDirectory *saveDir=gDirectory;
-//   //Prepare data to fit
-//   THSBins* savedBins=new THSBins("HSDataBins",fOutDir+"DataEntries.root");
-//   fTree->SetBranchStatus("*",0);
-//   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//     fTree->SetBranchStatus(fVariables[i].GetName(),1);
-//   }
-//   //but always need ID branch
-//   if(fTree->GetBranch(fIDBranchName)){
-//    fTree->SetBranchStatus(fIDBranchName,1);
-//   }
 
-//   //Prepare MCIntTree if exists in the same way
-//   THSBins* mcintBins=0;
-//   if(fMCIntTree){
-//     mcintBins=new THSBins("HSMCIntBins",fOutDir+"MCIntEntries.root");
-//     fMCIntTree->SetBranchStatus("*",0);
-//     for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//       fMCIntTree->SetBranchStatus(fVariables[i].GetName(),1);
-//     }
-//   }
-//   //Prepare MCGenTree if exists in the same way
-//   THSBins* mcgenBins=0;
-//   if(fMCGenTree){
-//     mcgenBins=new THSBins("HSMCGenBins",fOutDir+"MCGenEntries.root");
-//     fMCGenTree->SetBranchStatus("*",0);
-//     for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//       fMCGenTree->SetBranchStatus(fVariables[i].GetName(),1);
-//     }
-//   }
-//   //Now loop over bins and create sub fits
-//   for(Int_t i=0;i<fDataBins->GetN();i++){	
-//     THSRooFit* rf=CreateSubFitBins(savedBins->GetBinnedTree(fTree,i),kFALSE);
-//     //Save workspace to file. This will fitted in a seperate job
-//     rf->GetWorkSpace()->writeToFile(fOutDir+TString("Farm")+fDataBins->GetBinName(i)+".root");
-//     // if(fMCIntTree)rf->LoadMCIntTree(mcintBins->GetBinnedTree(fMCIntTree,i));
-//     if(fMCIntTree){//Also save mcint tree to file
-//       TFile* ofile=new TFile(fOutDir+TString("Farm")+fDataBins->GetBinName(i)+".root","update");
-//       TTree* mctree=mcintBins->GetBinnedTree(fMCIntTree,i);
-//       mctree->SetName("HSMCIntTree");
-//       mctree->SetDirectory(ofile);
-//       mctree->Write();
-//       ofile->Close();
-//       delete ofile;
-//     }
-//     if(fMCGenTree){//Also save mcgen tree to file
-//       TFile* ofile=new TFile(fOutDir+TString("Farm")+fDataBins->GetBinName(i)+".root","update");
-//       TTree* mctree=mcgenBins->GetBinnedTree(fMCGenTree,i);
-//       mctree->SetName("HSMCGenTree");
-//       mctree->SetDirectory(ofile);
-//       mctree->Write();
-//       ofile->Close();
-//       delete ofile;
-//     }
-
-//     cout <<"void THSRooFit::PrepareForFarm() Saved Workspace with "<<rf->GetDataSet()->numEntries()<<" for " <<fDataBins->GetBinName(i)<<endl;
-
-//     rf->RemoveDataSet();//save memory
-
-//     delete rf;
-//   }
-//   delete savedBins;
-//   delete mcintBins;
-//   delete mcgenBins;
-  
-//   cout<<"THSRooFit::PrepareForFarm() Done all files "<<endl;
-// }
 void THSRooFit::WriteToFile(TString fname){
   //this currently crashes and could be fixed
   //need to change the version to 1 in ClassDef
@@ -1344,15 +1315,17 @@ void  THSRooFit::ClearRF(){
 ///Create data sets for batch ToyMC analysis
 void  THSRooFit::GenerateToys(Int_t Ntoys){
   if(!fModel) TotalPDF();
+  Long64_t geni=0;
   for(Int_t i=0;i<Ntoys;i++){
     //Number of events to generate
     Long64_t nexp=RooRandom::randomGenerator()->Poisson(GetModel()->expectedEvents(GetVariables()));
-    cout<<nexp<<endl;
+    //GetModel()->SetGeni(geni);
     RooDataSet* DS=GetModel()->generate(GetVariables(),nexp);
     DS->SetName("ToyData");
     TFile* outfile=new TFile(GetOutDir()+Form("/Toy_%d.root",i),"recreate");
     DS->Write();
     outfile->Close();
     delete outfile;
+    //geni=GetModel->GetGeni();
   }
 }

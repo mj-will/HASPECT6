@@ -64,7 +64,12 @@ class RooHSEventsPDF : public RooAbsPdf {
   Double_t fMaxValue=0; //max value of function for accept/reject
   Long64_t fGeni=0; //index for tree generation
   TString fgenStr="gen";
+
+  Long64_t fIntRangeLow=0;
+  Long64_t fIntRangeHigh=0;
+  Int_t fNRanges=1;
  public:
+ 
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const;
   virtual Double_t analyticalIntegral(Int_t code,const char* rangeName) const;
 
@@ -108,7 +113,12 @@ class RooHSEventsPDF : public RooAbsPdf {
   TString GetCut(){return fCut;}
   Double_t GetMaxValue(){return fMaxValue;}
   void SetMaxValue(Double_t val){fMaxValue=val;}
-
+  void SetIntRange(Long64_t low,Long64_t high){fIntRangeLow=low;fIntRangeHigh=high;}
+  Long64_t GetIntRangeLow() const {return fIntRangeLow;}
+  Long64_t GetIntRangeHigh() const {return fIntRangeHigh;}
+  void SetNRanges(Int_t nr){fNRanges=nr;}
+  void SetNextRange(Int_t ir);
+  RooHSEventsPDF* GetParent(){return fParent;}
   ClassDef(RooHSEventsPDF,1) // Yor description goes here...
 };
  

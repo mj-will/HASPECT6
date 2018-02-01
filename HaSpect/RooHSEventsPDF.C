@@ -22,14 +22,16 @@ ClassImp(RooHSEventsPDF)
 
 RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) :  RooAbsPdf(other,name)
   {
+   
     fIsClone=kTRUE;
     fParent=const_cast<RooHSEventsPDF*>(&other);
+
     if(other.fEvTree)fEvTree=other.fEvTree->CopyTree("");
     //    if(other.fEvTree)fEvTree=other.fEvTree->CloneTree();
     if(other.fInWeights) fInWeights=other.fInWeights; //probably need to clone this
     fNInt=other.fNInt;
     fGeni=other.fGeni;
-    if(other.fEntryList)fEntryList=(TEntryList*)other.fEntryList->Clone();
+    //if(other.fEntryList)fEntryList=(TEntryList*)other.fEntryList->Clone();
     fForceConstInt=other.fForceConstInt;
     fConstInt=other.fConstInt;
     fCheckInt=other.fCheckInt;
@@ -40,15 +42,17 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fEvWeights=other.fEvWeights;
     fWgtSpecies=other.fWgtSpecies;
     fMaxValue=other.fMaxValue;
-  }
+    fIntRangeLow=other.fIntRangeLow;
+    fIntRangeHigh=other.fIntRangeHigh;
+ }
 RooHSEventsPDF::~RooHSEventsPDF(){
   //RooFit clones everything so I need to give the original
     //object the entrylist if I want to use it!
     if(fIsClone&&fParent&&fEntryList){
       if(fMaxValue){//has this clone used generator?
 	fParent->SetEntryList(fEntryList);
-	fParent->SetGeni(fGeni);
-      }
+ 	fParent->SetGeni(fGeni);
+     }
     }
     if(fEntryList) delete fEntryList;
     if(fLast) delete fLast;
@@ -117,6 +121,8 @@ void RooHSEventsPDF::initIntegrator()
       fEvTree->SetBranchAddress(fCatSet[i]->GetName(),&fMCCat[i]);
      }
   }
+
+ 
 }
 void RooHSEventsPDF::initGenerator(Int_t code)
 {
@@ -161,8 +167,8 @@ void RooHSEventsPDF::initGenerator(Int_t code)
 	if(value>fMaxValue)fMaxValue=value*1.01;//make it a little larger
       }
       fParent->SetMaxValue(fMaxValue);
-      }
-  }
+    }
+  }		
   //construct entry list so can reproduce full tree branches,
   //not jist those loaded as variables
   if(!fEntryList){
@@ -182,11 +188,12 @@ void RooHSEventsPDF::initGenerator(Int_t code)
 
  }
 void RooHSEventsPDF::generateEvent(Int_t code){
-  // Info("RooHSEventsPDF::generateEvent","Going to generate starting from %ld with ",fGeni);
+  // Info("RooHSEventsPDF::generateEvent","Going to generate starting from %lld with ",fGeni);
   
   Double_t value=0;
   if(!fUseWeightsGen){
     while(fGeni<fEvTree->GetEntries()){
+      //fParent->SetGeni(fGeni);
       fEvTree->GetEntry(fGeni++);
       value=evaluateMC();
       if(value>fMaxValue*RooRandom::uniform()){//accept
@@ -203,6 +210,7 @@ void RooHSEventsPDF::generateEvent(Int_t code){
   else{
     //using weights
     while(fGeni<fEvTree->GetEntries()){
+      //fParent->SetGeni(fGeni);
       fEvTree->GetEntry(fGeni++);
       if(!CheckRange("")) continue;
       value=evaluateMC();
@@ -244,10 +252,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
   //sort number of events first in case forced
   Long64_t NEv=0;
   
-  if(fNInt>-1) NEv=fNInt;
-  else NEv=fEvTree->GetEntries(); 
-  if(NEv>fEvTree->GetEntries()) NEv=fEvTree->GetEntries();
-
+ 
   // Info("RooHSEventsPDF::analyticalIntegral","calcing my own integral");
   // return 1;
   //only recalculate if a par changes when all variables included (ie code=1)
@@ -257,8 +262,24 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
   //In case changed for generation
   
   Double_t integral=0;
-  if(code==1){
-    for(Int_t ie=0;ie<NEv;ie++){
+  Long64_t ilow,ihigh=0;
+  if(fParent){
+    ilow=fParent->GetIntRangeLow();
+    ihigh=fParent->GetIntRangeHigh();
+  }
+  else{
+   ilow=GetIntRangeLow();
+   ihigh=GetIntRangeHigh();
+  }
+  // cout<<"PDF INT "<<ihigh<<" "<<ilow<<" "<<GetIntRangeLow()<<" "<<GetIntRangeHigh()<<endl;
+
+  if(ihigh==0&&fNInt>-1) ihigh=fNInt;
+  else if(ihigh==0) ihigh=fEvTree->GetEntries(); 
+  
+  if(ihigh>fEvTree->GetEntries()) ihigh=fEvTree->GetEntries();
+   if(code==1){
+    //for(Int_t ie=0;ie<NEv;ie++){
+    for(Int_t ie=ilow;ie<ihigh;ie++){
       fEvTree->GetEntry(ie);
       if(!CheckRange(rangeName)) continue;
       integral+=evaluateMC()*GetIntegralWeight(ie);
@@ -278,7 +299,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
     Int_t nbins=((RooRealVar*)(&(fProxSet[code-2]->arg())))->getBins();
     Double_t delta=vrange/nbins/2;
     //Double_t delta=vrange/nbins;
-    for(Int_t ie=0;ie<NEv;ie++){
+    for(Int_t ie=ilow;ie<ihigh;ie++){
       fEvTree->GetEntry(ie);
       if(!CheckRange(rangeName)) continue;
      //only inlcude events within same bin as vval in integral
@@ -296,7 +317,7 @@ Double_t RooHSEventsPDF::analyticalIntegral(Int_t code,const char* rangeName) co
 
   //Set Last[0] so we can just return that if no parameter changes
   if(fNMCGen) fLast[0]=integral/fNMCGen;
-  else fLast[0]=integral/NEv;
+  else fLast[0]=integral/(ihigh-ilow);
 
 
   return fLast[0];
@@ -576,4 +597,13 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
 void RooHSEventsPDF::ResetTree(){
 
   if(fEvTree) {delete fEvTree;fEvTree=nullptr;}
+}
+
+void RooHSEventsPDF::SetNextRange(Int_t ir){
+  Long64_t Nentries=fEvTree->GetEntries();
+  Int_t range=((Float_t)Nentries)/fNRanges;
+
+  fIntRangeLow=ir*range;
+  fIntRangeHigh=(ir+1)*range;
+
 }

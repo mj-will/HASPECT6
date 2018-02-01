@@ -24,6 +24,7 @@
 #include <TFile.h>
 #include "THSBins.h"
 #include "THSWeights.h"
+#include "RooHSEventsPDF.h"
 #include "HSMCMC.h"
 #include <vector>
 #include <map>
@@ -84,6 +85,11 @@ class THSRooFit : public TNamed {
   Int_t fNStudyTrials=0;
   
   RooLinkedList fFitOptions;
+
+  //For RooHSEventsPDF Range fits
+  vector<RooHSEventsPDF*> fHSPDF_Ranges;
+  Int_t fNIntRanges=1;
+
 public:
   THSRooFit() ;//default constructor, must not allocate memory!!!
   THSRooFit(TString name);
@@ -184,6 +190,7 @@ public:
   virtual void StudySavedBins(Int_t Nfits,Bool_t cleanup=kTRUE);
   virtual void FitBatchBin(Int_t Nfits);
   virtual void FitAndStudy(Int_t Nfits=1);
+  virtual void FitSplitIntegral(Int_t Nfits);
   void RandomisePars();
   void MakeBins();
   void MakeBins(TTree* tree,TString name);
@@ -208,7 +215,13 @@ public:
   RooLinkedList GetFitOptions(){return fFitOptions;}
   void SetPlot(Bool_t plot=kTRUE){fIsPlot=plot;}
   void SetNMCMC(Long64_t nmcmc,Long64_t burn=100) {fNMCMC=nmcmc;fBurnMCMC=burn;}
-  
+  void SetNIntRanges(Int_t nr){fNIntRanges=nr;}  
+  void AddHSPDF_Ranges(TString pdfname) {
+    RooHSEventsPDF* pdf=dynamic_cast<RooHSEventsPDF*>(fWS->pdf(pdfname));
+    if(pdf)fHSPDF_Ranges.push_back(pdf);
+    else Warning("THSRooFit::AddHSPDF_Ranges","Pdf named %s is not a ROooHSEventsPDF",pdfname.Data());
+  }
+
   void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}
   void SetStudyPDF(TString pdfn){fStudyPDF=pdfn;}
