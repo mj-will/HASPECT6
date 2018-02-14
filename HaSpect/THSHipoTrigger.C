@@ -148,6 +148,7 @@ void  THSHipoTrigger::RawScaler()
     fHelicity=fRawScalHel->Val();
     cout<<UnGatedFC<<" "<<GatedFC<<" "<<fHelicity<<endl;
   }
+  if(fUseUnGated) GatedFC=UnGatedFC-GatedFC;
   Float_t trueFreq = GatedFC / (0.03333 - 0.0005);
   Float_t beamCurrent = (trueFreq-100)/906.2;
    

@@ -20,6 +20,8 @@ class THSHipoTrigger: public THSHipoReader{
   
   void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
   Int_t GetSoftFTTrig(){return fSoftFTTrig;}
+  void SetUseUnGated(){fUseUnGated=kTRUE;}
+  
   void  RawScaler();
  private :
 
@@ -55,6 +57,8 @@ class THSHipoTrigger: public THSHipoReader{
   Int_t fFTHigh=0; 
   Int_t fFTLow=0;
 
+  Bool_t fUseUnGated=kFALSE; //temp fix for wrong DAQ scalers
+  
   Int_t fNRun=0;//Run Number
   Int_t fNEvent=0;;//Event Number
   Float_t fEventTime=0;;//Event Time
