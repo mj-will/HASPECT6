@@ -28,6 +28,7 @@ class THSDataManager{
   virtual Bool_t ReadEvent(Long64_t entry=-1);
   virtual void PrintEvent(Long64_t=0);
   virtual void WriteParticles(TString filename);
+  virtual void PostWrite(){} //in case want to reset anything after write
   
   Int_t GetN(){return fNin;}
   THSParticle* GetParticle(Int_t i){return fParticles.at(i);}

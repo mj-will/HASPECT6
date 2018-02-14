@@ -15,7 +15,9 @@ class THSHipoTrigger: public THSHipoReader{
   virtual Bool_t ReadEvent(Long64_t entry=0);
   virtual void InitOutput(TString filename);
   virtual Bool_t Init(TString filename,TString name);
+  virtual void PostWrite();
 
+  
   void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
   Int_t GetSoftFTTrig(){return fSoftFTTrig;}
  private :
@@ -35,7 +37,7 @@ class THSHipoTrigger: public THSHipoReader{
   THipoItem* fRecEvEVNTime=nullptr;
   THipoItem* fRecEvBCG=nullptr;
   THipoItem* fRecEvLT=nullptr;
-  THipoItem* fRecEvSTTime=nullptr;
+  //  THipoItem* fRecEvSTTime=nullptr;
   THipoItem* fRecEvRFTime=nullptr;
   THipoItem* fRecEvPTIME=nullptr;
    //Trigger variables

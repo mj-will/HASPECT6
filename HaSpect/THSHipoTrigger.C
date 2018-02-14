@@ -24,13 +24,21 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     fRecEvHelic=fEvBank->GetItem("Helic");
     fRecEvEVNTime=fEvBank->GetItem("EVNTime");
     fRecEvBCG=fEvBank->GetItem("BCG");
-    fRecEvLT=fEvBank->GetItem("LT");
-    fRecEvSTTime=fEvBank->GetItem("STTime");
+    //    fRecEvLT=fEvBank->GetItem("LT");
+    //fRecEvSTTime=fEvBank->GetItem("STTime");
     fRecEvRFTime=fEvBank->GetItem("RFTime");
     fRecEvPTIME=fEvBank->GetItem("PTIME");
 
     
     fRunTrig=fRunConBank->GetItem("trigger");
+
+    
+    fRawScalBank=fHipo->GetBank("RAW::scaler");
+    
+    fRawScalChan=fRawScalBank->GetItem("channel"); 
+    fRawScalSlot=fRawScalBank->GetItem("slot");
+    fRawScalVal=fRawScalBank->GetItem("value");
+    fRawScalHel=fRawScalBank->GetItem("helicity");
   }
   return kTRUE;
 }
@@ -53,6 +61,8 @@ void THSHipoTrigger::InitOutput(TString filename){
   fWriteTree->Branch("Helic",&fHelic,"Helic/I");
   fWriteTree->Branch("PTime",&fPTime,"PTime/F");
  
+  fWriteTree->Branch("Current",&fCurrent,"Current/F");
+  fWriteTree->Branch("Helicity",&fHelicity,"Helicity/I");
  }
 
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
@@ -61,39 +71,33 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
   if(!fHipo->NextEvent()) return kFALSE;
   fEntry++;
-  fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
-  //  cout<<"Bit Pattern "<<endl;
-  // fRunConBank->Print();
+ 
+  RawScaler();//need to call this for every event to accumulate scalers
+  
   //FT trigger
   //cout<<"entry "<<fRunConBank->GetEntry()<<endl;
+  fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
   if(fRunConBank->GetEntry()<0) return kTRUE; 
 
   CreateBitPattern(fRunTrig->Val());
   fFTHigh=fTrigBits[30];
   fFTLow=fTrigBits[29];
-  //cout<<"Try trigger"<<endl;
-  // if(fEntry>3) exit(0);
-  //return kTRUE;
+
   //Apply filter on FT trigger
   //fSofFTTrig==1 either Low or High
   //fSofFTTrig==2 only High
   if(fSoftFTTrig==1&&!fFTLow&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
   if(fSoftFTTrig==2&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
-
   //Similarily using fWriteThis can apply other trigger filters
-  //cout<<"HipoReder"<<endl;
+
   //Now check Event Builder Banks, -1 =>we have all ready got event
-  //Note that this will call fEvBank->NextEntry()
+  //Note that this funtion will call fEvBank->NextEntry()
   THSHipoReader::ReadEvent(-1); 
 
   //cout<<"READING SCALARS"<<endl;
   //now other event scalars
-  //  fEvBank->NextEntry();
-  //  fEvBank->Print();
-  //fEvBank->Print();
   if(fEvBank->GetEntry()<0) return kTRUE;
 
-  cout<<"WWWWWWWWWWWWWWWWWWWWWWWWWWW "<<fEvBank->GetEntry()<<" "<<fRecEvNRun->GetBankEntry()<<endl;
   fNRun=fRecEvNRun->Val();
   fNEvent=fRecEvNEVENT->Val();
   fType=fRecEvTYPE->Val();
@@ -101,7 +105,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fTrig=fRecEvHelic->Val();
   fEventTime=fRecEvEVNTime->Val();
   fBCG=fRecEvBCG->Val();
-  fLT=fRecEvLT->Val();
+  //fLT=fRecEvLT->Val();
   fSTTime=fRecEvSTTime->Val();
   fRFTime=fRecEvRFTime->Val();
   fPTime=fRecEvPTIME->Val();
@@ -129,4 +133,26 @@ void  THSHipoTrigger::CreateBitPattern(long val)
      }
      mask  >>= 1;
    }
+}
+void  THSHipoTrigger::RawScaler()
+{
+  cout<<"RawScaler "<<endl;
+  Double_t GatedFC=0;
+  Double_t UnGatedFC=0;
+  while(fRawScalBank->GetEntry()){
+    if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==0)
+      UnGatedFC=fRawScalVal->Val();
+    if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==1)
+      GatedFC=fRawScalVal->Val();
+
+    fHelicity=fRawScalHel->Val();
+    cout<<UnGatedFC<<" "<<GatedFC<<" "<<fHelicity<<endl;
+  }
+  Float_t trueFreq = GatedFC / (0.03333 - 0.0005);
+  Float_t beamCurrent = (trueFreq-100)/906.2;
+   
+  fCurrent+=beamCurrrent;
+}
+void  THSHipoTrigger::PostWrite(){
+  fCurrent=0;
 }

@@ -1,3 +1,8 @@
+//////////////////////////////////////////////////////
+///
+/// HSMCMC MCMC minimiser for RooFit
+/// Currently only works with positive PDFs only.
+
 #include "HSMCMC.h"
 #include "Rtypes.h"
 #include "RooGlobalFunc.h"
