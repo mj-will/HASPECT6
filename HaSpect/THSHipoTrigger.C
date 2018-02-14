@@ -141,7 +141,7 @@ void  THSHipoTrigger::RawScaler()
   Double_t GatedFC=0;
   Double_t UnGatedFC=0;
   while(fRawScalBank->NextEntry()){
-    if(fRawScaleBank->GetEntry()<0) break;
+    if(fRawScalBank->GetEntry()<0) break;
     
     if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==0)
       UnGatedFC=fRawScalVal->Val();
