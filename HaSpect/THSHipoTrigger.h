@@ -20,6 +20,7 @@ class THSHipoTrigger: public THSHipoReader{
   
   void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
   Int_t GetSoftFTTrig(){return fSoftFTTrig;}
+  void  RawScaler();
  private :
 
   //banks
