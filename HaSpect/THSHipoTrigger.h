@@ -25,6 +25,8 @@ class THSHipoTrigger: public THSHipoReader{
   //banks
   THipoBank* fRunConBank=nullptr;
   //  THipoBank* fRecEvBank=nullptr;
+  THipoBank* fRawScalBank=nullptr;
+    
 
   //items in banks
   THipoItem* fRunTrig=nullptr;
@@ -40,6 +42,13 @@ class THSHipoTrigger: public THSHipoReader{
   //  THipoItem* fRecEvSTTime=nullptr;
   THipoItem* fRecEvRFTime=nullptr;
   THipoItem* fRecEvPTIME=nullptr;
+
+  THipoItem* fRawScalChan=nullptr;; 
+  THipoItem* fRawScalSlot=nullptr;;
+  THipoItem* fRawScalVal=nullptr;;
+  THipoItem* fRawScalHel=nullptr;;
+  
+  
    //Trigger variables
   Int_t fSoftFTTrig=0;
   Int_t fFTHigh=0; 
@@ -57,7 +66,8 @@ class THSHipoTrigger: public THSHipoReader{
   Int_t fHelic=0;;//Helicity of Event
   Float_t fPTime=0;;//Event Processing Time (UNIX Time = seconds)
   
-
+  Float_t fCurrent=0;
+  Float_t fHelicity=0;
   
   Int_t fTrigBits[sizeof(int) * 8];
 
