@@ -10,6 +10,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     //Add the trigger banks to those to be configured
     Info("THSHipoTrigger","Opened file");
     fHipo->ConfigOnlyBank("RUN::config");
+    fHipo->ConfigOnlyBank("RAW::Scaler");
   }
   THSHipoReader::Init(filename,name);
   
