@@ -181,8 +181,6 @@ public:
   void  GenerateToys(Int_t Ntoys);
 
   virtual Bool_t  InitialiseFit();
-  //  THSRooFit*  CreateSubFit(TNamed cut); //allow individual cuts
-  //THSRooFit*  CreateSubFitBins(TNamed cut);//from predefined entrylists
   virtual THSRooFit*  CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree=kTRUE);//from alredy selected tree
   void SavePlots(TString filename);
   virtual void FitMany(Int_t Nfits=1);
@@ -192,11 +190,7 @@ public:
   virtual void FitAndStudy(Int_t Nfits=1);
   virtual void FitSplitIntegral(Int_t Nfits);
   void RandomisePars();
-  void MakeBins();
-  void MakeBins(TTree* tree,TString name);
   void MakeBinnedTrees(TTree* tree,TString name);
-  // virtual void FitWithBins(Int_t Nfits=1);
-  // virtual void PrepareForFarm();
   THSBins* GetBins(){return fDataBins;}
   void SetOutDir(TString name){fOutDir=name;fOutDir+="/";gSystem->MakeDirectory(fOutDir);}
   void SetBinDir(TString name){fBinDir=name;fBinDir+="/";}

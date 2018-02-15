@@ -2,17 +2,21 @@
 #include "THSBins.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "TLeaf.h"
 #include "TDirectory.h"
+#include "TFileMerger.h"
+#include "TObjectTable.h"
+#include "TRandom3.h"
+#include "TSystem.h"
 #include <algorithm>
+//#include "ProcInfo_t.h"
 
 
 ClassImp(THSBins)	
 
-THSBins::THSBins(TString name) :TNamed(name,name),fNaxis(0),fNbins(0){
+THSBins::THSBins(TString name) :TNamed(name,name){
 }
 
-THSBins::THSBins(TString name,TString filename):TNamed(name,name),fBinTree(0),fFile(0),fNaxis(0),fNbins(0){
+THSBins::THSBins(TString name,TString filename):TNamed(name,name){
   TDirectory *saveDir=gDirectory;
   fFile=new TFile(filename);
   if(!fFile->IsOpen()) {Error("THSBins::THSBins(TString name,TString filename)"," File does not exist %s",filename.Data());return;}
@@ -23,22 +27,17 @@ THSBins::THSBins(TString name,TString filename):TNamed(name,name),fBinTree(0),fF
   fNaxis=filebins->GetNAxis();
   fVarAxis=filebins->GetVarAxis();
   //tree is not written to file as data member
-  fBinTree=(TTree*)fFile->Get("HSBinTree");
-  if(!fBinTree) cout<<"THSBins::THSBins(TString name,TString filename)  Tree does not exist "<<"HSBinTree"<<endl;
   saveDir->cd();
-  // cout<<"DONE THSBins::THSBin"<<endl;
-}
-THSBins::THSBins(const THSBins& other, const char* name): TNamed(name,name),fBinTree(0),fFile(0),fNaxis(0),fNbins(0){
+ }
+THSBins::THSBins(const THSBins& other, const char* name): TNamed(name,name){
   fBinNames=other.fBinNames;
   fNbins=other.fNbins;
   fNaxis=other.fNaxis;
   fVarAxis=other.fVarAxis;
-  if(other.fBinTree) fBinTree=(TTree*)other.fBinTree->Clone();
   fFile=0;
 
 }
 THSBins::~THSBins(){
-  if(fBinTree) delete fBinTree;
   if(fFile){fFile->Close(); delete fFile;}
 }
 void THSBins::AddAxis(TString name,Int_t nbins,Double_t min,Double_t max){
@@ -50,11 +49,7 @@ void THSBins::AddAxis(TString name,Int_t nbins,Double_t min,Double_t max){
     bins[i]= min + i * binwidth;
   AddAxis(name,nbins,bins.GetArray());
   
-  // TAxis axis(nbins,min,max);
-  // axis.SetName(name);
-  // fVarAxis.push_back(axis);
-  // fNaxis++;
-}
+ }
 void THSBins::AddAxis(TString name,Int_t nbins,Double_t* xbins){
   //Add a new axis for a given variable, name should be tree name
   TAxis axis(nbins,xbins);
@@ -69,18 +64,6 @@ void THSBins::InitialiseBins(){
   fNbins=0;
   fBinNames.clear();
   IterateAxis(0,binName);
-
-}
-void THSBins::InitialiseBinTree(TString name,TString filename){
-  //SetName(name);
-  Info("THSBins::InitialiseBinTree"," create bin tree and save in file %s",filename.Data());
-  TDirectory *saveDir=gDirectory;
-  if(filename!=TString(""))fFile=new TFile(filename,"recreate");
-  fBinTree=new TTree("HSBinTree","Contains bin number for each event");
-  fBinTree->Branch("Bin",&fBin,"Bin/I");
-  InitialiseBins();
-  saveDir->cd(); //lists are in file directory, go back to ROOT
-
 
 }
 void THSBins::IterateAxis(Int_t iA,TString binName) {
@@ -102,22 +85,38 @@ void THSBins::IterateAxis(Int_t iA,TString binName) {
     fPartName.insert(fPartName.begin(),part);//for correct ordering with fVar.Axis vector
   }
 }
-
 void THSBins::RunBinTree(TTree* tree){
+  if(fNbins==0) InitialiseBins();//1 time initialisation
+  
+  if(fNbins<fMAXFILES){
+    RunBinTree(tree,0,fNbins);
+    return;
+  }
+  Int_t Nlots=(Int_t)(fNbins/fMAXFILES);
+  Int_t Nrem=fNbins%fMAXFILES;
+  
+  for(Int_t i=0;i<Nlots;i++)
+    RunBinTree(tree,fMAXFILES*i,fMAXFILES*(i+1));
+  //and remainder
+  RunBinTree(tree,fMAXFILES*(Nlots),fMAXFILES*(Nlots)+Nrem);
+  
+}
+
+void THSBins::RunBinTree(TTree* tree,Int_t BMin,Int_t BMax){
+  //Create all sub trees
+  cout<<"THSBins::RunBinTree Running bins from "<<BMin<<" to "<<BMax<<endl;
   //create entry lists for tree
   TDirectory *saveDir=gDirectory;
-  fFile->cd();
+  //  fFile->cd();
+
+  Bool_t GotAnInt=kFALSE;
   TVectorD vVal(fNaxis);//values of variables for given entry
   vector<Int_t> vValI(fNaxis);//int values of variables for given entry
   vector<Int_t> vIntIndex;
-  
-  Bool_t GotAnInt=kFALSE;
-  
-  tree->SetBranchStatus("*","0");//faster if turnoff unused branches
   for(Int_t j=0;j<fNaxis;j++){
     tree->SetBranchStatus(fVarAxis[j].GetName(),"1");//STATUS must be called before ADDRESS!! see Important remarkse in TChain SetBranchStatus!
     tree->GetLeaf(fVarAxis[j].GetName())->GetTypeName();//this isneeded to check type properly when setting branch address
-    
+    tree->GetBranch(fVarAxis[j].GetName())->SetAutoDelete();
     if(tree->SetBranchAddress(fVarAxis[j].GetName(),&vVal[j])==-2){
       //In case we have Int_t branches
       if(tree->SetBranchAddress(fVarAxis[j].GetName(),&vValI[j])==0){
@@ -126,47 +125,59 @@ void THSBins::RunBinTree(TTree* tree){
       }
     }
   }
-  vector<Int_t> vBin(fNaxis); //store for the bin number of each axis
+
+  saveDir->cd();
+
+  //prepare the binned trees
+  Int_t Nhere=BMax-BMin;
+  fTrees.reserve(Nhere);
+  fTrees.resize(Nhere);
+  //make output directory if not existing
+  gSystem->MakeDirectory(fOutDir+"/");
+  for(Int_t ib=BMin;ib<BMax;ib++){
+    gSystem->MakeDirectory(fOutDir+"/"+GetBinName(ib));
+    fTrees[ib-BMin]=new THSBinTree(Nhere,fOutDir+"/"+GetBinName(ib)+"/Tree"+fDataName,tree);	
+  }
+
+  saveDir->cd();
+
+  Int_t totalBytes=0;
   for(Long64_t i=0;i<tree->GetEntries();i++){//loop over events
     tree->GetEntry(i);
     if(GotAnInt){//put the integer value in the double array
       for(UInt_t iv=0;iv<vIntIndex.size();iv++){
 	vVal[vIntIndex[iv]]=vValI[vIntIndex[iv]];
-     }
+      }
+    }
+    if(i%100000==0){
+      cout<<"On event "<<i<<" = "<<100.*i/tree->GetEntries()<<"%"<<endl;
     }
     fBin=FindBin(vVal);
-    fBinTree->Fill();
+    //check if bin in current range
+    if(fBin>=BMax||fBin<BMin) continue;
+    Int_t aBin=fBin-BMin;
+    //Fill the tree associated with this bin
+    Int_t evSize=fTrees[aBin]->ReadEvent();
+    totalBytes+=evSize;
+    if(fTrees[aBin]->GetEntries()==(Long64_t)fMaxEntries/fNbins/evSize) {
+      fTrees[aBin]->Reset();
+    }
   }
-  tree->SetBranchStatus("*",1);
+
   tree->ResetBranchAddresses();
   saveDir->cd();
-
+  //cleanup
+  for(Int_t ib=BMin;ib<BMax;ib++){
+    Int_t aBin=ib-BMin;
+    delete  fTrees[aBin];
+    fTrees[aBin]=nullptr;
+  }
+  fTrees.clear();
 }
-
-TTree* THSBins::GetBinnedTree(TTree* tree,Int_t bin){
-  //This class will not delete the tree
-  // gROOT->cd();
-  TDirectory *saveDir=gDirectory;
-  tree->AddFriend(fBinTree,"bt");
-  tree->SetBranchStatus("bt.Bin",1);
-  if(tree->GetDirectory()) tree->GetDirectory()->cd();//or else complains memeiry resident...
-  TTree* tree_copy=tree->CopyTree(Form("bt.Bin==%d",bin));
-  tree_copy->SetName(fBinNames[bin]);
-  //tree_copy->SetTitle(fBinNames[bin]);
-  tree->RemoveFriend(fBinTree);
-  tree_copy->RemoveFriend(fBinTree);
-  tree->GetListOfFriends()->RemoveAll();
-  tree_copy->GetListOfFriends()->RemoveAll();
-  saveDir->cd();
-  return tree_copy;
- }
-void THSBins::Save(){
-  Info(" THSBins::Save()"," Saving %s",GetName());
-  if(!fFile) return;
-  fFile->cd();
-  if(fBinTree){ fBinTree->Write();delete fBinTree;fBinTree=0;}
+void THSBins::Save(TString filename){
+  Info(" THSBins::Save()"," Saving %s to %s",GetName(),filename.Data());
+  fFile=new TFile(filename,"recreate");
   Write();
-  fFile->Close();
   if(fFile) delete fFile;
   
 }
@@ -176,21 +187,6 @@ void THSBins::PrintAxis(){
     cout<<fVarAxis[iA].GetName()<<" "<<fVarAxis[iA].GetNbins()<<" "<<fVarAxis[iA].GetXmin()<<" "<<fVarAxis[iA].GetXmax()<<" "<<endl;
 }
 
-// TEntryList* THSBins::MergedLists(TList* list){
-
-//   TList* mlist=new TList(); 
-//   TEntryList* mel=0;
-//   for(Int_t i=0;i<list->GetEntries();i++){
-//     if(mel=dynamic_cast<TEntryList*>(fEntryLists->FindObject(list->At(i)->GetName())))
-//       mlist->Add(mel);
-
-//   }
-//   TEntryList *subList=new TEntryList();
-//   subList->Merge(mlist);
-//   delete mlist;
-//   return subList; 
-
-// }
 
 Int_t THSBins::FindBin(Double_t v0){
   TVectorD vals(1);vals[0]=v0;
@@ -231,3 +227,44 @@ Int_t THSBins::FindBin(TVectorD vals){
   return theBin;
 }
 
+////////////////////////////////////////////////////////////////
+///THSBinTree utility class
+///Duplicates a tree but keeps its branches/memory etc seperate
+///This allows us to make many copies without memory issues
+///CloneTree give trouble with memory, when lots of copies
+THSBinTree::THSBinTree(Int_t nbins,TString name,TTree* tree0){
+  cout<<"Constructing Bin Tree "<<name<<endl;
+  fName=name;
+  fFile=TFile::Open(fName+".root","recreate");
+  fTree=tree0->CloneTree(0);
+  fTree->SetName("BinnedTree");
+  fTree->SetDirectory(fFile);
+  fTree->SetAutoSave(1E12); //We do our won autosave as this one changes basket size greatly increasing memory when large number of bins
+  fTree->SetBasketSize("*",16000); //cloned trees have the parent basket size which can be very large and use large amount of memeory when we great many bins
+  fTree->SetAutoFlush(1E12); //Don't let root flush or it will make basket sizes
+}
+THSBinTree::~THSBinTree(){
+  if(fTree&&fFile)
+    Save();
+ 
+}
+void THSBinTree::Save(){
+  cout<<"THSBinTree::Save() "<<fName<<endl;
+  if(!fTree) return;
+  fFile->cd();
+  fTree->Write();
+  fTree->SetDirectory(0);
+  fTree->ResetBranchAddresses();
+  delete fTree;
+  // fFile->Close();
+  fTree=nullptr;
+  delete fFile;fFile=nullptr;
+
+}
+void THSBinTree::Reset(){
+  cout<<"reset "<<fName<<endl;
+  fTree->AutoSave("FlushBaskets");
+  fTree->SetBasketSize("*",16000); //just in case...
+  return;
+ 
+}

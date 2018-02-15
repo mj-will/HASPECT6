@@ -807,61 +807,6 @@ void THSRooFit::PlotDataModel(){
   }
 }
 
-// THSRooFit*  THSRooFit::CreateSubFit(TNamed cut){//cut.fName=cut selectionl fcut.fTitle=name
-//   cout<<"CreateSubFit "<<cut.GetName()<<endl;
-//   //create a fit object for a subset of data either by setting cut
-//   //or by fTree->SetEntryList prior to calling this function 
-//   //It will be deleted by this object
-//   THSRooFit* RFa=new THSRooFit();
-//   fRooFits->Add(RFa);
-//   RFa->SetName(cut.GetName());
-//   if(fBinnedFit)RFa->SetBinnedFit();
-//   RFa->SetSingleSpecies(fSingleSp);
-//   RFa->SetOutDir(fOutDir);
-//   // RFa->SetSPlotRange(fSRange[0],fSRange[1]);
-//   RFa->SetInWeights(fInWeights);
-//   RFa->SetWeightName(fWeightName);
-//   RFa->LoadWorkSpace(GetWorkSpace());
-//   //speed up copy by turning off redundant branches
-//   // RFa->SetBranchStatus("*",0);
-//   //need iterator over fVariables and getName 
-//   RFa->LoadDataSet(GetTree()->CopyTree(cut.GetTitle()));//will use any EntryList
-//   RFa->SetDataWeight();//if defined weights use them for this dataset
-//   return RFa;
-// }
-// THSRooFit*  THSRooFit::CreateSubFitBins(TNamed cut){//cut.fName=cut selectionl fcut.fTitle=name
-//   cout<<"THSRooFit::CreateSubFitBins "<<cut.GetName()<<endl;
-//   //create a fit object for a subset of data either by setting cut
-//   //or by fTree->SetEntryList prior to calling this function 
-//   //It will be deleted by this object
-//   THSRooFit* RFa=new THSRooFit();
-//   fRooFits->Add(RFa);
-//   if(fBinnedFit)RFa->SetBinnedFit();
-//   RFa->SetSingleSpecies(fSingleSp);
-//   RFa->SetOutDir(fOutDir);
-//   // RFa->SetSPlotRange(fSRange[0],fSRange[1]);
-//   RFa->SetInWeights(fInWeights);
-//   RFa->SetWeightName(fWeightName);
-//   RFa->SetName(cut.GetName());
-//    RFa->LoadWorkSpace(fWS);
-//    //speed up copy by turning off redundant branches
-//   fTree->SetBranchStatus("*",0);
-//   //fTree->SetCacheSize(30000000);
-//   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
-//     fTree->SetBranchStatus(fVariables[i].GetName(),1);
-//     //fTree->AddBranchToCache(fVariables[i].GetName());//??testing if this is faster
-//   }
-//   //but always need ID branch
-//   if(fTree->GetBranch(fIDBranchName)){
-//    fTree->SetBranchStatus(fIDBranchName,1);
-//   }
-//   else cout<<"Warning : THSRooFit::CreateSubFitBins no ID branch set, omitting, and will not be able to save weights"<<endl;
-//   //need iterator over fVariables and getName 
-//   RFa->LoadDataSet(fTree->CopyTree(cut.GetTitle()));//will use any EntryList
-//   fTree->SetBranchStatus("*",1);
-//   RFa->SetDataWeight();//if defined weights use them for this dataset
-//   return RFa;
-// }
 THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTree){//events already selected
   //create a fit object for a subset of data either by setting cut
   //or by fTree->SetEntryList prior to calling this function 
@@ -889,8 +834,9 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   TDirectory *saveDir=gDirectory;
   if(ctree->GetDirectory())ctree->GetDirectory()->cd();
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
-  else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
+  else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));
   else RFa->LoadDataSet(ctree);//use whole tree
+
   saveDir->cd();
   RFa->SetDataWeight();//if defined weights use them for this dataset
   return RFa;
@@ -916,34 +862,9 @@ void THSRooFit::SavePlots(TString filename){
   delete file;
   
 }
-void THSRooFit::MakeBins(){
-  //also include fit variables in bins as THSBins can then be used to check events
-  // for(Int_t ib=0;ib<fVariables.getSize();ib++)//only if RooRealVar, not for example RooCategory
-    // if(dynamic_cast<RooRealVar*>(&fVariables[ib]))fDataBins->AddAxis(fVariables[ib].GetName(),1,((RooRealVar*)&fVariables[ib])->getMin(""),((RooRealVar*)&fVariables[ib])->getMax(""));
-  fDataBins->InitialiseBinTree("HSDataBins",fOutDir+"DataEntries.root");
-  fDataBins->RunBinTree(fTree);
-  fDataBins->Save();
 
-  if(fMCIntTree){//If given a tree for NormInt calc mke bins of it here
-    fDataBins->InitialiseBinTree("HSMCIntBins",fOutDir+"MCIntEntries.root");
-    fDataBins->RunBinTree(fMCIntTree);
-    fDataBins->Save();
-  }
-  if(fMCGenTree){//If given a tree for NormInt Gen calc mke bins of it here
-    fDataBins->InitialiseBinTree("HSMCGenBins",fOutDir+"MCGenEntries.root");
-    fDataBins->RunBinTree(fMCGenTree);
-    fDataBins->Save();
-  }
-}
-void THSRooFit::MakeBins(TTree* tree,TString name){
-  if(!fDataBins) {Warning("THSRooFit::MakeBins","Trying to make bins but no bins defined");return;}
-  fDataBins->InitialiseBinTree("HSBins",fOutDir+name+"Entries.root");
-  fDataBins->RunBinTree(tree);
-  fDataBins->Save();
-}
 void THSRooFit::MakeBinnedTrees(TTree* tree,TString name){
-  MakeBins(tree,name);
-
+  //turn off all branches we do not require to save space and memory
   tree->SetBranchStatus("*",0);
   for(Int_t i=0;i<fVariables.getSize();i++){//only copy variable branches for speed
     tree->SetBranchStatus(fVariables[i].GetName(),1);
@@ -955,20 +876,14 @@ void THSRooFit::MakeBinnedTrees(TTree* tree,TString name){
   if(tree->GetBranch(fIDBranchName)){
     tree->SetBranchStatus(fIDBranchName,1);
   }
-
-  THSBins* savedBins=new THSBins("HSDataBins",fOutDir+name+"Entries.root");
-  for(Int_t i=0;i<savedBins->GetN();i++){
-    gSystem->MakeDirectory(fOutDir+savedBins->GetBinName(i));
-    TFile* ofile=new TFile(fOutDir+savedBins->GetBinName(i)+TString("/Tree")+name+".root","recreate");
-    TTree* newtree=savedBins->GetBinnedTree(tree,i);
-    newtree->SetName("BinnedTree");
-    newtree->Write();
-    ofile->Close();
-    delete ofile;
-  }
-  delete savedBins;
+  //now split the tree into bins and save in subdirs of fOutDir
+  fDataBins->SetOutDir(fOutDir);
+  fDataBins->SetDataName(name);
+  fDataBins->RunBinTree(tree);
+  fDataBins->Save(fOutDir+name+"Entries.root");
  
 }
+
 void THSRooFit::ConfigureSavedBins(TString dirname,TString pdfname){
   //Note pdfname is Data by default, only set if just studying simulated data
   fBinDir=dirname;
@@ -1025,10 +940,6 @@ void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
   TDirectory *saveDir=gDirectory;
   //Loop over bins
   for(Int_t ib=0;ib<GetBins()->GetN();ib++){
-    // Fit1SavedBin(ib,Nfits);
-    //TChain *chainData=new TChain("BinnedTree");
-    //chainData->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
-    //cout<<"Data chain "<<GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
     THSRooFit* rf=CreateSubFitBins(nullptr,GetBins()->GetBinName(ib),kFALSE);
      //look for RooHSEventsPDFs to get MC events trees
     for(Int_t ip=0;ip<fPDFs.getSize();ip++){
