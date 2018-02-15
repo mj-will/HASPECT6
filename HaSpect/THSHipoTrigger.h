@@ -75,7 +75,8 @@ class THSHipoTrigger: public THSHipoReader{
   Float_t fCharge=0;
   Float_t fTotCharge=0;
   Float_t fHelicity=0;
-
+  Int_t fNScalerReads=0;
+  
   Int_t fTrigBits[sizeof(int) * 8];
 
   Float_t fCurFactor=0.098088; //attenuation factor due to beam blocker
