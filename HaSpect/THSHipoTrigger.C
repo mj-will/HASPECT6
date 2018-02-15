@@ -45,6 +45,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   fCharge=0;
   fHelicity=-1;
   fTotCharge=0;
+  fNScalerReads=0;
   return kTRUE;
 }
 
@@ -84,6 +85,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
     fWriteTree->SetBranchStatus("*",1);
    
     cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
+    cout<<"  at average of current of "<<fTotCharge/fNScalerReads/0.033<<"nA per read. "<<endl; 
     return kFALSE;
   }
 
@@ -164,9 +166,9 @@ void  THSHipoTrigger::RawScaler()
     if(fRawScalBank->GetEntry()<0) break;
     
     if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==0)
-      UnGatedFC=fRawScalVal->Val();
-    if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==1)
       GatedFC=fRawScalVal->Val();
+    if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==1)
+      UnGatedFC=fRawScalVal->Val();
 
     if(fRawScalBank->GetEntry()==0) fHelicity=fRawScalHel->Val(); //this should be the same value for all entries...
     //    cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;
@@ -178,7 +180,7 @@ void  THSHipoTrigger::RawScaler()
   Float_t beamCurrent = (trueFreq-100)/906.2/fCurFactor;
   fCharge+=beamCurrent*0.033;//0.033ms scaler read
   fTotCharge+=fCharge;
-
+  fNScalerReads++;
 }
 void  THSHipoTrigger::PostWrite(){
   //fCharge=0; //reset charge 
