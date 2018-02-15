@@ -42,9 +42,9 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     fRawScalHel=fRawScalBank->GetItem("helicity");
   }
 
-  fCurrent=0;
+  fCharge=0;
   fHelicity=-1;
-  fTotCurrent=0;
+  fTotCharge=0;
   return kTRUE;
 }
 
@@ -66,7 +66,8 @@ void THSHipoTrigger::InitOutput(TString filename){
   fWriteTree->Branch("Helic",&fHelic,"Helic/I");
   fWriteTree->Branch("PTime",&fPTime,"PTime/F");
  
-  fWriteTree->Branch("Current",&fCurrent,"Current/F");
+  fWriteTree->Branch("TotCharge",&fTotCharge,"TotCharge/F");
+  fWriteTree->SetBranchStatus("TotCharge",0); //only write total charge at end
   fWriteTree->Branch("Helicity",&fHelicity,"Helicity/I");
  }
 
@@ -76,9 +77,17 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
   //Note include an extra fill in case there is an extra scaler current
   if(!fHipo->NextEvent()) {
-    fWriteTree->Fill();PostWrite();
+    //End of file write the total current
+    fWriteTree->SetBranchStatus("*",0);
+    fWriteTree->SetBranchStatus("TotCharge",1);
+    fWriteTree->Fill();
+    fWriteTree->SetBranchStatus("*",1);
+   
     cout<<"THSHipoTrigger::ReadEvent total current for this file "<<fTotCurrent<<endl;
-    return kFALSE;}
+    return kFALSE;
+  }
+
+  
   fEntry++;
  
   fWriteThis=kFALSE; //don't write scaler events on their own, accumulate and write with other events
@@ -163,17 +172,15 @@ void  THSHipoTrigger::RawScaler()
     //    cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;
   }
   if(GatedFC==0) return;
-  cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;                         
   
   if(fUseUnGated) GatedFC=UnGatedFC-GatedFC;
   Float_t trueFreq = GatedFC / (0.03333 - 0.0005);
-  Float_t beamCurrent = (trueFreq-100)/906.2;
-  cout<<fUseUnGated<<" "<<GatedFC<<" "<<UnGatedFC<<" "<<trueFreq<<" "<<beamCurrent<<endl;   
-  fCurrent+=beamCurrent;
-  fTotCurrent+=fCurrent;
+  Float_t beamCurrent = (trueFreq-100)/906.2/fCurFactor;
+  fCharge+=beamCurrent*0.033;//0.033ms scaler read
+  fTotCharge+=fCharge;
 
 }
 void  THSHipoTrigger::PostWrite(){
-  fCurrent=0; //reset current 
+  //fCharge=0; //reset charge 
   //Leave helicity as it is
 }

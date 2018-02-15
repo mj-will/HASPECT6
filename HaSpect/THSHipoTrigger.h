@@ -21,6 +21,7 @@ class THSHipoTrigger: public THSHipoReader{
   void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
   Int_t GetSoftFTTrig(){return fSoftFTTrig;}
   void SetUseUnGated(){fUseUnGated=kTRUE;}
+  void SetCurFactor(Float_t val){fCurFactor=val;}
   
   void  RawScaler();
  private :
@@ -71,12 +72,16 @@ class THSHipoTrigger: public THSHipoReader{
   Int_t fHelic=0;;//Helicity of Event
   Float_t fPTime=0;;//Event Processing Time (UNIX Time = seconds)
   
-  Float_t fCurrent=0;
-  Float_t fTotCurrent=0;
+  Float_t fCharge=0;
+  Float_t fTotCharge=0;
   Float_t fHelicity=0;
-  
+
   Int_t fTrigBits[sizeof(int) * 8];
 
+  Float_t fCurFactor=0.098088; //attenuation factor due to beam blocker
+                             //@(10.7)=9.808%  CLAS-NOTE 2018 - 003
+                             //@(6.4) =16.283% CLAS-NOTE 2018 - 004
+  
    void CreateBitPattern(long val);
  public :
   
