@@ -83,7 +83,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
     fWriteTree->Fill();
     fWriteTree->SetBranchStatus("*",1);
    
-    cout<<"THSHipoTrigger::ReadEvent total current for this file "<<fTotCurrent<<endl;
+    cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
     return kFALSE;
   }
 
