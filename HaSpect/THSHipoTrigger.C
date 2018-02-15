@@ -41,6 +41,10 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     fRawScalVal=fRawScalBank->GetItem("value");
     fRawScalHel=fRawScalBank->GetItem("helicity");
   }
+
+  fCurrent=0;
+  fHelicity=-1;
+  fTotCurrent=0;
   return kTRUE;
 }
 
@@ -70,9 +74,14 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
   //cout<<"THSHipoTrigger::ReadEvent("<<endl;    
 
-  if(!fHipo->NextEvent()) return kFALSE;
+  //Note include an extra fill in case there is an extra scaler current
+  if(!fHipo->NextEvent()) {
+    fWriteTree->Fill();PostWrite();
+    cout<<"THSHipoTrigger::ReadEvent total current for this file "<<fTotCurrent<<endl;
+    return kFALSE;}
   fEntry++;
  
+  fWriteThis=kFALSE; //don't write scaler events on their own, accumulate and write with other events
   RawScaler();//need to call this for every event to accumulate scalers
   
   //FT trigger
@@ -89,6 +98,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   //fSofFTTrig==2 only High
   if(fSoftFTTrig==1&&!fFTLow&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
   if(fSoftFTTrig==2&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
+  fWriteThis=kTRUE;
   //Similarily using fWriteThis can apply other trigger filters
 
   //Now check Event Builder Banks, -1 =>we have all ready got event
@@ -137,9 +147,10 @@ void  THSHipoTrigger::CreateBitPattern(long val)
 }
 void  THSHipoTrigger::RawScaler()
 {
-  cout<<"RawScaler "<<endl;
+  //  cout<<"RawScaler "<<endl;
   Double_t GatedFC=0;
   Double_t UnGatedFC=0;
+
   while(fRawScalBank->NextEntry()){
     if(fRawScalBank->GetEntry()<0) break;
     
@@ -148,15 +159,21 @@ void  THSHipoTrigger::RawScaler()
     if(fRawScalChan->Val()==0 && fRawScalSlot->Val()==1)
       GatedFC=fRawScalVal->Val();
 
-    fHelicity=fRawScalHel->Val();
-    cout<<"vls "<<UnGatedFC<<" "<<GatedFC<<" and hel "<<fHelicity<<endl;
+    if(fRawScalBank->GetEntry()==0) fHelicity=fRawScalHel->Val(); //this should be the same value for all entries...
+    //    cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;
   }
+  if(GatedFC==0) return;
+  cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;                         
+  
   if(fUseUnGated) GatedFC=UnGatedFC-GatedFC;
   Float_t trueFreq = GatedFC / (0.03333 - 0.0005);
   Float_t beamCurrent = (trueFreq-100)/906.2;
-   
+  cout<<fUseUnGated<<" "<<GatedFC<<" "<<UnGatedFC<<" "<<trueFreq<<" "<<beamCurrent<<endl;   
   fCurrent+=beamCurrent;
+  fTotCurrent+=fCurrent;
+
 }
 void  THSHipoTrigger::PostWrite(){
-  fCurrent=0;
+  fCurrent=0; //reset current 
+  //Leave helicity as it is
 }

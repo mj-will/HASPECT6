@@ -72,6 +72,7 @@ class THSHipoTrigger: public THSHipoReader{
   Float_t fPTime=0;;//Event Processing Time (UNIX Time = seconds)
   
   Float_t fCurrent=0;
+  Float_t fTotCurrent=0;
   Float_t fHelicity=0;
   
   Int_t fTrigBits[sizeof(int) * 8];
