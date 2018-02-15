@@ -3,10 +3,6 @@
 #include "THSHipoReader.h"
 
 THSHipoReader::THSHipoReader(){
-  cout<<"CONFIGURED TO RUN WITh EVENTBUILDER FROM COATJAVA 4a8.3"<<endl;
-  cout<<"This specifies the  DetectorType numbering scheme"<<endl;
-  cout<<"If the hipo file was created by a different version"<<endl;
-  cout<<"The detector information may not be correct"<<endl;
   fHipo = new THipo();
 
   //Make vectors to hold pointers to THSParticles
