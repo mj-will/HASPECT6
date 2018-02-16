@@ -119,6 +119,7 @@ class THipoBank  {
   //Iterate over entries for each event in item name
   Bool_t NextEntry();
   Int_t GetEntry(){return fEntry;}
+  Int_t GetEntries()
   THipoItem* GetItem(TString name);
   
   protected:
@@ -150,7 +151,7 @@ inline   void THipoBank::ClearEvent(){
   for(UInt_t i=0;i<fVecItems.size();i++) fVecItems.at(i)->Reset();
   fEntry=-1;
 }
-inline Bool_t THipoBank::GetEntries(){
+inline Int_t THipoBank::GetEntries(){
   if(fVecI.size()) return fVecI.size();
   if(fVecF.size()) return fVecF.size();
   return 0;
