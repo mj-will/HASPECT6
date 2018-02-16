@@ -119,7 +119,7 @@ class THipoBank  {
   //Iterate over entries for each event in item name
   Bool_t NextEntry();
   Int_t GetEntry(){return fEntry;}
-  Int_t GetEntries()
+  Int_t GetEntries();
   THipoItem* GetItem(TString name);
   
   protected:
