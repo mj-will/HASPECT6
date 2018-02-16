@@ -127,7 +127,7 @@ void THSDataManager::WriteParticles(TString filename){
   //Write all input events on 1 go
   InitOutput(filename);
   while(ReadEvent()){
-    if(fWriteThis){fWriteTree->Fill();PostWrite();}
+    if(fWriteThis&&fWriteTree){fWriteTree->Fill();PostWrite();}
     fWriteThis=kTRUE;
   }
   CloseOutput();
@@ -142,7 +142,7 @@ void THSDataManager::InitOutput(TString filename){
 }
 void THSDataManager::CloseOutput(){
   fWriteFile->cd();
-  fWriteTree->Write();
+  if(fWriteTree)fWriteTree->Write();
   fWriteFile->Close();
   delete fWriteFile;
   fWriteFile=nullptr;

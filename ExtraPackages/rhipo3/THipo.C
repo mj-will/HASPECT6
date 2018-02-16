@@ -228,6 +228,12 @@ THipoBank* THipo::GetBank(TString name){
   return fBanks[fBankMap[name]];
 };
 
+///Set fEntry back to -1 in all banks while staying on same event
+void THipo::ResetEntries(){
+  
+  for(UInt_t i=0;i<fBanks.size();i++)
+    fBanks[i]->ResetEntry();
+}
 ////////////////////////////////////////////////THipoBank
 THipoBank::~THipoBank(){
    for(UInt_t i=0;i<fVecItems.size();i++) delete fVecItems.at(i);

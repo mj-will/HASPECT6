@@ -79,11 +79,12 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   //Note include an extra fill in case there is an extra scaler current
   if(!fHipo->NextEvent()) {
     //End of file write the total current
-    fWriteTree->SetBranchStatus("*",0);
-    fWriteTree->SetBranchStatus("TotCharge",1);
-    fWriteTree->Fill();
-    fWriteTree->SetBranchStatus("*",1);
-   
+    if(fWriteTree){
+      fWriteTree->SetBranchStatus("*",0);
+      fWriteTree->SetBranchStatus("TotCharge",1);
+      fWriteTree->Fill();
+      fWriteTree->SetBranchStatus("*",1);
+    }
     cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
     cout<<"  at average of current of "<<fTotCharge/fNScalerReads/0.033<<"nA per read. "<<endl; 
     return kFALSE;

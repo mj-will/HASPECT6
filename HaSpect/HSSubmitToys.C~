@@ -1,0 +1,28 @@
+///////////////////////////////////////////////////
+///run with
+/// set the file name to the GenerateToys directory e.g.
+/// setenv FILEDIR $PWD/mcmc_test
+/// Set an extra directory to put output into e.g.
+/// setenv OUTDIR Run1
+/// The fitting script e.g.
+/// setenv RUNMAC $PWD/toyFit.C
+/// The last arguemnt =1 ->qsub 0 =>run local
+/// root 'HSSubmitToys.C(1,1)'
+void HSSubmitToys(Int_t Ntoys,Int_t toFarm=1){
+
+  //gSystem->Setenv("RUNMAC", TString(gSystem->Getenv("PWD"))+"/toyFit.C");
+  //gSystem->Setenv("OUTDIR",TString(gSystem->Getenv("OUTDIR")));
+   for(Int_t i=0;i<Ntoys;i++){
+    TString JobName=Form("Toy_%d",i);
+    cout<<"sending JobName "<<JobName<< endl;
+    gSystem->Setenv("JOBNAME",JobName);
+    if(toFarm)
+      gSystem->Exec("qsub pbs_run");
+    else
+      gSystem->Exec("./pbs_run");
+    gSystem->Exec("sleep 2");
+   
+  }
+  
+}
+ 

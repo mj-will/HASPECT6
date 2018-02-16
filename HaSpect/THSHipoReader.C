@@ -144,7 +144,10 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	particle->SetTime(fSTime->Val()-fRecEvSTTime->Val());
 	particle->SetDeltaE(fSEnergy->Val());
 	particle->SetPath(fSPath->Val()/100);
-	particle->SetDetector(1000*fSSector->Val());
+	if(fSDet->Val()>10) //FD
+	  particle->SetDetector(1000*fSSector->Val());
+	else //CD
+	  particle->SetDetector(10000);
      }
  	
       while(fCalPindex->FindEntry(fPBank->GetEntry())){

@@ -119,6 +119,7 @@ class THipoBank  {
   //Iterate over entries for each event in item name
   Bool_t NextEntry();
   Int_t GetEntry(){return fEntry;}
+  void ResetEntry(){fEntry=-1;}
   Int_t GetEntries();
   THipoItem* GetItem(TString name);
   
@@ -152,8 +153,8 @@ inline   void THipoBank::ClearEvent(){
   fEntry=-1;
 }
 inline Int_t THipoBank::GetEntries(){
-  if(fVecI.size()) return fVecI.size();
-  if(fVecF.size()) return fVecF.size();
+  if(fVecI.size()) return fVecI[0]->size();
+  if(fVecF.size()) return fVecF[0]->size();
   return 0;
 }
 inline Bool_t THipoBank::NextEntry(){
@@ -261,6 +262,7 @@ class THipo  {
    TString GetOutDirName(){return fOutDirName;}
    void CloseOutput();
    TTree* GetTree(){return fOutTree;}
+   void ResetEntries();
 };
 
 #endif

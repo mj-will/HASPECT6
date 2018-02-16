@@ -43,10 +43,10 @@ class THSDataManager{
   void SetReadGenBranch(TString name=""){fReadGName=name;fInGenerated=kTRUE;}
   void SetWriteGenBranch(TString name=""){fWriteGName=name;fAddGenerated=kTRUE;}
   virtual void InitOutput(TString filename);
-  void WriteEvent(){fWriteTree->Fill();}
-  void CloseOutput();
-  void ReadWriteChain(TChain* chain,TString OutDirName,TString FileAppend);
-  void CloseReadTree();
+  virtual void WriteEvent(){fWriteTree->Fill();}
+  virtual void CloseOutput();
+  virtual void ReadWriteChain(TChain* chain,TString OutDirName,TString FileAppend);
+  virtual void CloseReadTree();
   
   void AddUID(TString filename,TString treename="HSParticles"); //Add branch with unique ID to the HSParticles tree
   void SetUID(Long64_t val){UID=val;}
