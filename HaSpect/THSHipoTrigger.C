@@ -178,9 +178,11 @@ void  THSHipoTrigger::RawScaler()
   if(fUseUnGated) GatedFC=UnGatedFC-GatedFC;
   Float_t trueFreq = GatedFC / (0.03333 - 0.0005);
   Float_t beamCurrent = (trueFreq-100)/906.2/fCurFactor;
-  fCharge+=beamCurrent*0.033;//0.033ms scaler read
+
+  fCharge=beamCurrent*0.033;//0.033ms scaler read
   fTotCharge+=fCharge;
   fNScalerReads++;
+
 }
 void  THSHipoTrigger::PostWrite(){
   //fCharge=0; //reset charge 
