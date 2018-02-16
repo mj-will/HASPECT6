@@ -91,11 +91,9 @@ void THSHipoReader::CloseReadTree(){
   //noting to do for hipo files (I think)
 }
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
-  //return false at end of file
-  // LUND format:
-// Header (Event Info):
-// # of Particles, # of e, particle id, parent, daughter, p_x, p_y, p_z, E, mass, x vertex, y vertex, z vertex
-// type is 1 for particles in the detector
+  
+  //if entry ==-1 we have been called from a derived class who has
+  //already got the event 
   if(entry!=-1){
     if(!fHipo->NextEvent()) return kFALSE;
     fEntry++;
