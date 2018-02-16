@@ -150,6 +150,11 @@ inline   void THipoBank::ClearEvent(){
   for(UInt_t i=0;i<fVecItems.size();i++) fVecItems.at(i)->Reset();
   fEntry=-1;
 }
+inline Bool_t THipoBank::GetEntries(){
+  if(fVecI.size()) return fVecI.size();
+  if(fVecF.size()) return fVecF.size();
+  return 0;
+}
 inline Bool_t THipoBank::NextEntry(){
   //  cout<<"NEXt Entry for "<<GetName()<<" "<<fEntry<<" "<<fVecI[0]->size()<<endl;
   //try to iterate using first integer vector
