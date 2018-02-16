@@ -112,9 +112,9 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fWriteThis=kTRUE;
   //Similarily using fWriteThis can apply other trigger filters
 
-  //Now check Event Builder Banks, -1 =>we have all ready got event
+  //Now check Event Builder Banks, -2 =>we have all ready got event
   //Note that this funtion will call fEvBank->NextEntry()
-  THSHipoReader::ReadEvent(-1); 
+  THSHipoReader::ReadEvent(-2); 
 
   //cout<<"READING SCALARS"<<endl;
   //now other event scalars

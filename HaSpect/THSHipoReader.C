@@ -91,10 +91,9 @@ void THSHipoReader::CloseReadTree(){
   //noting to do for hipo files (I think)
 }
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
-  
-  //if entry ==-1 we have been called from a derived class who has
+  //if entry ==-2 we have been called from a derived class who has
   //already got the event 
-  if(entry!=-1){
+  if(entry!=-2){
     if(!fHipo->NextEvent()) return kFALSE;
     fEntry++;
   }
