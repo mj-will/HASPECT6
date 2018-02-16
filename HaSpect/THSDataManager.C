@@ -145,7 +145,10 @@ void THSDataManager::CloseOutput(){
   fWriteTree->Write();
   fWriteFile->Close();
   delete fWriteFile;
+  fWriteFile=nullptr;
+  fWriteTree=nullptr;
   
+
 }
 void THSDataManager::PrintEvent(Long64_t entry){
 

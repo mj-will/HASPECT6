@@ -24,7 +24,7 @@ class THSHipoTrigger: public THSHipoReader{
   void SetCurFactor(Float_t val){fCurFactor=val;}
   
   void  RawScaler();
- private :
+ protected :
 
   //banks
   THipoBank* fRunConBank=nullptr;
