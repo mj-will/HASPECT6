@@ -5,6 +5,7 @@
 
 #include <TH1.h>
 #include <TH2.h>
+#include <TGraph.h>
 #include "THSHipoTrigger.h"
 
 class THSHipoFTMon: public THSHipoTrigger{
@@ -40,6 +41,8 @@ class THSHipoFTMon: public THSHipoTrigger{
   Int_t GetSinglePim();
   Int_t GetSinglePip();
   void ScaleHistsByCharge();
+  void SaveSummaryData();
+  
  private :
 
   TList* fHistograms=nullptr;
@@ -61,19 +64,28 @@ class THSHipoFTMon: public THSHipoTrigger{
    THipoItem*  fFTHODOClust_id=nullptr;
    THipoItem*  fFTHODOClust_x=nullptr;
    THipoItem*  fFTHODOClust_y=nullptr;
+   THipoItem*  fFTHODOClust_z=nullptr;
    THipoItem*  fFTHODOClust_e=nullptr;
    THipoItem*  fFTHODOClust_t=nullptr;
+   THipoItem*  fFTHODOClust_size=nullptr;
    THipoItem*  fFTCALClust_id=nullptr;
    THipoItem*  fFTCALClust_x=nullptr;
    THipoItem*  fFTCALClust_y=nullptr;
    THipoItem*  fFTCALClust_e=nullptr;
    THipoItem*  fFTCALClust_t=nullptr;
+   THipoItem*  fFTCALClust_size=nullptr;
    THipoItem*  fFTREC_e=nullptr;
    THipoItem*  fFTREC_t=nullptr;
 
+   vector<TString> fFileNumbers;
+
  public :
-  
- 
+
+   void History(TChain* chain,TString outname);
+   void AddHistPoint(TH1F* his,Int_t i,Float_t val);
+   void GetFileNumbers(TChain* chain);
+   
+
 };
 
 #endif //ifdef THSHIPOTRIGGER

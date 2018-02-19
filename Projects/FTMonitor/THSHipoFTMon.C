@@ -1,5 +1,6 @@
 #include "THSHipoFTMon.h"
 #include <TCanvas.h>
+#include <TSystem.h>
 
 /*
  	\class THSFTMon
@@ -84,14 +85,23 @@ void THSHipoFTMon::Declare_FT_Histograms(){
   fHistograms->Add(new TH1F("FT_Ho-Ca_X","Cluster Hodo-Cal X difference ",100,-150,150));
   fHistograms->Add(new TH1F("FT_Ho-Ca_Y","Cluster Hodo-Cal Y difference ",100,-150,150));
   fHistograms->Add(new TH1F("FT_Ho-Ca_Time","Cluster Hodo-Cal Time difference ",100,-15,15));
-  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE","Cluster Cal Energy",100,0,15));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE0","Cluster Cal Energy neutral",100,0,15));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE1","Cluster Cal Energy Single Hodo",100,0,15));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE1a","Cluster Cal Energy Front Hodo",100,0,15));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE1b","Cluster Cal Energy Rear Hodo",100,0,15));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_CalE","Cluster Cal Energy charged",100,0,15));
   fHistograms->Add(new TH1F("FT_Ho-Ca_HodE","Cluster Hodo Energy",100,0,15));
   fHistograms->Add(new TH1F("FT_Ho-Ca_M2Gamma","FT 2 gamma invariant mass",200,0,1));
+  fHistograms->Add(new TH1F("FT_Ho-Ca_M2GammaB","FT 2 gamma invariant mass (single hodo)",200,0,1));
 
   fHistograms->Add(new TH1F("FT_Ca_Charge","FT charge",3,-1,1));
   fHistograms->Add(new TH2F("FT_Ca_YVX-","FT YVX charged",45,-170,170,45,-170,170));
   fHistograms->Add(new TH2F("FT_Ca_YVX0","FT YVX neutral",45,-170,170,45,-170,170));
-  
+   fHistograms->Add(new TH1F("FT_Ca_Size-","FT Cal Cluster Size charged",20,0,20));
+   fHistograms->Add(new TH1F("FT_Ho_Size-","FT Hodo Cluster Size charged",20,0,20));
+   fHistograms->Add(new TH1F("FT_Ca_Size0","FT Cal Cluster Size neutral",20,0,20));
+   fHistograms->Add(new TH1F("FT_Ho_Size0","FT Hodo Cluster Size neutral",20,0,20));
+ 
 
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -107,19 +117,30 @@ void THSHipoFTMon::Fill_FT_Histograms(){
     if(fFTPB_ch->Val()!=0&&fFTCALClustBank->GetEntry()>-1){
       Int_t hodo_id=fFTPB_hodoID->Val();
       fFTHODOClust_id->FindEntry(hodo_id);
-    
+  
       if(fFTCALClustBank->GetEntry()<0||fFTHODOClustBank->GetEntry()<0) return;
-      
+      //Histogram1D("FT_Ho_Size0")->Fill(fFTHODOClust_size->Val());
+    
       Histogram1D("FT_Ho-Ca_X")->Fill(fFTHODOClust_x->Val()-fFTCALClust_x->Val());
       Histogram1D("FT_Ho-Ca_Y")->Fill(fFTHODOClust_y->Val()-fFTCALClust_y->Val());
       Histogram1D("FT_Ho-Ca_HodE")->Fill(fFTHODOClust_e->Val());
       Histogram1D("FT_Ho-Ca_CalE")->Fill(fFTCALClust_e->Val());
+      if(fFTHODOClust_size->Val()==1)Histogram1D("FT_Ho-Ca_CalE1")->Fill(fFTCALClust_e->Val());
+      if(fFTHODOClust_z->Val()<1814)Histogram1D("FT_Ho-Ca_CalE1a")->Fill(fFTCALClust_e->Val());
+      if(fFTHODOClust_z->Val()>1825)Histogram1D("FT_Ho-Ca_CalE1b")->Fill(fFTCALClust_e->Val());
+
       Histogram1D("FT_Ho-Ca_Time")->Fill(fFTHODOClust_t->Val()-fFTCALClust_t->Val());
 
       Histogram2D("FT_Ca_YVX-")->Fill(fFTCALClust_x->Val(),fFTCALClust_y->Val());
+      Histogram1D("FT_Ho_Size-")->Fill(fFTHODOClust_size->Val());
+      Histogram1D("FT_Ca_Size-")->Fill(fFTCALClust_size->Val());
+
     }
     else if(fFTCALClustBank->GetEntry()>-1){
       Histogram2D("FT_Ca_YVX0")->Fill(fFTCALClust_x->Val(),fFTCALClust_y->Val());
+      Histogram1D("FT_Ca_Size0")->Fill(fFTCALClust_size->Val());
+      Histogram1D("FT_Ho-Ca_CalE0")->Fill(fFTCALClust_e->Val());
+      
     }
     // else cout<<"FT hit but no associated FTCalCluster???"<<endl; 
   }
@@ -152,6 +173,38 @@ void THSHipoFTMon::Fill_FT_Histograms(){
       
     }
     if(GotOne==2) Histogram1D("FT_Ho-Ca_M2Gamma")->Fill((gamma1+gamma2).M());
+  }
+  fFTParticlesBank->ResetEntry();
+
+  //Look for possible FT pi0 including single layer hodo hits
+  GotOne=0;
+  if(fFTParticlesBank->GetEntries()>1){
+    TLorentzVector gamma1;
+    TLorentzVector gamma2;
+    while(fFTParticlesBank->NextEntry()){
+      Int_t hodo_id=fFTPB_hodoID->Val();
+      fFTHODOClust_id->FindEntry(hodo_id);
+      if(fFTHODOClustBank->GetEntry()<0) continue;
+      if(fFTHODOClust_size->Val()<2&&GotOne==1){
+	gamma2.SetXYZM(fFTPB_cx->Val(),
+		       fFTPB_cy->Val(),
+		       fFTPB_cz->Val(),0);
+	gamma2.SetE(fFTPB_e->Val());
+ 	gamma2.SetRho(fFTPB_e->Val());
+	GotOne=2;
+	break;
+      }
+      if(fFTHODOClust_size->Val()<2&&!GotOne){
+	gamma1.SetXYZM(fFTPB_cx->Val(),
+		       fFTPB_cy->Val(),
+		       fFTPB_cz->Val(),0);
+	gamma1.SetE(fFTPB_e->Val());
+ 	gamma1.SetRho(fFTPB_e->Val());
+	GotOne++;
+      }
+      
+    }
+    if(GotOne==2) Histogram1D("FT_Ho-Ca_M2GammaB")->Fill((gamma1+gamma2).M());
   }
       //now reset
   fFTParticlesBank->ResetEntry();
@@ -290,13 +343,16 @@ Bool_t THSHipoFTMon::Init(TString filename,TString name){
     fFTHODOClust_id=fFTHODOClustBank->GetItem("id");
     fFTHODOClust_x=fFTHODOClustBank->GetItem("x");
     fFTHODOClust_y=fFTHODOClustBank->GetItem("y");
+    fFTHODOClust_z=fFTHODOClustBank->GetItem("z");
     fFTHODOClust_e=fFTHODOClustBank->GetItem("energy");
     fFTHODOClust_t=fFTHODOClustBank->GetItem("time");
+    fFTHODOClust_size=fFTHODOClustBank->GetItem("size");
     fFTCALClust_id=fFTCALClustBank->GetItem("id");
     fFTCALClust_x=fFTCALClustBank->GetItem("x");
     fFTCALClust_y=fFTCALClustBank->GetItem("y");
     fFTCALClust_e=fFTCALClustBank->GetItem("energy");
     fFTCALClust_t=fFTCALClustBank->GetItem("time");
+    fFTCALClust_size=fFTCALClustBank->GetItem("size");
    }
   
   return kTRUE;
@@ -320,8 +376,9 @@ void THSHipoFTMon::InitOutput(TString filename){
 void THSHipoFTMon::CloseOutput(){
   ScaleHistsByCharge();
   Export2PDF();
-  
   fWriteFile->cd();
+  SaveSummaryData();
+  
   fHistograms->Write();
   delete fWriteFile;
   fWriteFile=nullptr;
@@ -418,7 +475,7 @@ Int_t THSHipoFTMon::GetSinglePim(){
 ///Scale all histograms by the integrated charge for this file
 void THSHipoFTMon::ScaleHistsByCharge(){
 
-  for(UInt_t i=0;i<fHistograms->GetEntries();i++)
+  for(Int_t i=0;i<fHistograms->GetEntries();i++)
     ((TH1*)fHistograms->At(i))->Scale(1./fTotCharge);
 
 }
@@ -457,20 +514,36 @@ void THSHipoFTMon::Export2PDF(){
   canFTCh.Print(pdfname);
   
   TCanvas canFT("FT","FT Banks items");
-  canFT.Divide(3,2);
+  canFT.Divide(5,2);
   canFT.cd(1);
   Histogram1D("FT_Ho-Ca_X")->Draw("hist");
   canFT.cd(2);
   Histogram1D("FT_Ho-Ca_Y")->Draw("hist");
   canFT.cd(3);
   Histogram1D("FT_Ho-Ca_Time")->Draw("hist");
- 
   canFT.cd(4);
-  Histogram1D("FT_Ho-Ca_CalE")->Draw("hist");
+  Histogram1D("FT_Ca_Size-")->Draw("hist");
+  Histogram1D("FT_Ca_Size0")->SetLineColor(1);
+  Histogram1D("FT_Ca_Size0")->Draw("hist same");
   canFT.cd(5);
-  Histogram1D("FT_Ho-Ca_HodE")->Draw("hist");
+  Histogram1D("FT_Ho_Size-")->Draw("hist");
+
   canFT.cd(6);
+  Histogram1D("FT_Ho-Ca_CalE")->Draw("hist");
+  Histogram1D("FT_Ho-Ca_CalE1")->SetLineColor(2);
+  Histogram1D("FT_Ho-Ca_CalE1")->Draw("hist same");
+  Histogram1D("FT_Ho-Ca_CalE0")->SetLineColor(1);
+  Histogram1D("FT_Ho-Ca_CalE0")->Draw("hist same");
+  canFT.cd(7);
+  Histogram1D("FT_Ho-Ca_CalE1b")->Draw("hist");
+  Histogram1D("FT_Ho-Ca_CalE1a")->SetLineColor(2);
+  Histogram1D("FT_Ho-Ca_CalE1a")->Draw("hist same");
+  canFT.cd(8);
+  Histogram1D("FT_Ho-Ca_HodE")->Draw("hist");
+  canFT.cd(9);
   Histogram1D("FT_Ho-Ca_M2Gamma")->Draw("hist");
+  canFT.cd(10);
+  Histogram1D("FT_Ho-Ca_M2GammaB")->Draw("hist");
   canFT.Print(pdfname); //Close pdf file
 
   //FT Particle Histograms
@@ -507,4 +580,116 @@ void THSHipoFTMon::Export2PDF(){
  
   canP0.Print(pdfname+TString(")")); //Close pdf file
 
+}
+
+void THSHipoFTMon::SaveSummaryData(){
+  TTree* tree=new TTree("History","Summary data from FTMonitor");
+  //Get numbers, removing bins with 0 hits
+  Float_t NAll=Histogram1D("NParticles")->Integral(2,100);
+  Float_t NFT=Histogram1D("NFT")->Integral(2,10);
+  Float_t NPer=NFT/NAll*100;
+  Float_t NFT_trig=Histogram1D("NFT")->Integral(2,10);
+
+  Float_t MeanHodoE=Histogram1D("FT_Ho-Ca_HodE")->GetMean();
+  Float_t MeanCalE=Histogram1D("FT_Ho-Ca_CalE")->GetMean();
+  Float_t NFTpi0=Histogram1D("FT_Ho-Ca_M2Gamma")->Integral(Histogram1D("FT_Ho-Ca_M2Gamma")->FindFixBin(0.06),Histogram1D("FT_Ho-Ca_M2Gamma")->FindFixBin(0.15));
+  Float_t Np=Histogram1D("FT_Ca_Charge")->Integral(1,1);
+  Float_t MeanCurrent=fTotCharge/fNScalerReads/0.033;
+  
+  tree->Branch("NAll",&NAll,"NAll/F");
+  tree->Branch("NFT",&NFT,"NFT/F");
+  tree->Branch("NFT_trig",&NFT_trig,"NFT_trig/F");
+  tree->Branch("NPer",&NPer,"NPer/F");
+  tree->Branch("MeanHodoE",&MeanHodoE,"MeanHodoE/F");
+  tree->Branch("MeanCalE",&MeanCalE,"MeanCalE/F");
+  tree->Branch("NFTpi0",&NFTpi0,"NFTpi0/F");
+  tree->Branch("Np",&Np,"Np/F");
+  tree->Branch("TotCharge",&fTotCharge,"TotCharge/F");
+  tree->Branch("MeanCurrent",&MeanCurrent,"MeanCurrent/F");
+
+  fWriteFile->Write();
+  tree->Fill();
+  tree->Write();
+  
+}
+void THSHipoFTMon::History(TChain* chain,TString outname){
+
+  Float_t NAll;
+  Float_t NFT;
+  Float_t NPer;
+  Float_t NFT_trig;
+  Float_t MeanHodoE;
+  Float_t MeanCalE;
+  Float_t NFTpi0;
+  Float_t Np;
+  Float_t MeanCurrent;
+
+  chain->SetBranchAddress("NAll",&NAll);
+  chain->SetBranchAddress("NFT",&NFT);
+  chain->SetBranchAddress("NPer",&NPer);
+  chain->SetBranchAddress("NFT_trig",&NFT_trig);
+  chain->SetBranchAddress("MeanHodoE",&MeanHodoE);
+  chain->SetBranchAddress("MeanCalE",&MeanCalE);
+  chain->SetBranchAddress("NFTpi0",&NFTpi0);
+  chain->SetBranchAddress("Np",&Np);
+  chain->SetBranchAddress("MeanCurrent",&MeanCurrent);
+
+  TFile* fileh=new TFile(outname,"recreate");
+  Int_t Nent=chain->GetEntries();
+  TH1F* hNAll=new TH1F("NAll","Number of REC bank particles",Nent+1,0,Nent+1);
+  TH1F* hNFT=new TH1F("NFT","Number of REC bank FT particles",Nent+1,0,Nent+1);
+  TH1F* hNPer=new TH1F("NPer","Percentage of REC particles from FT",Nent+1,0,Nent+1);
+  TH1F* hNFT_trig=new TH1F("NFT_trig","Number of FT particles when FT makes trigger",Nent+1,0,Nent+1);
+  TH1F* hMeanHodoE=new TH1F("MeanHodoE","Mean Hodoscope Energy",Nent+1,0,Nent+1);
+  TH1F* hMeanCalE=new TH1F("MeanCalE","Mean Calorimter Energy",Nent+1,0,Nent+1);
+  TH1F* hNFTpi0=new TH1F("NFTpi0","Number of 2 gamma = #pi0 in FT ",Nent+1,0,Nent+1);
+  TH1F* hNp=new TH1F("Np","Number of charged particles in FT",Nent+1,0,Nent+1);
+  TH1F* hMeanCurrent=new TH1F("MeanCurrent","Mean Current",Nent+1,0,Nent+1);
+  
+  
+  for(Int_t i=0;i<Nent;i++){
+    chain->GetEntry(i);
+    AddHistPoint(hNAll,i,NAll);
+    AddHistPoint(hNFT,i,NFT);
+    AddHistPoint(hNPer,i,NPer);
+    AddHistPoint(hNFT_trig,i,NFT_trig);
+    AddHistPoint(hMeanHodoE,i,MeanHodoE);
+    AddHistPoint(hMeanCalE,i,MeanCalE);
+    AddHistPoint(hNFTpi0,i,NFTpi0);
+    AddHistPoint(hNp,i,Np);
+    AddHistPoint(hMeanCurrent,i,MeanCurrent);
+  }
+ 
+  hNAll->Write();
+  hNFT->Write();
+  hNPer->Write();
+  hNFT_trig->Write();
+  hMeanHodoE->Write();
+  hMeanCalE->Write();
+  hNFTpi0->Write();
+  hNp->Write();
+  hMeanCurrent->Write();
+  delete fileh;
+  
+}
+void THSHipoFTMon::AddHistPoint(TH1F* his,Int_t i,Float_t val){
+  his->SetBinContent(i+1,val);
+  cout<<i<<" "<<val<<endl;
+  his->GetXaxis()->SetBinLabel(i+1,fFileNumbers[i]);
+    
+}
+void THSHipoFTMon::GetFileNumbers(TChain* chain){
+
+  fFileNumbers.clear();
+
+  for(Int_t ifi=0;ifi<chain->GetNtrees();ifi++){
+    TString filen=chain->GetListOfFiles()->At(ifi)->GetTitle();
+    TString base(gSystem->BaseName(filen));
+    TString sNum0(base(base.First("0"),6));
+    TString sNum1(base(21,base.Sizeof()-32));
+    TString filabel=sNum0+"."+sNum1;
+    fFileNumbers.push_back(filabel);
+    cout<<filabel<<endl;
+  }
+    
 }
