@@ -8,4 +8,4 @@ setenv LZ4_h  /work/clas12/mesonex/lz4-1.7.5/lib
 alias hipo2root root -l $RHIPO/Hipo2Root.C
 alias allhipo2root root -l $RHIPO/Hipo2Root.C $RHIPO/ConvertAll.C
 alias hipo2hs root -l --hsdata $PWD/ConvertHSHipoChain.C
-alias hipo2ftmon  root --hsdata --THSHipoFTMon.C FTMonitor.C
+alias hipo2ftmon  root -l --hsdata --THSHipoFTMon.C FTMonitor.C
