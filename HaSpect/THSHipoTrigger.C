@@ -51,9 +51,8 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
 
 void THSHipoTrigger::InitOutput(TString filename){
   THSDataManager::InitOutput(filename);
-  fWriteTree->Branch("FTHigh",&fFTHigh,"FTHigh/I");
-  fWriteTree->Branch("FTLow",&fFTLow,"FTLow/I");
-
+  fWriteTree->Branch("TrigFT",&fTrigFT,"TrigFT/I");
+ 
 
   fWriteTree->Branch("NRun",&fNRun,"NRun/I");
   fWriteTree->Branch("NEvent",&fNEvent,"NEvent/I");
@@ -93,8 +92,8 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   
   fEntry++;
  
-  fWriteThis=kFALSE; //don't write scaler events on their own, accumulate and write with other events
-  RawScaler();//need to call this for every event to accumulate scalers
+  fWriteThis=kFALSE; //don't write scaler events on their own, accumulate and write at end or with other events
+  RawScaler();
   
   //FT trigger
   //cout<<"entry "<<fRunConBank->GetEntry()<<endl;
@@ -102,14 +101,20 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   if(fRunConBank->GetEntry()<0) return kTRUE; 
 
   CreateBitPattern(fRunTrig->Val());
-  fFTHigh=fTrigBits[30];
-  fFTLow=fTrigBits[29];
-
+  fTrigFT=0;
+  if(fTrigPeriod==0){//Engineering
+    fTrigFT+=fTrigBits[30];
+    fTrigFT+=fTrigBits[29];
+  }
+  else if(fTrigPeriod==1){//RG-A (02/18)
+    fTrigFT+=fTrigBits[23]*1;
+    fTrigFT+=fTrigBits[25]*2;
+    fTrigFT+=fTrigBits[26]*4;
+    fTrigFT+=fTrigBits[30]*8;
+  }
   //Apply filter on FT trigger
-  //fSofFTTrig==1 either Low or High
-  //fSofFTTrig==2 only High
-  if(fSoftFTTrig==1&&!fFTLow&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
-  if(fSoftFTTrig==2&&!fFTHigh){fWriteThis=kFALSE;return kTRUE;}
+  //fSofFTTrig==1 
+  if(fSoftFTTrig==1&&!fTrigFT){fWriteThis=kFALSE;return kTRUE;}
   fWriteThis=kTRUE;
   //Similarily using fWriteThis can apply other trigger filters
 
@@ -117,7 +122,6 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   //Note that this funtion will call fEvBank->NextEntry()
   THSHipoReader::ReadEvent(-2); 
 
-  //cout<<"READING SCALARS"<<endl;
   //now other event scalars
   if(fEvBank->GetEntry()<0) return kTRUE;
 
@@ -159,7 +163,6 @@ void  THSHipoTrigger::CreateBitPattern(long val)
 }
 void  THSHipoTrigger::RawScaler()
 {
-  //  cout<<"RawScaler "<<endl;
   Double_t GatedFC=0;
   Double_t UnGatedFC=0;
 
@@ -172,7 +175,6 @@ void  THSHipoTrigger::RawScaler()
       UnGatedFC=fRawScalVal->Val();
 
     if(fRawScalBank->GetEntry()==0) fHelicity=fRawScalHel->Val(); //this should be the same value for all entries...
-    //    cout<<"Vals "<<UnGatedFC<<" "<<GatedFC<<endl;
   }
   if(GatedFC==0) return;
   

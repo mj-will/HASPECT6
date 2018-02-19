@@ -20,6 +20,8 @@ class THSHipoTrigger: public THSHipoReader{
   
   void SetSoftFTTrig(Int_t trig){fSoftFTTrig=trig;}
   Int_t GetSoftFTTrig(){return fSoftFTTrig;}
+  void SetTrigPeriod(Int_t trig){fTrigPeriod=trig;}
+  Int_t GetTrigPeriod(){return fTrigPeriod;}
   void SetUseUnGated(){fUseUnGated=kTRUE;}
   void SetCurFactor(Float_t val){fCurFactor=val;}
   
@@ -55,8 +57,9 @@ class THSHipoTrigger: public THSHipoReader{
   
    //Trigger variables
   Int_t fSoftFTTrig=0;
-  Int_t fFTHigh=0; 
-  Int_t fFTLow=0;
+  Int_t fTrigPeriod=0;
+  Int_t fTrigFT=0; 
+ 
 
   Bool_t fUseUnGated=kFALSE; //temp fix for wrong DAQ scalers
   
