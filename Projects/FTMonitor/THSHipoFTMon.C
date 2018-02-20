@@ -97,6 +97,9 @@ void THSHipoFTMon::Declare_FT_Histograms(){
   fHistograms->Add(new TH1F("FT_Ca_Charge","FT charge",3,-1,1));
   fHistograms->Add(new TH2F("FT_Ca_YVX-","FT YVX charged",45,-170,170,45,-170,170));
   fHistograms->Add(new TH2F("FT_Ca_YVX0","FT YVX neutral",45,-170,170,45,-170,170));
+  fHistograms->Add(new TH2F("FT_Ca_YVX1a","FT YVX front HODO",45,-170,170,45,-170,170));
+  fHistograms->Add(new TH2F("FT_Ca_YVX1b","FT YVX rear HODO",45,-170,170,45,-170,170));
+  
    fHistograms->Add(new TH1F("FT_Ca_Size-","FT Cal Cluster Size charged",20,0,20));
    fHistograms->Add(new TH1F("FT_Ho_Size-","FT Hodo Cluster Size charged",20,0,20));
    fHistograms->Add(new TH1F("FT_Ca_Size0","FT Cal Cluster Size neutral",20,0,20));
@@ -126,9 +129,14 @@ void THSHipoFTMon::Fill_FT_Histograms(){
       Histogram1D("FT_Ho-Ca_HodE")->Fill(fFTHODOClust_e->Val());
       Histogram1D("FT_Ho-Ca_CalE")->Fill(fFTCALClust_e->Val());
       if(fFTHODOClust_size->Val()==1)Histogram1D("FT_Ho-Ca_CalE1")->Fill(fFTCALClust_e->Val());
-      if(fFTHODOClust_z->Val()<1814)Histogram1D("FT_Ho-Ca_CalE1a")->Fill(fFTCALClust_e->Val());
-      if(fFTHODOClust_z->Val()>1825)Histogram1D("FT_Ho-Ca_CalE1b")->Fill(fFTCALClust_e->Val());
-
+      if(fFTHODOClust_z->Val()<1814){
+	Histogram1D("FT_Ho-Ca_CalE1a")->Fill(fFTCALClust_e->Val());
+	Histogram2D("FT_Ca_YVX1a")->Fill(fFTCALClust_x->Val(),fFTCALClust_y->Val());
+      }
+      if(fFTHODOClust_z->Val()>1825){
+	Histogram1D("FT_Ho-Ca_CalE1b")->Fill(fFTCALClust_e->Val());
+ 	Histogram2D("FT_Ca_YVX1b")->Fill(fFTCALClust_x->Val(),fFTCALClust_y->Val());
+     }
       Histogram1D("FT_Ho-Ca_Time")->Fill(fFTHODOClust_t->Val()-fFTCALClust_t->Val());
 
       Histogram2D("FT_Ca_YVX-")->Fill(fFTCALClust_x->Val(),fFTCALClust_y->Val());
@@ -303,7 +311,6 @@ void THSHipoFTMon::Fill_Particle_Histograms(){
    }
 
 }
-
 
 /////////////////////////////////////////////////////////////////////////
 THSHipoFTMon::THSHipoFTMon(){
@@ -504,13 +511,17 @@ void THSHipoFTMon::Export2PDF(){
 
   //FT clusters Histograms
   TCanvas canFTCh("FTCh","FT Charge Dependent Banks items");
-  canFTCh.Divide(3,1);
+  canFTCh.Divide(3,2);
   canFTCh.cd(1);
   Histogram1D("FT_Ca_Charge")->Draw("hist");
   canFTCh.cd(2);
   Histogram2D("FT_Ca_YVX-")->Draw("col1");
   canFTCh.cd(3);
   Histogram2D("FT_Ca_YVX0")->Draw("col1");
+  canFTCh.cd(4);
+  Histogram2D("FT_Ca_YVX1a")->Draw("col1");
+  canFTCh.cd(5);
+  Histogram2D("FT_Ca_YVX1b")->Draw("col1");
   canFTCh.Print(pdfname);
   
   TCanvas canFT("FT","FT Banks items");
@@ -587,8 +598,8 @@ void THSHipoFTMon::SaveSummaryData(){
   //Get numbers, removing bins with 0 hits
   Float_t NAll=Histogram1D("NParticles")->Integral(2,100);
   Float_t NFT=Histogram1D("NFT")->Integral(2,10);
-  Float_t NPer=NFT/NAll*100;
-  Float_t NFT_trig=Histogram1D("NFT")->Integral(2,10);
+  Float_t NFT_trig=Histogram1D("NFT_trig")->Integral(2,10);
+  Float_t NPer=NFT_trig/NAll*100;
 
   Float_t MeanHodoE=Histogram1D("FT_Ho-Ca_HodE")->GetMean();
   Float_t MeanCalE=Histogram1D("FT_Ho-Ca_CalE")->GetMean();
