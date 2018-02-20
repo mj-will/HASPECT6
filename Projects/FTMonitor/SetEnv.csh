@@ -1,6 +1,6 @@
 setenv ROOTSYS /apps/root/6.10.02/root
 source /group/clas12/gemc/environment.csh  4a.2.1
-setenv HSANA /work/clas12/mesonex/HASPECT6
+setenv HSANA /work/clas12/mesonex/HASPECT6/HaSpect
 setenv RHIPO $HSANA/../ExtraPackages/rhipo3/
 setenv CHIPO /work/clas12/mesonex/libcpp
 setenv LD_LIBRARY_PATH "$LD_LIBRARY_PATH":/work/clas12/mesonex/lz4-1.7.5/lib
