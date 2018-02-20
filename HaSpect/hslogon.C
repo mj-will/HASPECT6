@@ -257,6 +257,9 @@ void HSdata(){
     LoadMacro("THSHipoReader.C");
     LoadMacro("THSHipoTrigger.C");
   }
+  if(gSystem->Getenv("FASTMCLIB")){
+    LoadMacro("THSCLAS12FastMC.C");
+  }
 }
 
 //////////////////////////////////
