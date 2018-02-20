@@ -1,0 +1,13 @@
+int ID=211
+float P=1.0
+float THETAD=10.
+float PHIS=20.
+float TORCUR=3400
+float D_PHI=0
+float WEIGHT=0
+int ICONF=0
+int IACC=1
+char CFILE="conf4.dat"
+gSystem->Load("./libFastMC.so")
+TFastMC::clas_at12g(ID,P,THETAD,PHIS,TORCUR,D_PHI,WEIGHT,ICONF,IACC)
+TFastMC::clas_at12g(ID,P,THETAD,PHIS,TORCUR,D_PHI,WEIGHT,CFILE)

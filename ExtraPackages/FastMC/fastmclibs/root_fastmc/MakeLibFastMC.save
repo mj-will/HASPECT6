@@ -1,0 +1,7 @@
+rm *.o
+rm libFastMC.so
+rootcint -f TFastMCDict.cxx -c TFastMC.hxx TFastMCLinkDef.h 
+g++ -fPIC -I/$ROOTSYS/include -o TFastMCDict.o TFastMCDict.cxx -c
+g++ -fPIC -I/$ROOTSYS/include -o TFastMC.o TFastMC.cxx -c
+g++ -o libFastMC.so -shared TFastMC.o  TFastMCDict.o -l gfortran ../fastmc/clasev/libfastmc.a    /phys/linux/dglazier/cernlib/2006/slc4_ia32_gcc4/lib/libpawlib.a /phys/linux/dglazier/cernlib/2006/slc4_ia32_gcc4/lib/libgraflib.a /phys/linux/dglazier/cernlib/2006/slc4_ia32_gcc4/lib/libkernlib.a /phys/linux/dglazier/cernlib/2006/slc4_ia32_gcc4/lib/libmathlib.a /phys/linux/dglazier/cernlib/2006/slc4_ia32_gcc4/lib/libpacklib.a -lnsl -lcrypt -ldl
+

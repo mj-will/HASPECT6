@@ -1,0 +1,7 @@
+rm *.o
+rm libFastMC.so
+rootcint -f TFastMCDict.cxx -c TFastMC.hxx TFastMCLinkDef.h 
+g++ -std=c++11 -fPIC -I/$ROOTSYS/include -o TFastMCDict.o TFastMCDict.cxx -c
+g++ -std=c++11 -fPIC -I/$ROOTSYS/include -o TFastMC.o TFastMC.cxx -c
+g++ -std=c++11 -o libFastMC.so -shared TFastMC.o  TFastMCDict.o -l gfortran ../fastmclibs/libfastmc.a    $CERNLIB/libpawlib.a $CERNLIB/libgraflib.a $CERNLIB/libkernlib.a $CERNLIB/libmathlib.a $CERNLIB/libpacklib.a -lnsl -lcrypt -ldl
+

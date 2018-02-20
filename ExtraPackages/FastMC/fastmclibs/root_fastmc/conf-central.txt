@@ -1,0 +1,28 @@
+
+May 25, 2005
+!I rerun central tracker and find momentum, phi and X resolutions!
+
+In subroutine field_const.for  which  I  checked out  yesterday we have:
+C  PARAMETERS OF THE FAST DIPOLE FOR THE CLAS++ CENTRAL DETECTOR
+        XMIN=0.0
+        XMAX=0.5
+        B0=5.0
+So, 5 T  is in CVS version of field_const.for
+
+I got these values for different options (particle was proton):
+
+a) 3 SVT planes -> sv90.dat (cvs version and change mass to proton mass)
+Delta_P/P:  Sigma_1=0.041 Sigma_2= 0.0074
+Delta_Phi:  Sigma_1=0.0057 Sigma_2= 0.0062
+Delta_X  :  Sigma_1=0.00024 Sigma_2= 0.00026
+
+b) 16 DC stereo planes -> hdc90.dat (cvs version)
+Delta_P/P:  Sigma_1=0.025 Sigma_2= 0.0032
+Delta_Phi:  Sigma_1=0.0050 Sigma_2= 0.0033
+Delta_X  :  Sigma_1=0.00033 Sigma_2= 0.00018
+
+c)  8 DC cathode pad chamber -> dc90.dat (cvs version)
+Delta_P/P:  Sigma_1=0.037 Sigma_2= 0.0072
+Delta_Phi:  Sigma_1=0.0072 Sigma_2= 0.0069
+Delta_X  :  Sigma_1=0.00045 Sigma_2= 0.00037
+
