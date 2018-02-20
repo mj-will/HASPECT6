@@ -153,8 +153,7 @@ void CleanAll(){
     gSystem->Exec(Form("rm %s/*.d",CHIPO.Data()));
     gSystem->Exec(Form("rm %s/*.pcm",CHIPO.Data()));
   }
-
-
+ 
 }
 
 /** Function is called with \--hsfit \n
@@ -258,6 +257,9 @@ void HSdata(){
     LoadMacro("THSHipoTrigger.C");
   }
   if(gSystem->Getenv("FASTMCLIB")){
+    TString fastmclib=gSystem->Getenv("FASTMCLIB");
+    gSystem->AddIncludePath(TString("-I")+fastmclib);
+    gSystem->Load(fastmclib+"/libFastMC.so");
     LoadMacro("THSCLAS12FastMC.C");
   }
 }
