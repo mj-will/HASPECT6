@@ -62,6 +62,7 @@ void hslogon(){
     TString opt=gApplication->Argv(i);
     //look for --proof=Nworkers optionif Nworkers not given all cores will be used
     if((opt.Contains("--cleanall"))) CleanAll();
+    if((opt.Contains("--fortran")))  gSystem->Load("libgfortran.so");
     
   }
   //check if additional macro dir given
