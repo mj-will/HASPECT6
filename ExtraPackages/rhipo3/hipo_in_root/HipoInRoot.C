@@ -34,7 +34,7 @@
   while(Hipo.NextEvent()){//loop over events
     //Loop over all the particles for this event and histogram
     Int_t pentry=0;
-    while(pentry=hBRecPart->NextEntry()){
+    while((pentry=hBRecPart->NextEntry())){
       particle.SetXYZM(hIpx->Val(),hIpy->Val(),hIpz->Val(),0);
       hisP->Fill(particle.P());
       hisTh->Fill(particle.Theta()*TMath::RadToDeg());
