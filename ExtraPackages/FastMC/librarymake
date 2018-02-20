@@ -15,5 +15,5 @@ g++ -std=c++11 -fPIC -o libFastMC.so -shared TFastMC.o  TFastMCDict.o -lgfortran
 
 cd ../../
 echo 'to run need setenv FASTMCLIB $PWD/fastmclibs/root_fastmc/'
-echo '            setenv LD_LIBRARY_PATH $FASTMCLIB:$LD_LIBRARY_PATH'
+echo '            setenv LD_LIBRARY_PATH $FASTMCLIB":"$LD_LIBRARY_PATH'
 echo '   You can test with : root $FASTMCLIB/libFastMC.so MapAll.C'
