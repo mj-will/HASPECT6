@@ -5,7 +5,8 @@ Bool_t THSCLAS12FastMC::Init(TString filename,TString name){
   THSLundReader::Init(filename,name);
 
   gSystem->Exec("ln -s $FASTMCLIB/conf5.dat conf5.dat");
- 
+
+  return kTRUE;
 }
 
 Bool_t THSCLAS12FastMC::ReadEvent(Long64_t entry){
@@ -32,16 +33,21 @@ Bool_t THSCLAS12FastMC::ReadEvent(Long64_t entry){
      Float_t WEIGHT=0;
      TFastMC::clas_at12g(fGenerated[i]->PDG(),P1,THETAD1,PHIS1,fTORUS,0,WEIGHT,fCFILE.Data());
      if(WEIGHT){
-       fParticles.push_back(fReadParticles->at(i));
+       THSParticle* hs=fReadParticles->at(i);
+       TLorentzVector* hs4=hs->P4p();
+       fParticles.push_back(hs);
        Double_t Mass=vec->M();
-       fParticles.back()->P4p()->SetVect(TVector3(0,0,1));
-       fParticles.back()->P4p()->SetE(sqrt(P1*P1+Mass*Mass)); 	  
-       fParticles.back()->P4p()->SetRho(P1);
-       fParticles.back()->P4p()->SetPhi(PHIS1*TMath::DegToRad());
-       fParticles.back()->P4p()->SetTheta(THETAD1*TMath::DegToRad());
-       fParticles.back()->SetPDGcode(fGenerated[i]->PDG());
-       fParticles.back()->SetTruth(*vec,fGenerated[i]->Vertex(),fGenerated[i]->PDG());
+      
+       hs4->SetVectM(TVector3(0,1,1),0);
+       hs4->SetE(sqrt(P1*P1+Mass*Mass)); 	  
+       //hs4->SetE(P1); 	  
+       hs4->SetRho(P1);
+       hs4->SetPhi(PHIS1*TMath::DegToRad());
+       hs4->SetTheta(THETAD1*TMath::DegToRad());
+       hs->SetPDGcode(fGenerated[i]->PDG());
+       hs->SetTruth(*vec,fGenerated[i]->Vertex(),fGenerated[i]->PDG());
        if(THETAD0<5)fParticles.back()->SetDetector(-100);
+       else if(THETAD0>35)fParticles.back()->SetDetector(10000);
        else fParticles.back()->SetDetector(1000);
  
      }
