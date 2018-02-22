@@ -367,6 +367,7 @@ Bool_t THSHipoFTMon::Init(TString filename,TString name){
 ////////////////////////////////////////////////////////////////////
 ///Initialise the output file and declare all histograms
 void THSHipoFTMon::InitOutput(TString filename){
+  
   fWriteFile=new TFile(filename,"recreate");
   fHistograms=new TList();
   fHistograms->SetName("FTMon Histograms");
@@ -696,7 +697,7 @@ void THSHipoFTMon::GetFileNumbers(TChain* chain){
   for(Int_t ifi=0;ifi<chain->GetNtrees();ifi++){
     TString filen=chain->GetListOfFiles()->At(ifi)->GetTitle();
     TString base(gSystem->BaseName(filen));
-    TString sNum0(base(base.First("0"),6));
+    TString sNum0(base(9,6));//e.g. out_clas_002835
     TString sNum1(base(21,base.Sizeof()-32));
     TString filabel=sNum0+"."+sNum1;
     fFileNumbers.push_back(filabel);

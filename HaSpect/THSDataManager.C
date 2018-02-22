@@ -107,12 +107,13 @@ Bool_t THSDataManager::ReadEvent(Long64_t entry){
 }
 void THSDataManager::ReadWriteChain(TChain* chain,TString OutDirName,TString FileAppend){
   //loop over all files in chain
-  TObjArray *files=chain->GetListOfFiles();
+  fChainFiles=chain->GetListOfFiles();
 
-  Info("THSDataManager::ReadWriteChain"," Will proceess all %d files in chain and put in %s with %s appended",files->GetEntries(),OutDirName.Data(),FileAppend.Data());
+  Info("THSDataManager::ReadWriteChain"," Will proceess all %d files in chain and put in %s with %s appended",fChainFiles->GetEntries(),OutDirName.Data(),FileAppend.Data());
   
-  for(Int_t i=0;i<files->GetEntries();i++){
-    TString fname=files->At(i)->GetTitle();
+  for(Int_t i=0;i<fChainFiles->GetEntries();i++){
+    fChainFileN=i;
+    TString fname=fChainFiles->At(i)->GetTitle();
     Init(fname,chain->GetName());
     TString outfile=gSystem->BaseName(fname);
     //  outfile.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);

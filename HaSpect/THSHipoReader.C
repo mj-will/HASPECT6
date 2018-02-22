@@ -1,6 +1,7 @@
 #include <sstream>
 #include <string>
 #include "THSHipoReader.h"
+#include <TSystem.h>
 
 THSHipoReader::THSHipoReader(){
   fHipo = new THipo();
@@ -90,6 +91,49 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
 void THSHipoReader::CloseReadTree(){
   //noting to do for hipo files (I think)
 }
+void THSHipoReader::WriteParticles(TString filename){
+  //CLAS file names ~ out_clas_003311.evio.3.hipo ~out_clas_RUNNO.evio.FILENO.hipo
+  //Want the option to write all files into 1 run output file
+  //Write all input events on 1 go
+
+  //Initialise
+  Int_t run_number=GetRunNumber(filename);
+  if(!fCombineFiles) //only merge files if fCombineFiles=kTRUE
+     InitOutput(filename);
+  else if(run_number!=fRunNumber){
+    TString basen=gSystem->BaseName(filename);
+    TString runname(basen(0,16));//out_clas_NNNNNN.
+    runname.Append("root");
+    runname.Prepend(TString(gSystem->DirName(filename))+"/");
+    cout<<"THSHipoReader::WriteParticles Actually write to "<<runname<<endl;
+    InitOutput(runname);
+    fRunNumber=run_number;
+  }
+
+  //Loop over events
+  while(ReadEvent()){
+    if(fWriteThis&&fWriteTree){fWriteTree->Fill();PostWrite();}
+    fWriteThis=kTRUE;
+  }
+
+  //Close
+  if(!fCombineFiles) //only merge files if fCombineFiles=kTRUE
+    CloseOutput();
+  else if(fChainFileN+1<fChainFiles->GetEntries()){
+    TString nextfname=fChainFiles->At(fChainFileN+1)->GetTitle();
+    if(GetRunNumber(nextfname)!=fRunNumber)
+      CloseOutput();
+  }
+  else
+    CloseOutput();//last file
+}
+Int_t THSHipoReader::GetRunNumber(TString filen){
+  TString base(gSystem->BaseName(filen));
+  TString sNum0(base(base.First("0"),6));
+  return sNum0.Atoi();
+}
+
+
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
   //if entry ==-2 we have been called from a derived class who has
   //already got the event 

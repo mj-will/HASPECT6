@@ -1,8 +1,9 @@
 ///Run with root --hsdata FTMonitor.C.C --hsin=/path/to/hipo/files --hsout=/path/to/output/root/files
 {
   THSHipoFTMon* reader=new THSHipoFTMon();
-  reader->SetUseUnGated(); //TEMP HACK!!!!
-  reader->SetTrigPeriod(0); //0=Enginnering; 1=RG-A 02/18;...
+  //reader->SetUseUnGated(); //TEMP HACK!!!!
+  reader->SetTrigPeriod(1); //0=Enginnering; 1=RG-A 02/18;...
+  reader->SetCombineFiles();
   
 
   ///////////////////////////////////////////////////////////////////

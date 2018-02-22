@@ -19,8 +19,11 @@ class THSHipoReader: public THSDataManager{
   virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
   virtual void CloseReadTree();
-  void SetUsePID(Bool_t use=kTRUE){fUsePID=use;}
+  virtual void WriteParticles(TString filename);
+  // void SetUsePID(Bool_t use=kTRUE){fUsePID=use;}
   
+  Int_t GetRunNumber(TString filen);
+  void SetCombineFiles(Bool_t setf=kTRUE){fCombineFiles=kTRUE;};
  protected :
   
   THipo *fHipo=nullptr;
@@ -76,7 +79,8 @@ class THSHipoReader: public THSDataManager{
   THipoItem* fMCVz=nullptr;
 
   Bool_t fUsePID=kTRUE;
-  
+  Bool_t fCombineFiles=kFALSE;
+  Int_t fRunNumber=0;
  public :
   
  

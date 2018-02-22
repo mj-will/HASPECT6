@@ -75,7 +75,8 @@ class THSDataManager{
   Bool_t fWriteThis=kTRUE; //write this event?
   TFile* fWriteFile=0;
   TTree* fWriteTree=0;
-  
+  TObjArray *fChainFiles=nullptr; //list of filenames to be processed
+  Int_t fChainFileN=0;//index of current chain file
   //VECTORS (TTREEREADERARRAYS) FOR DEFAULT TREE READING
   TTreeReader fTReader;
   TTreeReaderArray<THSParticle> fTParticles{fTReader, "Particles"};
