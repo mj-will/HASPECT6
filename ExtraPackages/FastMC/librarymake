@@ -2,7 +2,8 @@ cd fastmclibs
 
 rm -f ./libfastmc.a
 
-gfortran  -c -fPIC clas_at12g.F  read_par_clas12g.F accep_fun_ft.F smear_fun_ft.F   `cernlib pawlib graflib kernlib mathlib packlib` -ldl
+gfortran  -c -fPIC clas_at12g.F  read_par_clas12g.F accep_fun_ft.F smear_fun_ft.F
+
 ar r libfastmc.a clas_at12g.o  read_par_clas12g.o accep_fun_ft.o smear_fun_ft.o
 
 cd root_fastmc
