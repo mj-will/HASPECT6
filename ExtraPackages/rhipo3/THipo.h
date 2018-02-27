@@ -139,7 +139,11 @@ class THipoBank  {
   map<TString,Int_t > fItemMap; 
   map<TString,Bool_t > fFloatMap; 
 
-    
+  vector<vector<Int_t>* > fWrVecI; //write branch vector
+  vector<vector<Long_t>* > fWrVecL; //write branch vector
+  vector<vector<Short_t>* > fWrVecS; //write branch vector
+  vector<vector<Char_t>* > fWrVecB; //write branch vector
+  
   Int_t fEntry=-1;
   
   private:
@@ -150,6 +154,12 @@ inline   void THipoBank::ClearEvent(){
   for(UInt_t i=0;i<fVecI.size();i++) fVecI.at(i)->clear();
   for(UInt_t i=0;i<fVecF.size();i++) fVecF.at(i)->clear();
   for(UInt_t i=0;i<fVecItems.size();i++) fVecItems.at(i)->Reset();
+
+  for(UInt_t i=0;i<fWrVecI.size();i++) fWrVecI.at(i)->clear();
+  for(UInt_t i=0;i<fWrVecL.size();i++) fWrVecL.at(i)->clear();
+  for(UInt_t i=0;i<fWrVecS.size();i++) fWrVecS.at(i)->clear();
+  for(UInt_t i=0;i<fWrVecB.size();i++) fWrVecB.at(i)->clear();
+
   fEntry=-1;
 }
 inline Int_t THipoBank::GetEntries(){
@@ -184,13 +194,19 @@ inline  void THipoBank::ReadItemI(hipo::event *event,UInt_t ii){
   if(fTypeI[ii][0]=='L'){
     vector<Long_t> vecl=event->getLong(fGroup,IdxI(ii));
     //cout<<vecl.size()<<endl;
-    for(UInt_t iv=0;iv<vecl.size();iv++)
+    for(UInt_t iv=0;iv<vecl.size();iv++){
       (fVecI.at(ii))->push_back(vecl.at(iv));
+      (fWrVecL.at(ii))->push_back(vecl.at(iv));
+    }
     return;
   }
   vector<Int_t> vec=event->getInt(fGroup,IdxI(ii));
-  for(UInt_t iv=0;iv<vec.size();iv++)
+  for(UInt_t iv=0;iv<vec.size();iv++){
     (fVecI.at(ii))->push_back(vec.at(iv));
+    if(fTypeI[ii][0]=='I')(fWrVecI.at(ii))->push_back(vec.at(iv));
+    else if(fTypeI[ii][0]=='S')(fWrVecS.at(ii))->push_back(vec.at(iv));
+    else if(fTypeI[ii][0]=='B')(fWrVecB.at(ii))->push_back(vec.at(iv));
+  }
 }
 inline  void THipoBank::ReadItemF(hipo::event *event,UInt_t ii){
   // Int_t type= event->getNodeType(event->getNodeAddress(fGroup,IdxI(ii)));

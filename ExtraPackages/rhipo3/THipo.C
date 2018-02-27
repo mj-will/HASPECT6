@@ -105,11 +105,6 @@ void THipo::ToRoot(TString filename){
   cout<<"THipo::ToRoot Number of records "<<fNRecords<<endl;
   //if perviously defined by user configuration or previous hipo file
   if(fBanks.size()==0)ConfigBanks();
-  // if(fBanks.size()==0)ConfigAllBanks();
-  //filename.ReplaceAll(".hipo.3",".root");
-  // TString append=filename(filename.Last('.')+1,filename.Sizeof());
-  // if(append!=TString("hipo")
-  //    filename=filename(0,filename.Last('.'));
   filename.ReplaceAll(".hipo",".root");
 
   //Append the output directory name
@@ -245,11 +240,20 @@ THipoBank::~THipoBank(){
    fItemsI.clear();
    fTypeI.clear();
    fItemsF.clear();
+   fWrVecI.clear();
+   fWrVecL.clear();
+   fWrVecS.clear();
+   fWrVecB.clear();
 }
 void THipoBank::AddIntItem(TString name,Int_t id,TString type){
   fItemsI.push_back(name);
   fTypeI.push_back(type);
   fVecI.push_back(new vector<Long_t >);
+  
+  fWrVecI.push_back(new vector<Int_t >);
+  fWrVecL.push_back(new vector<Long_t >);
+  fWrVecS.push_back(new vector<Short_t >);
+  fWrVecB.push_back(new vector<Char_t >);
   //  fVecI.push_back(new vector<Int_t >);
   fItemMap[name]=fIndexI.size();
   fIndexI.push_back(id);
@@ -268,25 +272,27 @@ void THipoBank::InitTree(TTree* tree){
     TString branchname=fName;
     branchname.ReplaceAll("::","_");
     branchname.ReplaceAll(" ","");
-    // if(fTypeI[in].Contains("SHORT")){
-    //   vector<Short_t>* vecptr=reinterpret_cast<vector<Short_t >*>(fVecI.at(in));
-    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    // }
-    // else if(fTypeI[in].Contains("BYTE")){
-    //   vector<Char_t>* vecptr=reinterpret_cast<vector<Char_t >*>(fVecI.at(in));
-    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    // }
-    // else if(fTypeI[in].Contains("INT")){
-    //   vector<Int_t>* vecptr=reinterpret_cast<vector<Int_t >*>(fVecI.at(in));
-    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    // }
-    // else {
-    //   vector<Long_t>* vecptr=(fVecI.at(in));
-    //   tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    // }
-    //vector<Long_t>* vecptr=(fVecI.at(in));
-    // tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
-    tree->Branch(branchname+"_"+fItemsI.at(in),&(fVecI.at(in)));   
+    if(fTypeI[in].Contains("SHORT")){
+      // vector<Short_t>* vecptr=reinterpret_cast<vector<Short_t >*>(fVecI.at(in));
+      //fWrVecI.push_back(new vector<Int_t>);
+      tree->Branch(branchname+"_"+fItemsI.at(in),fWrVecS.at(in));
+    }
+    else if(fTypeI[in].Contains("BYTE")){
+      // vector<Char_t>* vecptr=reinterpret_cast<vector<Char_t >*>(fVecI.at(in));
+      //      tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+       tree->Branch(branchname+"_"+fItemsI.at(in),fWrVecB.at(in));
+     }
+    else if(fTypeI[in].Contains("INT")){
+      //vector<Int_t>* vecptr=reinterpret_cast<vector<Int_t >*>(fVecI.at(in));
+      //tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+       tree->Branch(branchname+"_"+fItemsI.at(in),fWrVecI.at(in));
+     }
+    else {
+      // vector<Long_t>* vecptr=(fVecI.at(in));
+      //tree->Branch(branchname+"_"+fItemsI.at(in),vecptr);
+       tree->Branch(branchname+"_"+fItemsI.at(in),fWrVecL.at(in));
+     }
+    //   tree->Branch(branchname+"_"+fItemsI.at(in),&(fVecI.at(in)));   
   }
   //Make a branch for each float item
   for(UInt_t fn=0;fn<NFloat();fn++){
