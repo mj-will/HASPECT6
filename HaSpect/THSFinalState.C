@@ -498,6 +498,7 @@ void THSFinalState::AutoIter(){
   //Topo definition will be list of PDG values expect for particles
   //specified by charge, where the charge will be given instead
   vector<Int_t >* thisTopo = fCurrTopo->Definition();
+  vector<Int_t >* trueTopo = fCurrTopo->True(); //always PDG values
 
   cout<<" WARNING running THSFinalState::AutoIter() you  should check the topology print output and make sure the displayed iterator is waht you want .."<<endl;
   
