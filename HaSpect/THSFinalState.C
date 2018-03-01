@@ -524,6 +524,8 @@ void THSFinalState::AutoIter(){
     cout<<"Look through configs "<<fConfigs.size()<<endl;
     for(UInt_t jp=0;jp<fConfigs.size();jp++){
       if(fConfigs[jp]->GetNChild())continue; //not a detected particle
+      //make sure this particle is in the true topology
+      if(std::count(trueTopo->begin(),trueTopo->end(),fConfigs[jp]->PDG())==0) continue;
       //found a particle with this particle identification
       if(fCurrTopo->ParticleID(fConfigs[jp]->PDG())==pid){
 	Nconfig_pid++;

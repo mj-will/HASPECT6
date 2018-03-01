@@ -103,14 +103,14 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   CreateBitPattern(fRunTrig->Val());
   fTrigFT=0;
   if(fTrigPeriod==0){//Engineering
-    fTrigFT+=fTrigBits[30];
-    fTrigFT+=fTrigBits[29];
+    fTrigFT+=fTrigBits[30]*1;
+    fTrigFT+=fTrigBits[29]*2;
   }
   else if(fTrigPeriod==1){//RG-A (02/18)
-    fTrigFT+=fTrigBits[23]*1;
-    fTrigFT+=fTrigBits[25]*2;
-    fTrigFT+=fTrigBits[26]*4;
-    fTrigFT+=fTrigBits[30]*8;
+    fTrigFT+=fTrigBits[23]*8;
+    fTrigFT+=fTrigBits[25]*4;
+    fTrigFT+=fTrigBits[26]*2;
+    fTrigFT+=fTrigBits[30]*1;
   }
   //Apply filter on FT trigger
   //fSofFTTrig==1 
