@@ -532,7 +532,7 @@ void THSFinalState::AutoIter(){
 	Nconfig_pid++;
 	if(std::count(types.begin(),types.end(),fConfigs[jp]->PDG())==0){
 	  //Found a new PDG type
-	  cout<<"new type "<<endl;
+	  cout<<"new type "<<fConfigs[jp]->PDG()<<endl;
 	  ntype++;
 	  types.push_back(fConfigs[jp]->PDG());
 	  vector<THSParticleConfig* > new_one;
@@ -565,9 +565,11 @@ void THSFinalState::AutoIter(){
  	  //Now look to see if there are identical particle of this parent type
 	  //We do not want to double count these
 	  vector<THSParticleConfig* > all_parents=HowManyParticles(parent->PDG());
+	  cout<<"Parents "<<all_parents.size()<<" "<<child->PDG()<<" "<<child_pdg.size()<<endl;
 	  Int_t NUsedParents=1;
 	  for(UInt_t io=0;io<all_parents.size();io++){
 	    if(all_parents[io]==parent)continue; //don't count this one again
+	    if(all_parents[io]->Parent()||parent->Parent())continue; //Has a parent so should not include here as it is not identical
 	    vector<THSParticle* > child_other=all_parents[io]->Children(child->PDG());
 	    //   if(child_pdg.size()+child_other.size()>N_pid)//not enough for all parents
 	    if(N_pid==0)//not enough for all parents

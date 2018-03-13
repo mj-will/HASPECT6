@@ -23,6 +23,11 @@
 #include <algorithm>      // std::sort
 #include <list>     
 
+namespace HS{
+  TList* gRooFits=new TList();//when moving between different root scripts
+  THSRooFit* gRF= nullptr;//when moving between different root scripts
+}
+
 ClassImp(THSRooFit);
 
 
@@ -414,8 +419,11 @@ void THSRooFit::LoadSpeciesPDF(TString opt,Int_t Scale0){
   fYields.add(*(fWS->factory(fYld+opt+Form("[%d,0,1E12]",Scale0))));//default yields limits
 }
 void THSRooFit::TotalPDF(){
-  cout<<"THSRooFit::TotalPDF()"<<endl;
+  cout<<"THSRooFit::TotalPDF() "<<fWS<<" "<<fModel<<endl;
+  if(fModel)fModel->Print();
   fPDFs.Print();
+  cout<<"yields"<<endl;
+  cout<<fYields.getSize()<<endl;
   fYields.Print();
   //Construct a total PDF whcih is the sum of the species PDFs
   RooAddPdf model(fName+"TotalPDF","total model",
@@ -435,7 +443,7 @@ void THSRooFit::TotalPDF(){
   fYields[0].Print();
   AddFitOption(RooFit::Extended());
   fWS->Print();
- }
+}
 void THSRooFit::Fit(Bool_t randPar){   
   Info("THSRooFit::Fit()"," Starting");
   if(!fData){
@@ -823,6 +831,8 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   RFa->SetStudyPDF(fStudyPDF);
   RFa->SetStudyPlot(fStudyPlot);
   RFa->SetCut(fCut);
+  RFa->SetFitMethod(fFitMethod);
+  RFa->SetNMCMC(fNMCMC);
   //Done configuring RF
   fRooFits->Add(RFa);
   RFa->LoadWorkSpace(fWS,GetName());
@@ -836,8 +846,7 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));
   else RFa->LoadDataSet(ctree);//use whole tree
-
-  saveDir->cd();
+   saveDir->cd();
   RFa->SetDataWeight();//if defined weights use them for this dataset
   return RFa;
 }
@@ -903,6 +912,9 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
     TChain *chainData=new TChain("BinnedTree");
     chainData->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
     cout<<"Data chain "<<GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
+    // TFile* binDFile=new TFile(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
+    // TTree* chainData=(TTree*)binDFile->Get("BinnedTree");
+    
     THSRooFit* rf=CreateSubFitBins(chainData,GetBins()->GetBinName(ib),kFALSE);
      //look for RooHSEventsPDFs to get MC events trees
     for(Int_t ip=0;ip<fPDFs.getSize();ip++){
@@ -916,10 +928,14 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
 	//pdf has ownership of chain when set
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
 	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+	//	TFile* binMCFile=new TFile(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
+	//TTree* chainMC=(TTree*)binMCFile->Get("BinnedTree");
 
 	hspdf->SetEvTree(chainMC,fCut);
-	hspdf->AddProtoData(rf->GetDataSet());
+	//hspdf->AddProtoData(rf->GetDataSet());
+	//	exit(0);
 	delete chainMC;
+	//delete binMCFile;
       }
     } 
     //Configured the fir for this bin now do it
@@ -930,8 +946,8 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
       delete rf;rf=nullptr;
       delete chainData;chainData=nullptr;
     }
+    //delete binDFile;
   }
-  
 }
 void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
   if(!fDataBins->GetN()) return;

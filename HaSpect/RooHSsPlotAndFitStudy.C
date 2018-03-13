@@ -79,6 +79,7 @@ Bool_t RooHSsPlotAndFitStudy::attach(RooWorkspace& w) {
   fGenRooFit->LoadWorkSpace(&w);
   fGenRooFit->SetOutDir(fOutDir);
   fGenRooFit->SetPlot(fIsPlot);
+  // fGenRooFit->TotalPDF();
   for(Int_t isp=0;isp<fsPlots->GetEntries();isp++){
     THSsPlot* sp=((THSsPlot*)fsPlots->At(isp));
     sp->LoadWorkSpace(&w);
@@ -118,13 +119,16 @@ Bool_t RooHSsPlotAndFitStudy::initialize()
 Bool_t RooHSsPlotAndFitStudy::execute() 
 {
   cout<<"RooHSsPlotAndFitStudy::execute() "<<fGenRooFit<<" "<<fHSRooFit<<" "<<fsPlots->GetEntries()<<endl;
-
+  cout<<fGenRooFit->GetModel()<<endl;
+  fGenRooFit->GetModel()->Print();
   //generate pseudo data set
   fWS->loadSnapshot("initial");//load initial parameters
-
+  //fGenRooFit->TotalPDF();
   //Number of events to generate
   Long64_t nexp=RooRandom::randomGenerator()->Poisson(fGenRooFit->GetModel()->expectedEvents(fGenRooFit->GetVariables()));
-
+  //
+  fGenRooFit->GetModel()->Print();
+  fGenRooFit->GetVariables().Print();
   //Generate a full signal+ background data set
   RooDataSet* DS=fGenRooFit->GetModel()->generate(fGenRooFit->GetVariables(),nexp);
   Info("RooHSsPlotAndFitStudy::execute() ","generated pseudo data :");

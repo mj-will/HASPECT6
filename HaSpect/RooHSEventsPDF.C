@@ -543,6 +543,8 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   cout<<"Add branches "<<endl;
   while(RooAbsArg* arg=(RooAbsArg*)iter()){
     if(fEvTree->GetBranch(arg->GetName())) continue; //already exists
+    if(TString("UID")==TString(arg->GetName())) continue; //already exists
+    
     if(dynamic_cast<RooAbsCategory*>(arg)){
       index.push_back(NI+ND);
       Int_t tempI=0;

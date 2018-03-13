@@ -55,9 +55,9 @@ Bool_t THSParticleIter::NextCombitorial(){
   if(fCombi.GetType()==2){ //for selections with more requested than in allparticles, add extra particles (with zero energy etc)
     while(vec_combi.size()<UInt_t(fNSel)){
       vec_combi.push_back(fExtraParticle);
-    }
+    }	
     fSelected=fCombi.Next(&vec_combi,fNSel,fNIdentical);
-    }
+    }	
   //cout<<fSelected.size()<<endl;
   else fSelected=fCombi.Next(fAllParticles,fNSel,fNIdentical);
   //update selected and remaining particles

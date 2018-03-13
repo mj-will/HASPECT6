@@ -14,6 +14,8 @@
 #include <TLegend.h>
 #include <algorithm>      // std::sort
 
+TList* gsPlots=new TList();//when moving between different root scripts
+
 ClassImp(THSsPlot);
 
 
@@ -364,7 +366,9 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
   }
   RFa->SetNStudyTrials(fNStudyTrials);
   RFa->SetStudyPDF(fStudyPDF);
+  RFa->SetFitMethod(fFitMethod);
   RFa->SetSPlotRange(fSRange[0],fSRange[1]);//Extra to THSRooFit
+  RFa->SetNMCMC(fNMCMC);
    //Done configuring RF
   fRooFits->Add(RFa);
   RFa->LoadWorkSpace(fWS,GetName());

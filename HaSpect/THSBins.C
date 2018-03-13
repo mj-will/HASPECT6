@@ -240,7 +240,7 @@ THSBinTree::THSBinTree(Int_t nbins,TString name,TTree* tree0){
   fTree->SetName("BinnedTree");
   fTree->SetDirectory(fFile);
   fTree->SetAutoSave(1E12); //We do our won autosave as this one changes basket size greatly increasing memory when large number of bins
-  fTree->SetBasketSize("*",16000); //cloned trees have the parent basket size which can be very large and use large amount of memeory when we great many bins
+   fTree->SetBasketSize("*",32000); //cloned trees have the parent basket size which can be very large and use large amount of memeory when we great many bins
   fTree->SetAutoFlush(1E12); //Don't let root flush or it will make basket sizes
 }
 THSBinTree::~THSBinTree(){
@@ -253,13 +253,13 @@ void THSBinTree::Save(){
   if(!fTree) return;
   fFile->cd();
   fTree->Write();
-  fTree->SetDirectory(0);
-  fTree->ResetBranchAddresses();
-  delete fTree;
+  //fTree->SetDirectory(0);
+  //fTree->ResetBranchAddresses();
+  //delete fTree;
   // fFile->Close();
-  fTree=nullptr;
+  //fTree=nullptr;
   delete fFile;fFile=nullptr;
-
+  fTree=nullptr;
 }
 void THSBinTree::Reset(){
   cout<<"reset "<<fName<<endl;
