@@ -145,7 +145,7 @@ void THSRooFit::LoadWorkSpace(RooWorkspace* ws,TString rfname){
     //e.g. for ToyStudies
     rfname=GetName();
   }
-  cout<<"WS "<<rfname<<" "<<fWS<<" "<<ws<<endl;
+  cout<<"THSRooFit::LoadWorkSpace WS "<<rfname<<" "<<fWS<<" "<<ws<<endl;
   //else the given name is used
   //this is useful for creating subfits when binning etc
   //and the new RF has a different name to the RF which created the workspace
@@ -426,16 +426,10 @@ void THSRooFit::LoadSpeciesPDF(TString opt,Int_t Scale0){
 void THSRooFit::TotalPDF(){
   cout<<"THSRooFit::TotalPDF() "<<fWS<<" "<<fModel<<endl;
   if(fModel)fModel->Print();
-  fPDFs.Print();
-  fPDFs[0].Print();
-  cout<<"yields"<<endl;
-  cout<<fYields.getSize()<<endl;
-  fYields.Print();
   //Construct a total PDF whcih is the sum of the species PDFs
   RooAddPdf model(fName+"TotalPDF","total model",
 		  fPDFs, 
 		  fYields);
-  cout<<"MAde Model "<<fModel<<endl;
   model.Print();
   Int_t Nm=0;
   //can't delete from workspace!
@@ -447,7 +441,6 @@ void THSRooFit::TotalPDF(){
   fWS->import(model,RooFit::RecycleConflictNodes()); //and replace any existing model, memory leak?
   fModel=fWS->pdf(model.GetName());
   fModel->Print();
-  fYields[0].Print();
   AddFitOption(RooFit::Extended());
   fWS->Print();
 }
