@@ -121,10 +121,15 @@ void THSRooFit::LoadDataSet(RooAbsData* data,Bool_t toWS){
   if(!data) {cout<<"LoadDataSet(RooAbsData*) No valid data set "<<endl;return;}
   //Take a tree and convert to RooDataSet
   //if(fWS->pdf("TotalPDF"))fWS->pdf("TotalPDF")->SetNameTitle("OldPDF","OldPDF");
-  if(toWS) fWS->import(*data);
-  else if(!(fDataBins))if(!fInWeights)fWS->import(*data); //if not told to import if not bins
+  //Make sure events in data match variable and cut definitions
+  RooArgSet dataVars(fVariables,fAuxVars);
+  if(fID) dataVars.add(*fID);
+  RooAbsData* dataCut=data->reduce(dataVars,fCut);
+  delete data;data=nullptr;
+  if(toWS) fWS->import(*dataCut);
+  else if(!(fDataBins))if(!fInWeights)fWS->import(*dataCut); //if not told to import if not bins
   //else if not told to import and there are bins don't import
-  fData=data;
+  fData=dataCut;
   cout<<"THSRooFit::LoadDataSet Print dataset for "<<fData->GetName()<<endl;
   fData->Print();
 }
@@ -422,6 +427,7 @@ void THSRooFit::TotalPDF(){
   cout<<"THSRooFit::TotalPDF() "<<fWS<<" "<<fModel<<endl;
   if(fModel)fModel->Print();
   fPDFs.Print();
+  fPDFs[0].Print();
   cout<<"yields"<<endl;
   cout<<fYields.getSize()<<endl;
   fYields.Print();
@@ -429,6 +435,7 @@ void THSRooFit::TotalPDF(){
   RooAddPdf model(fName+"TotalPDF","total model",
 		  fPDFs, 
 		  fYields);
+  cout<<"MAde Model "<<fModel<<endl;
   model.Print();
   Int_t Nm=0;
   //can't delete from workspace!
