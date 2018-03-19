@@ -125,7 +125,7 @@ void THSRooFit::LoadDataSet(RooAbsData* data,Bool_t toWS){
   RooArgSet dataVars(fVariables,fAuxVars);
   if(fID) dataVars.add(*fID);
   RooAbsData* dataCut=data->reduce(dataVars,fCut);
-  delete data;data=nullptr;
+  // delete data;data=nullptr;
   if(toWS) fWS->import(*dataCut);
   else if(!(fDataBins))if(!fInWeights)fWS->import(*dataCut); //if not told to import if not bins
   //else if not told to import and there are bins don't import
