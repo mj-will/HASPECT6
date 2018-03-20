@@ -33,7 +33,7 @@ void HSSubmitFarm(Int_t Njobs,Int_t toFarm=1){
       gSystem->Exec(farmsub+" "+farmrun);
     else
       gSystem->Exec(farmrun);
-    gSystem->Exec("sleep 0.2");
+    //gSystem->Exec("sleep 0.2");
    
   }
   

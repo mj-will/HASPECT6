@@ -33,6 +33,7 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fGeni=other.fGeni;
     //if(other.fEntryList)fEntryList=(TEntryList*)other.fEntryList->Clone();
     fForceConstInt=other.fForceConstInt;
+    fForceNumInt=other.fForceNumInt;
     fConstInt=other.fConstInt;
     fCheckInt=other.fCheckInt;
     fUseWeightsGen=other.fUseWeightsGen;
