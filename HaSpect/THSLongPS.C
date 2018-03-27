@@ -1,23 +1,35 @@
 //--Author      DI Glazier 25/01/2015
 //--Rev
-//--Update
+//--Update      Peter Pauli 26/03/2018
 //--Description
+//-- University of Glasgow
 //HASPECT Event Reconstruction
 //THSLongPS
 
 /**
-	\class THSLongPS
-	
-	Class to perform general Longitudinal Phasespace Analysis
-	
+ *	\class THSLongPS
+ *	
+ *	Class to perform general Longitudinal Phasespace Analysis
+ *	
+ *	
+ *	Usage example: \n
+ * 
+ *	// create LongPS object \n
+ *	THSLongPS *fLPS = new THSLongPS(3); \n
+ *	// in event loop do: \n
+ *	fLPS->Reset(); \n
+ *	fLPS->AddParticle(Proton_P4); // add TLorentzVector \n
+ *	fLPS->AddParticle(KMinus_P4); \n 
+ *	fLPS->AddParticle(KPlus_P4); \n
+ *	fLPS->Analyse(); \n
+ *	cout << fLPS->GetSector() << endl;
 */
-
 
 #include "THSLongPS.h"
 #include <TLorentzRotation.h>
 
 THSLongPS::THSLongPS(Int_t Np){
-  //PARTICLE 0 MUST BE BARYON!!!!!!!!!!!!!!!!!!!!!!!!
+  //PARTICLE 0 SHOULD BE BARYON!
   fNpart=Np;
   fP4s.reserve(fNpart);
   fCM.SetXYZT(0,0,0,0);
@@ -36,6 +48,7 @@ THSLongPS::THSLongPS(Int_t Np){
   fNSector=fSector;
   fSector=0;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 ///Makes all combinations of particles on top and bottom branches. \n
 ///Np = number of particles, Nt = number of particles top \n
@@ -44,12 +57,10 @@ THSLongPS::THSLongPS(Int_t Np){
 ///Note number of combinations choosing Nt from Np and ignoring order : \n
 /// Number = Np!/(Np-Nt)!/Nt! or TMath::Factorial(N)/TMath::Factorial(N-K)/TMath::Factorial(K)
 void THSLongPS::MakeIndices(Int_t Np,Int_t Nt){
-  
-
   vector<Int_t> donethis;//use to reject equivalnet permutations (not ordering)
   vector<Int_t >IP(Np); //vector containing particle numbers from 0->Np
   for(Int_t i=0;i<Np;i++)IP[i]=i; 
- vector<TString> sPart(Np);
+  vector<TString> sPart(Np);
   for(Int_t isp=0;isp<Np;isp++)sPart[isp].Form("%d",isp);//A number for each particle
   
   vector<Int_t>::iterator ite = IP.begin(); 
@@ -116,10 +127,8 @@ void THSLongPS::AnalyseCMHelicity(TLorentzVector *zLV){
     fP4s[ip].Boost(CMboost); //cm boost
     TVector3 p3CM(fP4s[ip].Vect().Dot(xCM),fP4s[ip].Vect().Dot(yCM),fP4s[ip].Vect().Dot(zCM));
     whichForward[ip]=p3CM.Z()>0;
-    //fP4s[ip].SetVectM(p3CM,fP4s[ip].M());
     fPtot+=p3CM.Z()*p3CM.Z();
   }
-  //   fPtot=TMath::Sqrt(fPtot);
   fPtot=zVec.Rho();
   fCosTh=-TMath::Cos(fCM.Angle(zVec.Vect()));
   TLorentzVector p4boost(fP4s[0]+fP4s[1]);
@@ -133,7 +142,6 @@ void THSLongPS::AnalyseCMHelicity(TLorentzVector *zLV){
   pmin.Boost(boostIso);//boost along helicity z axis to CM
   fPmin[1]=pmin.Z(); //minium longitudinal momentum allowed for isobar
   pmin=TLorentzVector(0,0,-B12,sqrt(B12*B12+fP4s[0].M2())); //backward in helcity frame
-  // cout<<pmin.Beta()<<endl;
   pmin.Boost(boostIso);//boost along helicity z axis to CM
   fPmin[0]=pmin.Z(); //minium longitudinal momentum allowed for isobar
   
@@ -147,11 +155,9 @@ void THSLongPS::AnalyseCMHelicity(TLorentzVector *zLV){
   for(fSector=0;fSector<fNSector;fSector++)
     if(fIsForward[fSector]==whichForward) break;
   
-  // if(boostIso.Z()<0){fPmin[0]=fPmax[0];fPmin[1]=fPmax[1];}
   if(fCosTh>0){
   fOmegaCut[0]=TMath::ATan2(fPmin[0],fPmax[1]);
   fOmegaCut[1]=TMath::ATan2(fPmax[0],fPmin[1]);
-  //fOmega=TMath::ATan2(fP4s[0].Z(),fP4s[1].Z())*TMath::RadToDeg();
   }
   else{
   fOmegaCut[1]=TMath::ATan2(-fPmax[0],-fPmin[1]);
@@ -164,12 +170,6 @@ double THSLongPS::BetaPM(double p0, double m0){
  //beta =p/E
   return p0/sqrt(p0*p0+m0*m0);
 }
-
-// double THSLongPS::BetaPM(double p0, double m0){
-//   //Warning return -ve if p0<0 
-//  //beta =p/E
-//   return p0/sqrt(p0*p0+m0*m0);
-// }
 
 double THSLongPS::breakupMomentum( double mass0, double mass1, double mass2 ){
    
@@ -224,16 +224,10 @@ Float_t THSLongPS::GetOmegaDG(){
 }
 
 Float_t THSLongPS::GetOmega(){
-  //Vincnet
-  // Float_t Omega=asin(-fP4s[0].Z()/fPtot/sqrt(2./3))+TMath::Pi();
 
   //Omega only properly defined for 3 particles
   Float_t Omega=asin(fP4s[0].Z()/fPtot/sqrt(2./3));
  
-  //or should probably be 
-  // if(TMath::Abs(Omega)>90) Omega=TMath::Pi()-Omega;
-  // else if(fP4s[0].Z()<0) Omega=2*TMath::Pi()+Omega;
-
   if(fP4s[1].Z()>0&&fP4s[2].Z()<0) Omega=TMath::Pi()-Omega;
   else if(fP4s[1].Z()<0&&fP4s[2].Z()<0&&fP4s[2].Z()<fP4s[1].Z())  Omega=TMath::Pi()-Omega;
   else if(fP4s[1].Z()>0&&fP4s[2].Z()>0&&fP4s[2].Z()<fP4s[1].Z())  Omega=TMath::Pi()-Omega;

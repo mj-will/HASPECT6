@@ -1,7 +1,8 @@
 //--Author      DI Glazier 25/01/2015
 //--Rev
-//--Update
+//--Update      Peter Pauli 26/03/2018
 //--Description
+//-- University of Glasgow
 //HASPECT Event Reconstruction
 //THSLongPS
 //Class to perform general Longitudinal Phasespace Analysis
@@ -38,12 +39,10 @@ class THSLongPS {
   THSLongPS(Int_t Np);
   virtual ~THSLongPS(){};
   
-  //void Initialise(); //Set fNpart, reserve space in vectors
   void AddParticle(TLorentzVector p4);//add 4 vectos should be done for each particle for each event
   void Reset(){fSize=0;fCM.SetXYZT(0,0,0,0);fPtot=0;}
   void Analyse(); // do the kinematics and find the current sector
   void AnalyseCMHelicity(TLorentzVector *zLV);
-  //void RemoveSector();//Remove a sector if it is not very interesting
   double breakupMomentum( double mass0, double mass1, double mass2 );
   double BetaPM(double p0, double m0);
   TLorentzVector GetP4(Int_t ip){return fP4s[ip];}
