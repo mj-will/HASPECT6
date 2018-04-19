@@ -3,7 +3,7 @@
     //Found liblz4 in LD_LIBRARY_PATH 
     gROOT->ProcessLine("#define __LZ4__");
     gSystem->AddIncludePath("-D__LZ4__");
-    gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("LZ4_h"));
+    //gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("LZ4_h"));
      
   }
   else{
@@ -24,6 +24,8 @@
   }
 
   gROOT->LoadMacro("utils.cpp+");
+  gROOT->LoadMacro("dictionary.cpp+");
+  gROOT->LoadMacro("node.cpp+");
   gROOT->LoadMacro("event.cpp+");
   gROOT->LoadMacro("record.cpp+");
   gROOT->LoadMacro("reader.cpp+");

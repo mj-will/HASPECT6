@@ -4,8 +4,11 @@
   THipo Hipo;
   Hipo.AddCommandLineFiles();
   Hipo.SetCompression(1);
-  //  Hipo.ConfigOnlyBank("REC");
-  Hipo.ConfigOnlyBank("RUN");
+  Hipo.ConfigOnlyBank("REC::Particle");
+  Hipo.ConfigOnlyBank("RUN::config");
+  Hipo.ConfigOnlyBank("RAW::scaler");
+  Hipo.ConfigOnlyBank("REC::Event");
+  //Hipo.ConfigOnlyBank("RUN");
 
   Hipo.ToRoot(); //process files given on command line
 

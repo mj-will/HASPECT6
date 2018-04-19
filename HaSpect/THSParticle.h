@@ -1,10 +1,10 @@
-//--Author      DI Glazier 30/06/2014
+//--Author      DI Glazier 23/03/2018
 //--Rev
 //--Update
 //--Description
 //HASPECT Event Reconstruction
 //THSParticle
-//Persistant Data structure
+//Optimised Persistant Data structure
 //Contains reconstructed information required for data analysis
 
 #ifndef __THSParticle_h__
@@ -16,54 +16,68 @@
 #include "TMatrixD.h"
 #include <vector>
 #include <iostream>
+#include <Math/Vector4D.h>
+#include <Math/Point3D.h>
+#include <Math/DisplacementVector3D.h>
 using namespace std;
+
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> > HSLorentzVector;
+typedef ROOT::Math::PositionVector3D< ROOT::Math::Cartesian3D< Double32_t >, ROOT::Math::DefaultCoordinateSystemTag > HSPosition;
+
+typedef ROOT::Math::DisplacementVector3D< ROOT::Math::Cartesian3D< Double_t >, ROOT::Math::DefaultCoordinateSystemTag > HSMomentum;
+
+#pragma link C++ class vector<THSParticle >+;
+#pragma link C++ class vector<THSParticle* >+;
 
 class THSParticle {
  private:
  protected:
-  TLorentzVector fP4;  //4-vector 
-  TVector3 fVertex;     //particle vertex position
-  Int_t fPDGCode=0;           //PDG number
+  HSLorentzVector fP4;  //4-vector 
+  HSLorentzVector fTruthP4;//! true generated 4-vector
+  HSPosition fVertex;     //particle vertex position
+  HSPosition fTruthV;//! true generated vertex
   Double32_t fPDGMass=0;
   Double32_t fMeasMass=0; //Or other PID info
   Double32_t fTime=0;
   Double32_t fPath=0;
-  Double32_t fDoca=0;
+  Double32_t fDoca=0;//!
   Double32_t fEdep=0;
   Double32_t fDeltaE=0;
-  Int_t fDetector=0; //detector code
-
+  Short_t fPDGCode=0;           //PDG number
+  Short_t fTruthPDG=0;//! true PDG code
+  Short_t fDetector=0; //detector code
+ 
   //Allow space for covariance matrix
   //The vector will need decoded into the TMatrix for calculations
-  vector<Float_t> fCovaMatEntries;
+  vector<Float_t> fCovaMatEntries;//!
   TMatrixD fCovarianceMatrix;//!
 
-  TLorentzVector fTruthP4;// true generated 4-vector
-  TVector3 fTruthV;// true generated vertex
-  Int_t fTruthPDG;// true PDG code
+  //Note if you want to store these in a file
+  //you need to remove the !
   
   
  public:
-  THSParticle();  	        //Constructor
+  THSParticle()=default;  	        //Constructor
   THSParticle(int code);  	        //Constructor
   THSParticle(TString pdgname);  	        //Constructor
-  virtual ~THSParticle(){};	     	//Destructor
+  ~THSParticle()=default;	     	//Destructor
 
 
   //Setting functions
   void SetPDGcode(Int_t code){
-    if(TDatabasePDG::Instance()->GetParticle(fPDGCode=code))
-      fPDGMass = TDatabasePDG::Instance()->GetParticle(fPDGCode=code)->Mass();
+    if(TDatabasePDG::Instance()->GetParticle(fPDGCode=code)){
+      TParticlePDG* part=TDatabasePDG::Instance()->GetParticle(fPDGCode=code);
+      fPDGMass = part->Mass();}
     else fPDGMass=0;
   }
-  void SetP4(TLorentzVector v){fP4=v;}
-  void SetVectPDG(TLorentzVector v){fP4.SetVectM(v.Vect(),fPDGMass);}
-  void SetP4(TLorentzVector *v){fP4=*v;}
+  void SetP4(HSLorentzVector v){fP4=v;}
+  void SetVectPDG(HSLorentzVector v){fP4.SetXYZT(v.X(),v.Y(),v.Z(),sqrt(v.P2()+fPDGMass*fPDGMass));}
+  void SetP4(HSLorentzVector *v){fP4=*v;}
   void SetXYZT(Double_t X,Double_t Y,Double_t Z,Double_t T){fP4.SetXYZT(X,Y,Z,T);}
-  void SetXYZM(Double_t X,Double_t Y,Double_t Z,Double_t M){fP4.SetXYZM(X,Y,Z,M);}
-  void SetVertex(TVector3 v){fVertex=v;}
+  void SetXYZM(Double_t X,Double_t Y,Double_t Z,Double_t M){fP4.SetXYZT(X,Y,Z,sqrt(M*M+X*X+Y*Y+Z*Z));}
+  void SetVertex(HSPosition v){fVertex=v;}
   void SetVertex(Double_t X,Double_t Y,Double_t Z){fVertex.SetXYZ(X,Y,Z);}
-  //void SetPol(TVector3 p){fPol=p;}
+  //void SetPol(HSPosition p){fPol=p;}
   //void SetPol(Double_t X,Double_t Y,Double_t Z){fPol.SetXYZ(X,Y,Z);}
   void SetTime(Double_t time){fTime=time;};
   void SetPath(Double_t path){fPath=path;};
@@ -73,17 +87,17 @@ class THSParticle {
   void SetDetector(Int_t det){fDetector=det;};
   void SetMeasMass(Double_t mass){fMeasMass=mass;};
   void TakePDGMass(){SetVectPDG(fP4);}; //Preserves momentum
-  void TakePDGMassFromE(){Double_t rho=sqrt(fP4.E()*fP4.E()-fPDGMass*fPDGMass);fP4.SetRho(rho);}; //preserves energy
+  void TakePDGMassFromE(){Double_t rho0=fP4.P();Double_t rho=sqrt(fP4.E()*fP4.E()-fPDGMass*fPDGMass);rho/=rho0;fP4.SetXYZT(fP4.X()*rho,fP4.Y()*rho,fP4.Z()*rho,fP4.E());}; //preserves energy
   // void CreateTruth(){fTruth=new THSParticle();};
   void SetTruth(THSParticle* part){fTruthP4=part->P4();fTruthV=part->Vertex();fTruthPDG=part->PDG();};
   void SetTruth(THSParticle part){fTruthP4=part.P4();fTruthV=part.Vertex();fTruthPDG=part.PDG();};
-  void SetTruth(TLorentzVector part,TVector3 ver,Int_t pdg){fTruthP4=part;fTruthV=ver;fTruthPDG=pdg;};
+  void SetTruth(HSLorentzVector part,HSPosition ver,Int_t pdg){fTruthP4=part;fTruthV=ver;fTruthPDG=pdg;};
   //Getting functions
-  TLorentzVector P4(){return fP4;}
-  TLorentzVector* P4p(){return &fP4;}
-  TVector3 Vertex(){return fVertex;}
-  //TVector3 Pol(){return fPol;}
-  Int_t PDG(){return fPDGCode;}
+  HSLorentzVector P4(){return fP4;}
+  HSLorentzVector* P4p(){return &fP4;}
+  HSPosition Vertex(){return fVertex;}
+  //HSPosition Pol(){return fPol;}
+  Short_t PDG(){return fPDGCode;}
   Double_t PDGMass(){return fPDGMass;}
   Double_t MeasMass(){return fMeasMass;}
   Double_t Time(){return fTime;}
@@ -98,12 +112,12 @@ class THSParticle {
   Double_t DeltaTime(){return HypTime()-fTime;};
   Double_t DeltaTimeVer(){return DeltaTime()+fVertex.Z()/2.99792e+08*1E9;}
   Int_t Charge();
-  Int_t Detector(){return fDetector;}
+  Short_t Detector(){return fDetector;}
   
-  TLorentzVector* TruthP4p(){return &fTruthP4;};
-  TLorentzVector TruthP4(){return fTruthP4;};
-  TVector3* TruthVer(){return &fTruthV;};
-  Int_t TruthPDG(){return fPDGCode;};
+  HSLorentzVector* TruthP4p(){return &fTruthP4;};
+  HSLorentzVector TruthP4(){return fTruthP4;};
+  HSPosition* TruthVer(){return &fTruthV;};
+  Short_t TruthPDG(){return fPDGCode;};
   
  
   void Clear();
@@ -116,9 +130,9 @@ class THSParticle {
   void Add(THSParticle *hsp1, THSParticle *hsp2,Int_t pdg=0);
 
   //DOCA routines
-  Double_t MakeVirtualVertex(THSParticle* p1,THSParticle *p2);
-  Double_t Calc_dtfDOCA( TVector3 locVertex1, TVector3 locUnitDir1, TVector3 locVertex2, TVector3 locUnitDir2, TVector3 *result);
-  void Calc_dtfInterDOCA( TVector3 locUnitDir1, TVector3 locUnitDir2, TVector3 locVertex1,  TVector3 locVertex2, TVector3 *locInterDOCA1, TVector3 *locInterDOCA2);
+  /* Double_t MakeVirtualVertex(THSParticle* p1,THSParticle *p2); */
+  /* Double_t Calc_dtfDOCA( HSPosition locVertex1, HSPosition locUnitDir1, HSPosition locVertex2, HSPosition locUnitDir2, HSPosition *result); */
+  /* void Calc_dtfInterDOCA( HSPosition locUnitDir1, HSPosition locUnitDir2, HSPosition locVertex1,  HSPosition locVertex2, HSPosition *locInterDOCA1, HSPosition *locInterDOCA2); */
 
  public:
   //need to permutate class
@@ -127,23 +141,24 @@ class THSParticle {
   //to be filled with object not pointers for this to work
   friend bool operator< ( const THSParticle& lhs, const THSParticle& rhs ){return lhs.fP4.Rho() < rhs.fP4.Rho(); };
 
-  Double_t p3Distance(TVector3 vec){return (fP4.Vect()-vec).Mag();}
+  Double_t p3Distance(HSMomentum vec){return (fP4.Vect()-vec).Mag2();}
 
   Double_t ResTheta(){return fP4.Theta()-fTruthP4.Theta();};
   Double_t ResPhi(){return fP4.Phi()-fTruthP4.Phi();};
   Double_t ResRho(){return fP4.Rho()-fTruthP4.Rho();};
   Double_t ResE(){return fP4.E()-fTruthP4.E();};
-  ClassDef(THSParticle,2) //class THSParticle
+  ClassDef(THSParticle,4) //class THSParticle
 };
 inline Int_t THSParticle::Charge(){
   
-  if(fPDGCode==1E6) return 1;
-  else if(fPDGCode==-1E6) return -1;
-  else {
+  if(fPDGCode==1E4) return 1;
+  else if(fPDGCode==-1E4) return -1;
+  else if(fPDGCode!=45){
     Int_t charge=TDatabasePDG::Instance()->GetParticle(fPDGCode)->Charge();
     if(charge!=0)charge=(Int_t) charge/TMath::Abs(charge); //just get sign not mag.
     return charge;
   }
+  else return 0;
 }
 
 //inline bool THSParticle::operator<( const THSParticle& rhs ) {cout<<" "<<rhs.fP4.Rho()<<endl;return fP4.Rho() < rhs.fP4.Rho(); }

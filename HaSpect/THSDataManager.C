@@ -1,155 +1,247 @@
 #include "THSDataManager.h"
+#include "TTreeCache.h"
 #include "TSystem.h"
 #include "TObjArray.h"
 
 
 THSDataManager::~THSDataManager(){
-  if(fTGenerated) delete fTGenerated;
-  if(fTUID) delete fTUID;
 
-
-  for(UInt_t i=0;i<fParticles.size();i++){
-    if(fParticles[i])delete fParticles[i];  
-  }
-  for(UInt_t i=0;i<fGenerated.size();i++){
-    if(fGenerated[i])delete fGenerated[i];  
-  }
+  // for(UInt_t i=0;i<fParticles.size();i++){
+  //   if(fParticles[i])delete fParticles[i];  
+  // }
+  // for(UInt_t i=0;i<fGenerated.size();i++){
+  //   if(fGenerated[i])delete fGenerated[i];  
+  // }
   
   fParticles.clear();
   fGenerated.clear();
 
   
   if(fReadParticles){
-    for(UInt_t i=0;i<fReadParticles->size();i++){
-      if(fReadParticles->at(i)) delete fReadParticles->at(i);  
-    }
-  fReadParticles->clear();
+   fReadParticles->clear();
   }
   if(fReadGenerated){
-    for(UInt_t i=0;i<fReadGenerated->size();i++){
-      if(fReadGenerated->at(i)) delete fReadGenerated->at(i);  
-    }
-  fReadGenerated->clear();
+   fReadGenerated->clear();
   }
 
   CloseReadTree();
-  
   // if(fReadParticles) delete fReadParticles;
   if(fWeights)delete fWeights;
+  if(fEntryList)delete fEntryList;
 }
 void THSDataManager::CloseReadTree(){
   if(fReadFile) {
-    //if(fReadTree) delete fReadTree;
-    fReadFile->Close();
-    delete fReadFile;
+    delete fReadFile;fReadFile=nullptr;
+    fReadTree=nullptr;
   }
+  if(fPerfstats) delete fPerfstats;fPerfstats=nullptr;
 
 }
-Bool_t THSDataManager::InitTreeReader(TString filename,TString name){
+Bool_t THSDataManager::InitReader(TString filename,TString name){
   fReadFile=TFile::Open(filename);
   if(!fReadFile) {Error("THSDataManager::Init","No file found %s",filename.Data());return kFALSE;}
   fReadTree=dynamic_cast<TTree*>(fReadFile->Get(name));
   if(!fReadTree){Error("THSDataManager::Init","No tree found %s",name.Data());return kFALSE;}
   //standard particle vector
-  fTParticles= TTreeReaderArray<THSParticle>{fTReader, fReadBName.Data()};
-  //generated particles if simualtions
-  if(fInGenerated)fTGenerated= new TTreeReaderArray<THSParticle>{fTReader, fReadGName.Data()};
-  if(fReadTree->GetBranch(fIDName)) fTUID=new TTreeReaderValue<Double_t>{fTReader, fIDName};
+  fReadParticles=&fParticles;
+  fReadTree->SetBranchAddress(fReadBName.Data(),&fReadParticles);
+  fReadPIDs=&fPIDs;
+  fReadTree->SetBranchAddress("PIDs",&fReadPIDs);
+  fBParticles=fReadTree->GetBranch(fReadBName.Data());
+  fBPIDs=fReadTree->GetBranch("PIDs");
+  cout<<"set brandch "<<fReadParticles<<" "<<&fParticles<<endl;
+   //generated particles if simualtions
+  fReadGenerated=&fGenerated;
+  if(fInGenerated)fReadTree->SetBranchAddress(fReadGName.Data(),&fReadGenerated);
   
-  fTReader.SetTree(fReadTree);
+  //TTreeCache::SetLearnEntries(100);
+  fReadTree->SetCacheSize(50E6);//10MB
+  fReadTree->StopCacheLearningPhase();
+  fPerfstats = new TTreePerfStats("ioperf", fReadTree);
+  
   return kTRUE;
 }
 Bool_t THSDataManager::Init(TString filename,TString name){
-  return InitTreeReader(filename,name); //default use tree reader
-
+  fTreeName=name;
+  fCurFileName=gSystem->BaseName(filename);
+  return InitReader(filename,name); //default use tree reader
+}
+Bool_t THSDataManager::NextChainFile(){
+  if(fChainFileN==fChainFiles->GetEntries()){
+    cout<<"THSDataManager::NextChainFile() Finished all files "<<endl;
+    PrintPerfStats();
+    CloseReadTree();
+    if(fWriteThis)CloseOutput();
+    return kFALSE; //no more files
+  }
+  CloseReadTree();
+  if(fWriteThis)CloseOutput();
+  cout<<"THSDataManager::NextChainFile() new file : "<<fChainFiles->At(fChainFileN)->GetTitle()<<" "<<fChainFileN<<" "<<fChainFiles->GetEntries()<<endl;
+  //initialise next file
+  fEntry=0;
+  TString fname=fChainFiles->At(fChainFileN++)->GetTitle();
+  Init(fname,fTreeName);
+  fCurFileName=gSystem->BaseName(fname);
+  if(fOutDir!=TString("")){
+    fCurFileName.Append(fFileAppend);
+    InitOutput(fOutDir+"/"+fCurFileName);
+  }
+  if(fEntryList) FilterFinalStateEvent();//If filtering via entrlist, redo for this file
+  return kTRUE;
 }
 Bool_t THSDataManager::ReadEvent(Long64_t entry){
-  // if(fReadParticles){
-  //   if(entry<0){
-  //     if(fReadTree->GetEntry(fEntry++)>0){
-  // 	for(UInt_t iv=0;iv<fReadParticles->size();iv++)
-  // 	  fParticles[iv]=fReadParticles->at(iv);      
-  // 	return kTRUE;
-  //     }
-  //     else return kFALSE;
-  //   }
-  //   if(fReadTree->GetEntry((fEntry=entry))>0){
-  //     for(UInt_t iv=0;iv<fReadParticles->size();iv++)
-  // 	fParticles[iv]=fReadParticles->at(iv);
-  //     return kTRUE;
-  //   }
-  //   else return kFALSE;
-  // }
-  //OR using TTreeReader for project
-  //else if(fTReader.GetTree()){
-  Bool_t IsNext=kFALSE;
-  if(fTReader.GetTree()){
-    if(entry<0){
-      fEntry++;
-      IsNext= fTReader.Next();
+  //Default reader for root files with vector<THSParticle*> branches
+  // if(fEntry<fReadTree->GetEntries())fBParticles->GetEntry(fEntry++);
+  if(fEntry<fReadTree->GetEntries())fReadTree->GetEntry(fEntry++);
+  else if(fChainFiles){
+    cout<<fEntry<<" "<<fChainFileN<<" "<<fChainFiles->GetEntries()<<endl;
+    if(fChainFileN<=fChainFiles->GetEntries()){//next file
+      NextChainFile();  
+      //first event in new file
+
+      if(!fReadFile) return kFALSE;
+      fReadTree->GetEntry(fEntry++);
     }
-    else
-      IsNext= !(fTReader.SetLocalEntry(fEntry=entry));
-    
-    ClearParticles();
-    for(UInt_t ip=0;ip<fTParticles.GetSize();ip++){
-      fParticles.push_back((THSParticle*)&(fTParticles.At(ip)));
-    }
-    if(fInGenerated){
-      for(UInt_t ip=0;ip<fTGenerated->GetSize();ip++){
-    	fGenerated.push_back((THSParticle*)&(fTGenerated->At(ip)));
-      }
-    }
-    return IsNext;
   }
-  Info("THSDataManager::ReadEvent"," No tree initialised");
-  return kFALSE;
+  else return kFALSE;
+  return kTRUE; 
 }
-void THSDataManager::ReadWriteChain(TChain* chain,TString OutDirName,TString FileAppend){
+void THSDataManager::FilterFinalStateEvent(Long64_t entry){
+  if(fEntryList) delete fEntryList;fEntryList=nullptr;
+  fEntryList=new TEntryList();
+  //Fill EntryList with events passing finalstate topology
+  fReadTree->DropBranchFromCache(fBParticles);
+  fReadTree->AddBranchToCache(fBPIDs,kTRUE);
+  fReadTree->StopCacheLearningPhase();
+  for(Int_t i=0;i<fReadTree->GetEntries();i++){
+     fBPIDs->GetEntry(i);
+     if(fFinalState->CheckForATopology())
+       fEntryList->Enter(i);
+  }
+  fReadTree->SetEntryList(fEntryList);
+  fReadTree->DropBranchFromCache(fBPIDs);
+  fReadTree->AddBranchToCache(fBParticles,kTRUE);
+
+  cout<<"THSDataManager::FilterFinalStateEvent found final state entries = "<<fEntryList->GetN()<<endl;
+}
+Bool_t THSDataManager::ReadFinalStateEvent(Long64_t entry){
+  //Default reader for root files with vector<THSParticle*> branches
+  if(fEntry<fReadTree->GetEntries()){
+
+    fBPIDs->GetEntry(fEntry);
+    while(!fFinalState->CheckForATopology()){
+      fEntry++;
+       fBPIDs->GetEntry(fEntry);
+       if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
+    }
+     fReadTree->GetEntry(fEntry);
+    fEntry++;
+  }
+  else if(fChainFiles){
+    if(fChainFileN<=fChainFiles->GetEntries()){//next file
+      NextChainFile();  
+      if(!fReadFile) return kFALSE;
+      fBPIDs->GetEntry(fEntry);
+      while(!fFinalState->CheckForATopology()){
+	fEntry++;
+	fBPIDs->GetEntry(fEntry);
+        if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
+     }
+      //fBParticles->GetEntry(fEntry);
+      fReadTree->GetEntry(fEntry);
+      fEntry++;
+      
+    }
+  }
+  else return kFALSE;
+  return kTRUE; 
+}
+// Bool_t THSDataManager::ReadFinalStateEvent(Long64_t entry){
+//   //Default reader for root files with vector<THSParticle*> branches
+//   if(fEntry<fEntryList->GetN()){
+//    fReadTree->LoadTree(fEntry);
+//     Long64_t en=fEntryList->GetEntry(fEntry);
+//     //  cout<<en<<" "<<fEntry<<" "<<fEntryList->Next()<<endl;
+//     // Long64_t en=fReadTree->GetEntryList()->Next();
+//     //fBPIDs->GetEntry(en);
+//     //fBParticles->GetEntry(en);
+//     fReadTree->GetEntry(en);
+//     fEntry++;
+//   }
+//   else if(fChainFiles){
+//     if(fChainFileN<=fChainFiles->GetEntries()){//next file
+//       NextChainFile();  
+//       if(!fReadFile) return kFALSE;
+//       Long64_t en=fEntryList->GetEntry(fEntry);
+//       fReadTree->GetEntry(en);
+//        fEntry++;
+      
+//     }
+//   }
+//   else return kFALSE;
+//   return kTRUE; 
+// }
+Bool_t THSDataManager::InitChain(TChain* chain){
   //loop over all files in chain
   fChainFiles=chain->GetListOfFiles();
-
-  Info("THSDataManager::ReadWriteChain"," Will proceess all %d files in chain and put in %s with %s appended",fChainFiles->GetEntries(),OutDirName.Data(),FileAppend.Data());
-  
-  for(Int_t i=0;i<fChainFiles->GetEntries();i++){
-    fChainFileN=i;
-    TString fname=fChainFiles->At(i)->GetTitle();
-    Init(fname,chain->GetName());
-    TString outfile=gSystem->BaseName(fname);
-    //  outfile.ReplaceAll(fname(fname.Last('.'),fname.Sizeof()),FileAppend);
-    outfile.Append(FileAppend);
-    Info("THSDataManager::ReadWriteChain"," Writing to %s",(OutDirName+outfile).Data());
-    WriteParticles(OutDirName+"/"+outfile);
-    CloseReadTree();
+  Info("THSDataManager::InitChain"," Will proceess all %d files in chain",fChainFiles->GetEntries());
+  //Load first file
+  fCurFileName=fChainFiles->At(fChainFileN++)->GetTitle();
+  fTreeName=chain->GetName();
+  Init(fCurFileName,chain->GetName());
+  fCurFileName=gSystem->BaseName(fCurFileName);
+  if(fOutDir!=TString("")){
+    fCurFileName.Append(fFileAppend);
+    InitOutput(fOutDir+"/"+fCurFileName);
   }
+  return kTRUE;  
 }
 
-void THSDataManager::WriteParticles(TString filename){
+
+void THSDataManager::WriteParticles(){
+  cout<<":WriteParticles() "<<fChainFiles<<" "<<fWriteTree<<endl;
   //Write all input events on 1 go
-  InitOutput(filename);
-  while(ReadEvent()){
-    if(fWriteThis&&fWriteTree){fWriteTree->Fill();PostWrite();}
-    fWriteThis=kTRUE;
+  if(!fChainFiles){
+    if(fOutDir!=TString("")){
+      fCurFileName.Append(fFileAppend);
+      InitOutput(fOutDir+"/"+fCurFileName);
+    }
   }
-  CloseOutput();
+  while(ReadEvent()){
+    if(fWriteTree->GetEntries()==100)
+      fWriteTree->OptimizeBaskets();
+    if(fWriteThis&&fWriteTree){fWriteTree->Fill();PostWrite();}
+    fWriteThis=kTRUE;//assume will write next event unless told otherwise
+  }
+  if(fWriteTree)CloseOutput();
 }
 void THSDataManager::InitOutput(TString filename){
+  fWriteThis=kTRUE;
+  //Make output directory if not existing
+  if(!fWriteFile) gSystem->Exec(Form("mkdir -p %s",fOutDir.Data()));
   fWriteFile=new TFile(filename,"recreate");
+  //fWriteFile->SetCompressionSettings(401);//LZ4
   fWriteTree=new TTree("HSParticles","data tree");
-  //fReadParticles=&fParticles;
   fWriteTree->Branch(fReadBName,&fParticles);
+  fWriteTree->Branch("PIDs",&fPIDs);
+  //Make an unsplit tree for MakeSelector
+  TTree* UnSplitTree=new TTree("HSUnSplit","unsplit tree for MakeSelector");
+  UnSplitTree->Branch(fReadBName,&fParticles,256000,0);
+  UnSplitTree->Branch("PIDs",&fPIDs,64000,0);
+  UnSplitTree->Write();
+  delete UnSplitTree;
+  
   if(fAddGenerated)fWriteTree->Branch(fWriteGName,&fGenerated);
   Info("THSDataManager::InitOutput","Saving particles to %s",filename.Data());
 }
 void THSDataManager::CloseOutput(){
+  if(!fWriteFile) return;
   fWriteFile->cd();
   if(fWriteTree)fWriteTree->Write();
   fWriteFile->Close();
   delete fWriteFile;
   fWriteFile=nullptr;
   fWriteTree=nullptr;
-  
-
 }
 void THSDataManager::PrintEvent(Long64_t entry){
 
@@ -157,9 +249,13 @@ void THSDataManager::PrintEvent(Long64_t entry){
   if(!ReadEvent(entry)) {Error("PrintEvent","error in event read");return;}  
   cout<<"Initialised with "<<fNin<<" particles"<<endl;
   for(UInt_t i=0;i<fNin;i++){
-    fParticles[i]->Print("");  
+    fParticles[i].Print("");  
   }
   
+}
+void THSDataManager::PrintPerfStats(){
+  if(fReadTree)fReadTree->PrintCacheStats();
+  if(fPerfstats) fPerfstats->Print();
 }
 void THSDataManager::AddUID(TString filename,TString treename){
   //Once all files are available you can give every
@@ -194,7 +290,7 @@ void THSDataManager::LoadWeights(TString fname,TString wname){
    
 }
 void THSDataManager::GetWeightEvent(){
-  if(fWeights)fWeights->GetEntryBinarySearch((Long64_t)fTUID);
+  //if(fWeights)fWeights->GetEntryBinarySearch((Long64_t)fTUID);
 }
 Double_t THSDataManager::GetWeight(Int_t species){
   if(fWeights) fWeight=fWeights->GetWeight(species);

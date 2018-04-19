@@ -9,7 +9,7 @@ class THSCombitorial;
 class THSParticleIter{
   
  public :
-  THSParticleIter(){};
+  THSParticleIter()=default;
   virtual ~ THSParticleIter(){delete fExtraParticle;if(fInnerIter) delete fInnerIter;}//if(fSelIter) delete fSelIter; if(fRemIter) delete fRemIter;};
   
  private:
@@ -57,7 +57,7 @@ class THSParticleIter{
   
   void SortEvent();
   void SetCombi(THSCombitorial combi){fCombi=combi;fUseCombi=kTRUE;}
-  
+  void GotoStart(){ fCombi.ResetNiter();fDoneSelRem=kTRUE;if(fInnerIter) fInnerIter->GotoStart();}
   
   THSParticle* NextParticle();
   Bool_t NextCombitorial();

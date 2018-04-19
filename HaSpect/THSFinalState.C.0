@@ -101,13 +101,6 @@ void THSFinalState::InitFS(){
   for(UInt_t i=0;i<fTopos.size();i++)
     fTopos[i]->Print(fPrintVerbose);
 
-  map< Int_t , vector< THSParticle* >* >::iterator itmap;
-  for (itmap = fMapPDGtoParticle.begin(); itmap != fMapPDGtoParticle.end(); itmap++)
-    {
-      //      itmap->second->resize(fMaxPart);
-      for(Int_t i=0;i<fMaxPart;i++)
-	itmap->second->push_back(new THSParticle());
-    }  
 }
 /////////////////////////////////////////////////////////////////////
 ///Note particles with TruthOnly are reserved for undetected particles
@@ -133,6 +126,7 @@ Bool_t THSFinalState::CheckForATopology(){
   for(Int_t ito=0;ito<(Int_t)fTopos.size();ito++){
     if(fTopos[ito]->CheckTopo(&fThisTopo)){
       fTopoID=ito; //start FindTopology here
+      //  cout<<"Got Check "<<endl;
       return kTRUE;
     }
   }
@@ -174,8 +168,7 @@ THSTopology* THSFinalState::FindTopology(){
       break;
     }
   }
-  //fCurrTopo=fTopos[0];
-  fNParts=fThisTopo.size();
+   fNParts=fThisTopo.size();
   return fCurrTopo;
 }
 
@@ -185,9 +178,18 @@ THSTopology* THSFinalState::FindTopology(){
 ///Get the first combination from the particle iterator
 void THSFinalState::InitParticles(){
   if(fIsPermutating0==kTRUE) return;//already Inited
-  InitDetParts();
-  if(!fCurrTopo) return;//if reached fMaxPart
-  // //Get first combination
+  if(!fUseChargePID)
+    //Init all particle type vectors
+    InitDetParts();
+  
+  else//Just use the charge for PID (Need to SetUseChargePID())
+    InitDetPartsCharge(); 
+
+  CheckParticles(); //Make sure all particle vectors are below limits
+  if(!fCurrTopo) return;
+
+  //Get first combination
+  //  PermutateParticles();
   FirstParticles();
 }
 /////////////////////////////////////////////////////////////////
@@ -218,36 +220,15 @@ void THSFinalState::InitDetParts(){
     }  
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle* part=&(frDetParts->at(ip));
+    //cout<<part->PDG()<< " "<<fCurrTopo->ParticleID(part->PDG())<<endl;
     //Find the particle vector given by this topology
-    vector<THSParticle*> *vecParts=fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())];
-    vecParts->push_back(part);
-    if(vecParts->size()==fMaxPart) {fCurrTopo=nullptr; return;}
- 
+    fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())]->push_back(part);
    }
  
 }
 //////////////////////////////////////////////////////////////
 ///Read in the particles from this input event
 ///assign them in vectors corrsponing to their charge
-// void THSFinalState::InitDetPartsCharge(){
-//   //fVecPlus.clear();
-//   //fVecMinus.clear();
-//   //fVec0.clear();
-//   vector<vector<THSParticle*> *> chargeVec={&fVecMinus,&fVec0,&fVecPlus};
-//   vector<Int_t > Nparts={0,0,0};
-//   for(UInt_t ip=0;ip<fNParts;ip++){
-//     //cout<<frDetParts->at(ip).PDG()<<endl;
-//     //    THSParticle* part=&(frDetParts->at(ip));
-//     //chargeVec[frDetParts->at(ip).Charge()+1]->push_back(frDetParts->at(ip));
-//     UInt_t index=frDetParts->at(ip).Charge()+1;
-//     // cout<<chargeVec[index]->at(Nparts[index])<<endl;
-//     if(Nparts[index]==fMaxPart) {fCurrTopo=nullptr; return;}
-//     chargeVec[index]->at(Nparts[index]++)->CopyParticle(&frDetParts->at(ip),kTRUE);
-//    }
-//  }
-//////////////////////////////////////////////////////////////
-//Read in the particles from this input event
-//assign them in vectors corrsponing to their charge
 void THSFinalState::InitDetPartsCharge(){
   fVecPlus.clear();
   fVecMinus.clear();
@@ -257,8 +238,8 @@ void THSFinalState::InitDetPartsCharge(){
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle* part=&(frDetParts->at(ip));
     chargeVec[part->Charge()+1]->push_back(part);
-  }
-}
+   }
+ }
 
 //////////////////////////////////////////////////////////////////
 ///Process one event from the input tree
@@ -268,8 +249,8 @@ void THSFinalState::ProcessEvent(){
   //fClock.Start();/////////////////Timing
   InitEvent();
   if(frDetParts)fNDet=frDetParts->size();
-  Int_t ntopo=0;
   while(FindTopology()){ //Find all valid topologies
+    // cout<<"Start "<<fUID<<endl;
     //Init particle vectors, this should only be done once for each event
     //Not for each permuation
     InitDetected();//make all final state particles missing
@@ -290,7 +271,8 @@ Bool_t THSFinalState::FSProcess(){
   if(IsGoodEvent()){
     UserProcess(); 
   }
-   if(fTryPerm)
+
+  if(fTryPerm)
     PermutateParticles();
   if(IsPermutating()){
     return kTRUE;
@@ -344,6 +326,8 @@ void THSFinalState::Finish(){
 ///Check through particle types,
 ///if more than 1 of a type permutate through all combinations
 Bool_t THSFinalState::PermutateParticles(){
+  // cout<<fTryPerm<<" "<<fNPerm<<" "<<fCurrTopo<<" "<<fIsPermutating1<<" "<<endl;
+  // if(!fTryPerm&&fNPerm>0) return kFALSE; //not permutating in this analysis
   if(fIsGenerated) return kFALSE; //Truth generated analysis
   if(!fCurrTopo) return kFALSE; //no valid topology
   fNPerm++;

@@ -32,7 +32,7 @@ class THSFinalState{
 
  public :
   THSFinalState();
-  virtual ~THSFinalState(){cout<<"DELETE THSFinalState"<<endl;fConfigs.clear();};
+  virtual ~THSFinalState(){fConfigs.clear();};
 
   virtual void GetEvent(Long64_t uid){}//interface to different readers
   Bool_t WorkOnEvent();

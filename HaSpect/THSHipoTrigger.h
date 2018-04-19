@@ -35,24 +35,24 @@ class THSHipoTrigger: public THSHipoReader{
     
 
   //items in banks
-  THipoItem* fRunTrig=nullptr;
+  THipoItemL* fRunTrig=nullptr;
   //THipoItem* fEvSTTime=nullptr;
-  THipoItem* fRecEvNRun=nullptr;
-  THipoItem* fRecEvNEVENT=nullptr;
-  THipoItem* fRecEvTYPE=nullptr;
-  THipoItem* fRecEvTRG=nullptr;
-  THipoItem* fRecEvHelic=nullptr;
-  THipoItem* fRecEvEVNTime=nullptr;
-  THipoItem* fRecEvBCG=nullptr;
-  THipoItem* fRecEvLT=nullptr;
+  THipoItemI* fRecEvNRun=nullptr;
+  THipoItemI* fRecEvNEVENT=nullptr;
+  THipoItemB* fRecEvTYPE=nullptr;
+  THipoItemL* fRecEvTRG=nullptr;
+  THipoItemB* fRecEvHelic=nullptr;
+  THipoItemF* fRecEvEVNTime=nullptr;
+  THipoItemF* fRecEvBCG=nullptr;
+  THipoItemD* fRecEvLT=nullptr;
   //  THipoItem* fRecEvSTTime=nullptr;
-  THipoItem* fRecEvRFTime=nullptr;
-  THipoItem* fRecEvPTIME=nullptr;
+  THipoItemF* fRecEvRFTime=nullptr;
+  THipoItemF* fRecEvPTIME=nullptr;
 
-  THipoItem* fRawScalChan=nullptr;; 
-  THipoItem* fRawScalSlot=nullptr;;
-  THipoItem* fRawScalVal=nullptr;;
-  THipoItem* fRawScalHel=nullptr;;
+  THipoItemS* fRawScalChan=nullptr;; 
+  THipoItemB* fRawScalSlot=nullptr;;
+  THipoItemI* fRawScalVal=nullptr;;
+  THipoItemB* fRawScalHel=nullptr;;
   
   
    //Trigger variables

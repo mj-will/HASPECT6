@@ -761,8 +761,9 @@ void THSRooFit::PlotDataModel(){
   if(fChi2s.getSize()==0){
     for(Int_t idr=0;idr<fVariables.getSize();idr++){
       RooRealVar* var=dynamic_cast<RooRealVar*>(fWS->var(fVariables[idr].GetName()));//get variable
-       RooRealVar* chi2var=new RooRealVar(TString("Chi2")+var->GetName(),TString("Chi2")+var->GetName(),0);
-       fChi2s.add(*chi2var);
+      if(!var) continue;
+      RooRealVar* chi2var=new RooRealVar(TString("Chi2")+var->GetName(),TString("Chi2")+var->GetName(),0);
+      fChi2s.add(*chi2var);
     }
   }
   //Loop over variables

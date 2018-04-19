@@ -32,11 +32,11 @@ class THSTopology{
   FinalState::VoidFuncs Exec;
  private:
 
-  vector<Int_t> fTrueDefinition; //pdg codes needed for this topology
-  vector<Int_t> fActualDefinition; //pids needed for this topology
-   THSParticleIter *fIter=nullptr;
-  vector<Int_t> fIncParts; //particle allowed to be inclusive
-  vector<Int_t> fChargeParts; //particle allowed be IDed by charge
+  THSParticleIter *fIter=nullptr;
+  vector<Short_t> fTrueDefinition; //pdg codes needed for this topology
+  vector<Short_t> fActualDefinition; //pids needed for this topology
+  vector<Short_t> fIncParts; //particle allowed to be inclusive
+  vector<Short_t> fChargeParts; //particle allowed be IDed by charge
 
   //Flag to do PID by charge not given pdg code
   Bool_t fUseChargePID=kFALSE;
@@ -44,14 +44,14 @@ class THSTopology{
 
   Int_t fID; //reference number
 
-  const Int_t fNoID=1E6;
+  const Int_t fNoID=1E4;
   
   THSTopology* fAlternative=nullptr; //Another topology with same detected final state
 
  public:
-  Bool_t CheckTopo(vector<Int_t> *detTopo);
-  Bool_t CheckExclusiveTopo(vector<Int_t> *detTopo);
-  Bool_t CheckInclusiveTopo(vector<Int_t> *detTopo);
+  Bool_t CheckTopo(vector<Short_t> *detTopo);
+  Bool_t CheckExclusiveTopo(vector<Short_t> *detTopo);
+  Bool_t CheckInclusiveTopo(vector<Short_t> *detTopo);
   void SetInclusive(TString parts);
   void SetChargePID(TString parts);
 
@@ -60,17 +60,17 @@ class THSTopology{
 
   void SetAlternative(THSTopology* alt){fAlternative=alt;}
   THSTopology*  Alternative(){return fAlternative;}
-  vector<Int_t>* Definition() {return &fActualDefinition;}
-  vector<Int_t>* True() {return &fTrueDefinition;}
+  vector<Short_t>* Definition() {return &fActualDefinition;}
+  vector<Short_t>* True() {return &fTrueDefinition;}
 
   void SetID(Int_t id){fID=id;}
   Int_t ID(){return fID;}
 
-  Int_t PDGtoCharge(Int_t pdg);
-  Int_t ParticleID(Int_t pdg);
-  void TopoToCharge(vector<Int_t> *thisTopo);
+  Short_t PDGtoCharge(Short_t pdg);
+  Short_t ParticleID(Short_t pdg);
+  void TopoToCharge(vector<Short_t> *thisTopo);
   
-  UInt_t HowManyTrue(Int_t pdg);
+  UInt_t HowManyTrue(Short_t pdg);
   
   void Print(Int_t verbose);
 };

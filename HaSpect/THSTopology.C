@@ -62,8 +62,8 @@ THSTopology::~THSTopology(){
 
 //////////////////////////////////////////////////////////////////////
 ///Check if the topology itopo exactly matches the current detected one
-Bool_t THSTopology::CheckTopo(vector<Int_t> *detTopo){
-  // cout<<"CheckTopo "<<fID<<endl;
+Bool_t THSTopology::CheckTopo(vector<Short_t> *detTopo){
+   // cout<<"CheckTopo "<<fID<<endl;
   // for(Int_t i=0;i<fActualDefinition.size();i++)
   //   cout<<fActualDefinition[i]<<" ";
   // cout<<endl;
@@ -74,7 +74,7 @@ Bool_t THSTopology::CheckTopo(vector<Int_t> *detTopo){
   return CheckExclusiveTopo(detTopo);
 }
 
-Bool_t THSTopology::CheckExclusiveTopo(vector<Int_t> *detTopo){
+Bool_t THSTopology::CheckExclusiveTopo(vector<Short_t> *detTopo){
   if(*(detTopo)==fActualDefinition){
     return kTRUE;
   }
@@ -82,10 +82,10 @@ Bool_t THSTopology::CheckExclusiveTopo(vector<Int_t> *detTopo){
 }
 //////////////////////////////////////////////////////////////////////
 ///Check if the topology itopo matches inclusively the current detected one
-Bool_t THSTopology::CheckInclusiveTopo(vector<Int_t> *detTopo){
+Bool_t THSTopology::CheckInclusiveTopo(vector<Short_t> *detTopo){
 
 
-  vector<Int_t>ptypes;
+  vector<Short_t>ptypes;
 
   for(UInt_t ipart=0;ipart<fActualDefinition.size();ipart++){
     //check if ptypes already includes this type fDefinition[ipart]
@@ -214,19 +214,19 @@ void THSTopology::Print(Int_t verbose){
 }
 //////////////////////////////////////////////////////////////////////
 ///Convert particle PDG code to the particle charge
-Int_t THSTopology::PDGtoCharge(Int_t pdg){
-
-  Int_t charge=TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
+Short_t THSTopology::PDGtoCharge(Short_t pdg){
+  TParticlePDG* pp=TDatabasePDG::Instance()->GetParticle(pdg);
+  if(!pp)return 0;
+  Short_t charge=pp->Charge();
   if(charge!=0)charge=charge/TMath::Abs(charge); //just get sign not mag.
   return charge;
 }
 //////////////////////////////////////////////////////////////////////
 ///return PDG code or charge depending on what is configured via fChargeParts
-Int_t THSTopology::ParticleID(Int_t pdg){
+Short_t THSTopology::ParticleID(Short_t pdg){
   if(!fUseChargePID) return pdg;
    //First check the case of no defined PDG code
     //i.e. Rootinos, these are always converted to charge
- 
   if(pdg==fNoID){ return pdg;}
   if(pdg==-fNoID){ return pdg;}
   if(pdg==0){ return pdg;}
@@ -246,15 +246,15 @@ Int_t THSTopology::ParticleID(Int_t pdg){
 
 //////////////////////////////////////////////////////////////////////
 ///Convert this topology to charge identification according to fChargeParts
-void THSTopology::TopoToCharge(vector<Int_t> *thisTopo){
+void THSTopology::TopoToCharge(vector<Short_t> *thisTopo){
 
   for(UInt_t ip=0;ip<thisTopo->size();ip++){
     thisTopo->at(ip)=ParticleID(thisTopo->at(ip));
   }
   
 }
-UInt_t THSTopology::HowManyTrue(Int_t pdg){
-  Int_t np=0;
+UInt_t THSTopology::HowManyTrue(Short_t pdg){
+  UInt_t np=0;
  
   for(UInt_t i=0;i<fTrueDefinition.size();i++){
     if(fTrueDefinition[i]==pdg) np++;

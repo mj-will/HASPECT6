@@ -52,12 +52,15 @@ Bool_t THSParticleIter::NextCombitorial(){
   //If more to go get the next one
   //  fSelected=fCombi.Next(&fAllParticles,fNSel,fNIdentical);
   vector<THSParticle*>  vec_combi=*fAllParticles;
+  // for(Int_t ii=0;ii<fAllParticles->size();ii++)
+  //   cout<<"iter "<<fAllParticles->at(ii)->PDG()<<" "<<fCombi.Niter()<<endl;
+  
   if(fCombi.GetType()==2){ //for selections with more requested than in allparticles, add extra particles (with zero energy etc)
     while(vec_combi.size()<UInt_t(fNSel)){
       vec_combi.push_back(fExtraParticle);
     }	
     fSelected=fCombi.Next(&vec_combi,fNSel,fNIdentical);
-    }	
+  }	
   //cout<<fSelected.size()<<endl;
   else fSelected=fCombi.Next(fAllParticles,fNSel,fNIdentical);
   //update selected and remaining particles
@@ -215,29 +218,27 @@ void THSParticleIter::SortEvent(){
       fInnerIter->SortEvent();
     }
     //else{
-      for(UInt_t isel=0;isel<fEvParts.size();isel++){
-    	//if(isel>=fSelected.size())cout<<" THSParticleIter::SortEvent() Warning too many particles "<<isel<<" "<<fEvParts.size()<<endl;
-    	if(isel<fSelected.size()){
-	  fEvParts[isel]->CopyParticle(fSelected[isel],kFALSE);
-	  fEvParts[isel]->TakePDGMass();
-	}
-	else{
-	  fEvParts[isel]->P4p()->SetE(0);
-	  fEvParts[isel]->P4p()->SetRho(0);
-	  fEvParts[isel]->P4p()->SetTheta(0);
-	}
+    for(UInt_t isel=0;isel<fEvParts.size();isel++){
+      //if(isel>=fSelected.size())cout<<" THSParticleIter::SortEvent() Warning too many particles "<<isel<<" "<<fEvParts.size()<<endl;
+      if(isel<fSelected.size()){
+	fEvParts[isel]->CopyParticle(fSelected[isel],kFALSE);
+	fEvParts[isel]->TakePDGMass();
       }
-    
+      else{
+	fEvParts[isel]->P4p()->SetXYZT(0,0,0,0);
+      }
     }
- 
-    else{ //No combitorial just take all particles as given
+    
+  }
+  
+  else{ //No combitorial just take all particles as given
     // cout<<"Sorting "<<fEvParts.size()<<" "<<fAllParticles->size()<<endl;
-   for(UInt_t iall=0;iall<fAllParticles->size();iall++){
-     if(iall>=fAllParticles->size())cout<<" THSParticleIter::SortEvent() Warning too may particles in AllParticles "<<iall<<" "<<fEvParts.size()<<endl;
+    for(UInt_t iall=0;iall<fAllParticles->size();iall++){
+      if(iall>=fAllParticles->size())cout<<" THSParticleIter::SortEvent() Warning too may particles in AllParticles "<<iall<<" "<<fEvParts.size()<<endl;
       // fEvParts[iall]->CopyParticle(fAllParticles[iall],kFALSE);
       // fEvParts[iall]->TakePDGMass();
-     if(iall>=fEvParts.size())cout<<" THSParticleIter::SortEvent() Warning too may particles in EvParticles "<<iall<<" "<<fEvParts.size()<<endl;
-     //  cout<<iall<<" "<<fEvParts[iall]<<" "<<fAllParticles->at(iall)<<endl;
+      if(iall>=fEvParts.size())cout<<" THSParticleIter::SortEvent() Warning too may particles in EvParticles "<<iall<<" "<<fEvParts.size()<<endl;
+      //  cout<<iall<<" "<<fEvParts[iall]<<" "<<fAllParticles->at(iall)<<endl;
       fEvParts[iall]->CopyParticle(fAllParticles->at(iall),kFALSE);
       fEvParts[iall]->TakePDGMass();
     }

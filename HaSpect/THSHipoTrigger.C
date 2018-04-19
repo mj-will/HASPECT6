@@ -18,28 +18,28 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     
     fRunConBank=fHipo->GetBank("RUN::config");
  
-    fRecEvNRun=fEvBank->GetItem("NRUN");
-    fRecEvNEVENT=fEvBank->GetItem("NEVENT");
-    fRecEvTYPE=fEvBank->GetItem("TYPE");
-    fRecEvTRG=fEvBank->GetItem("TRG");
-    fRecEvHelic=fEvBank->GetItem("Helic");
-    fRecEvEVNTime=fEvBank->GetItem("EVNTime");
-    fRecEvBCG=fEvBank->GetItem("BCG");
+    fRecEvNRun=dynamic_cast<THipoItemI*>(fEvBank->GetItem("NRUN"));
+    fRecEvNEVENT=dynamic_cast<THipoItemI*>(fEvBank->GetItem("NEVENT"));
+    fRecEvTYPE=dynamic_cast<THipoItemB*>(fEvBank->GetItem("TYPE"));
+    fRecEvTRG=dynamic_cast<THipoItemL*>(fEvBank->GetItem("TRG"));
+    fRecEvHelic=dynamic_cast<THipoItemB*>(fEvBank->GetItem("Helic"));
+    fRecEvEVNTime=dynamic_cast<THipoItemF*>(fEvBank->GetItem("EVNTime"));
+    fRecEvBCG=dynamic_cast<THipoItemF*>(fEvBank->GetItem("BCG"));
     //    fRecEvLT=fEvBank->GetItem("LT");
     //fRecEvSTTime=fEvBank->GetItem("STTime");
-    fRecEvRFTime=fEvBank->GetItem("RFTime");
-    fRecEvPTIME=fEvBank->GetItem("PTIME");
+    fRecEvRFTime=dynamic_cast<THipoItemF*>(fEvBank->GetItem("RFTime"));
+    fRecEvPTIME=dynamic_cast<THipoItemF*>(fEvBank->GetItem("PTIME"));
 
     
-    fRunTrig=fRunConBank->GetItem("trigger");
+    fRunTrig=dynamic_cast<THipoItemL*>(fRunConBank->GetItem("trigger"));
 
     
     fRawScalBank=fHipo->GetBank("RAW::scaler");
     
-    fRawScalChan=fRawScalBank->GetItem("channel"); 
-    fRawScalSlot=fRawScalBank->GetItem("slot");
-    fRawScalVal=fRawScalBank->GetItem("value");
-    fRawScalHel=fRawScalBank->GetItem("helicity");
+    fRawScalChan=dynamic_cast<THipoItemS*>(fRawScalBank->GetItem("channel")); 
+    fRawScalSlot=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("slot"));
+    fRawScalVal=dynamic_cast<THipoItemI*>(fRawScalBank->GetItem("value"));
+    fRawScalHel=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("helicity"));
   }
 
   fCharge=0;

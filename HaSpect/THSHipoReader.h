@@ -19,9 +19,10 @@ class THSHipoReader: public THSDataManager{
   virtual Bool_t Init(TString filename,TString name="");
   virtual Bool_t ReadEvent(Long64_t entry=0);
   virtual void CloseReadTree();
-  virtual void WriteParticles(TString filename);
-  // void SetUsePID(Bool_t use=kTRUE){fUsePID=use;}
-  
+  // virtual void WriteParticles(TString filename);
+  virtual void InitOutput(TString filename);
+  virtual void CloseOutput();
+
   Int_t GetRunNumber(TString filen);
   void SetCombineFiles(Bool_t setf=kTRUE){fCombineFiles=kTRUE;};
  protected :
@@ -36,47 +37,47 @@ class THSHipoReader: public THSDataManager{
   THipoBank *fEvBank=nullptr;
   //  THipoBank *fCVTBank=nullptr;
 
-  THipoItem* fPid=nullptr;
-  THipoItem* fPx=nullptr;
-  THipoItem* fPy=nullptr;
-  THipoItem* fPz=nullptr;
-  THipoItem* fVx=nullptr;
-  THipoItem* fVy=nullptr;
-  THipoItem* fVz=nullptr;
-  THipoItem* fBeta=nullptr;
-  THipoItem* fCharge=nullptr;
+  THipoItemI* fPid=nullptr;
+  THipoItemF* fPx=nullptr;
+  THipoItemF* fPy=nullptr;
+  THipoItemF* fPz=nullptr;
+  THipoItemF* fVx=nullptr;
+  THipoItemF* fVy=nullptr;
+  THipoItemF* fVz=nullptr;
+  THipoItemF* fBeta=nullptr;
+  THipoItemB* fCharge=nullptr;
   
-  THipoItem* fSPindex=nullptr;
-  THipoItem* fSTime=nullptr;
-  THipoItem* fSSector=nullptr;
-  THipoItem* fSEnergy=nullptr;
-  THipoItem* fSDet=nullptr;
-  THipoItem* fSPath=nullptr;
+  THipoItemS* fSPindex=nullptr;
+  THipoItemF* fSTime=nullptr;
+  THipoItemB* fSSector=nullptr;
+  THipoItemF* fSEnergy=nullptr;
+  THipoItemB* fSDet=nullptr;
+  THipoItemF* fSPath=nullptr;
 
-  THipoItem* fCalPindex=nullptr;
-  THipoItem* fCalEnergy=nullptr;
-  THipoItem* fCalTime=nullptr;
-  THipoItem* fCalPath=nullptr;
+  THipoItemS* fCalPindex=nullptr;
+  THipoItemF* fCalEnergy=nullptr;
+  THipoItemF* fCalTime=nullptr;
+  THipoItemF* fCalPath=nullptr;
 
-  THipoItem* fChPindex=nullptr;
-  THipoItem* fChEnergy=nullptr;
-  THipoItem* fChDetector=nullptr;
+  THipoItemS* fChPindex=nullptr;
+  THipoItemS* fChEnergy=nullptr;
+  THipoItemB* fChDetector=nullptr;
 
-  THipoItem* fFTPindex=nullptr;
-  THipoItem* fFTTime=nullptr;
-  THipoItem* fFTEnergy=nullptr;
-  THipoItem* fFTDet=nullptr;
-  THipoItem* fFTPath=nullptr;
+  THipoItemS* fFTPindex=nullptr;
+  THipoItemF* fFTTime=nullptr;
+  THipoItemF* fFTEnergy=nullptr;
+  THipoItemB* fFTDet=nullptr;
+  THipoItemF* fFTPath=nullptr;
 
-  THipoItem* fRecEvSTTime=nullptr;
+  THipoItemF* fRecEvSTTime=nullptr;
  
-  THipoItem* fMCPid=nullptr;
-  THipoItem* fMCPx=nullptr;
-  THipoItem* fMCPy=nullptr;
-  THipoItem* fMCPz=nullptr;
-  THipoItem* fMCVx=nullptr;
-  THipoItem* fMCVy=nullptr;
-  THipoItem* fMCVz=nullptr;
+  THipoItemI* fMCPid=nullptr;
+  THipoItemF* fMCPx=nullptr;
+  THipoItemF* fMCPy=nullptr;
+  THipoItemF* fMCPz=nullptr;
+  THipoItemF* fMCVx=nullptr;
+  THipoItemF* fMCVy=nullptr;
+  THipoItemF* fMCVz=nullptr;
 
   Bool_t fUsePID=kTRUE;
   Bool_t fCombineFiles=kFALSE;

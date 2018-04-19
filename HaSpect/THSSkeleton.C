@@ -125,7 +125,7 @@ void THSSkeleton::HSOut_Control(){
   ReplaceMacroText("INPUT_FILE_DIR",TString(gSystem->DirName(fFileName))+"/");
   ReplaceMacroText("TREENAME",fTreeName);
   ReplaceMacroText("FILENAMES",gSystem->BaseName(fFileName));
-  ReplaceMacroText("SELECTOR",fSelName+".C++");
+  ReplaceMacroText("SELECTOR",fSelName+".C+");
 
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 
@@ -382,6 +382,12 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter("   THSOutput::HSProcessFill();");
   ContinueLineAfter("}");
 
+  fPlace=0;
+  FindNextLineLike("GetEntry(entry)");
+  ContinueLineAfter("  b_PIDs->GetEntry(entry);//Check if event contains valid topology",-1);
+  ContinueLineAfter("  if(!CheckForATopology()) return kTRUE;");
+
+
   fPlace=0; 
   if(fIsHisto){
     AddLineAfter("THSOutput::HSProcessFill();"," //below you can give vars corresponding to fBins axis",-1);
@@ -402,6 +408,8 @@ void THSSkeleton::HSFinalState(){
   ReplaceMacroText("public THSOutput",TString("public THSOutput, public ")+fFinalName);
   TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
   ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
+  FindNextLineLike("fChain->SetBranchAddress(\"PIDs\"");	
+  ContinueLineAfter(" THSFinalState::SetDetPIDs(PIDs);");
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
     ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetGenParts(Generated);");
@@ -410,13 +418,16 @@ void THSSkeleton::HSFinalState(){
   FindNextLineLike("Terminate();");
   ContinueLineAfter("  //Additional final state analysis function");
   ContinueLineAfter(Form("  virtual void UserProcess();"));
- 
+  
+  ReplaceMacroText("SetMakeClass(1)","SetMakeClass(0)");
+
   fCurMacro.SaveSource(fSelName+".h");
   //////////////////////////////////////////////////////////////////  
   //Now with Control
   fCurMacro=TMacro(TString("Control_")+fSelName+".C");
   // AddLineAfter("HSout(","  HSMacPath(\"ADDITIONALMACROPATH_WHEREPROJECTIS\");");
   //ContinueLineAfter("  HSfinal(\""+fFinalName+"\");");
+  ReplaceMacroText("HSUnSplit","HSParticles");
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
 
