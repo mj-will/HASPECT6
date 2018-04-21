@@ -54,7 +54,7 @@ class THipoItem  {
   TString GetName(){return fName;}
   Int_t  Type(){return fNode->type();}
   
-  char* GetAddress(){return fNode->getAddress();}
+  //  char* GetAddress(){return fNode->getAddress();}
   
   void SetName(TString name){fNode->name(name.Data());fName=name;}
   void SetType(Int_t type){fNode->type(type);}
@@ -63,7 +63,7 @@ class THipoItem  {
   virtual void TreeBranch(TTree* outtree){};
   Bool_t TreeBranch(TString bankname0,TTree* outtree);
   virtual void VectorBranch(TTree* outtree){};
-  void SetBranchAddress(){if(fBranch)fBranch->SetAddress(GetAddress());}
+  //void SetBranchAddress(){if(fBranch)fBranch->SetAddress(GetAddress());}
   virtual void CopyToVector(){};
   void SetIsVector(Bool_t vect){fIsVector=vect;}
   // template<class T>   T Val(){return 0;};
@@ -91,8 +91,8 @@ class THipoItemB : public THipoItem{
 
   virtual void ResetNode(hipo::node<int8_t>* node){fNodeB=nullptr;fNode=nullptr;fNodeB=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeB);fNode->type(1);};
  
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/B");}
+  // virtual void TreeBranch(TTree* outtree){
+  //  fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/B");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecB);}
 
@@ -127,8 +127,8 @@ class THipoItemS : public THipoItem{
  virtual ~THipoItemS(){}
  virtual void ResetNode(hipo::node<int16_t>* node){fNodeS=nullptr;fNode=nullptr;fNodeS=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeS);fNode->type(2);};
 
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/S");}
+ //virtual void TreeBranch(TTree* outtree){
+ // fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/S");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecS);}
 
@@ -162,8 +162,8 @@ class THipoItemI : public THipoItem{
  virtual ~THipoItemI(){}
    virtual void ResetNode(hipo::node<int32_t>* node){fNodeI=nullptr;fNode=nullptr;fNodeI=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeI);fNode->type(3);};
 
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/I");}
+   //virtual void TreeBranch(TTree* outtree){
+   // fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/I");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecI);}
 
@@ -198,8 +198,8 @@ class THipoItemF : public THipoItem{
  virtual ~THipoItemF(){}
  virtual void ResetNode(hipo::node<float_t>* node){fNodeF=nullptr;fNode=nullptr;fNodeF=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeF);fNode->type(4);};
 
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/F");}
+ // virtual void TreeBranch(TTree* outtree){
+ //  fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/F");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecF);}
 
@@ -225,8 +225,8 @@ class THipoItemD : public THipoItem{
  virtual ~THipoItemD(){}
   virtual void ResetNode(hipo::node<double_t>* node){fNodeD=nullptr;fNode=nullptr;fNodeD=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeD);fNode->type(5);};
 
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/D");}
+  //virtual void TreeBranch(TTree* outtree){
+  // fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/D");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecD);}
 
@@ -252,8 +252,8 @@ class THipoItemL : public THipoItem{
  virtual ~THipoItemL(){};
   virtual void ResetNode(hipo::node<long>* node){fNodeL=nullptr;fNode=nullptr;fNodeL=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeL);fNode->type(8);};
 
-  virtual void TreeBranch(TTree* outtree){
-    fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/L");}
+  //virtual void TreeBranch(TTree* outtree){
+  //fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/L");}
   virtual void VectorBranch(TTree* outtree){
     fBranch=outtree->Branch(fBranchname,&fVecL);}
   

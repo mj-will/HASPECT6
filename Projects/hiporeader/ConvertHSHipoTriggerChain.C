@@ -5,16 +5,13 @@
   reader->SetOutDir(HSout());
   //  reader->SetWriteGenBranch("Generated"); //simulation only
 
+  TChain chain("hipo");
+  chain.Add(HSin()+"/out_clas_002835.evio.*.hipo");
 
 
   gBenchmark->Start("time");
   reader->SetTrigPeriod(1);                                                
   reader->SetCurFactor(0.16283); //for 6GeV, for 10GeV you can remove this line 
-
-  cout<<"Analysing file "<<HSin()<<endl;
-  TChain chain("hipo");
-  chain.Add(HSin()+"/*.hipo");
-
 
   reader->InitChain(&chain);
   reader->WriteParticles();

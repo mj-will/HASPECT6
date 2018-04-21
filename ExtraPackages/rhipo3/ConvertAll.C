@@ -1,6 +1,5 @@
 {
   THipo Hipo;
-  Hipo.SetIsVector(kFALSE);
   Hipo.AddCommandLineFiles();
   Hipo.SetCompression(1);
   gBenchmark->Start("time");
