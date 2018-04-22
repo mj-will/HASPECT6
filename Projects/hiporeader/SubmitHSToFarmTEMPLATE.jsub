@@ -1,0 +1,12 @@
+PROJECT: clas12
+MEMORY: 1000 MB
+TIME: 1440
+DISK_SPACE: 4 GB
+COMMAND: root
+OPTIONS: -l -b -q  --hsdata ConvertHSHipoTrigger.C --hsin=./ --hsout=outfiles/
+OS: centos7
+TRACK: debug
+OTHER_FILES: $RHIPO/ConvertHSHipoTrigger.C
+OUTPUT_DATA: outfiles/*.root
+OUTPUT_TEMPLATE:
+INPUT_FILES: 
