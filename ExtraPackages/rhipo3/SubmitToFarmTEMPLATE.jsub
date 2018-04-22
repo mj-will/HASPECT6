@@ -3,7 +3,7 @@ MEMORY: 1000 MB
 TIME: 1440
 DISK_SPACE: 4 GB
 COMMAND: root
-OPTIONS: -l -b -q  --hsdata ConvertAll.C --hsin=./ --hsout=outfiles/
+OPTIONS: -l -b -q  --farm --hsdata ConvertAll.C --hsin=./ --hsout=outfiles/
 OS: centos7
 TRACK: debug
 OTHER_FILES: $RHIPO/ConvertAll.C
