@@ -5,7 +5,7 @@ DISK_SPACE: 4 GB
 COMMAND: root
 OPTIONS: -l -b -q  --farm --hsdata ConvertAll.C --in=./ --out=./
 OS: centos7
-TRACK: debug
+TRACK: analysis
 OTHER_FILES: $RHIPO/ConvertAll.C
 OUTPUT_DATA: out*.root
 OUTPUT_TEMPLATE:
