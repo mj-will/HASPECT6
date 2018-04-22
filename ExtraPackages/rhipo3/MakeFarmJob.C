@@ -1,6 +1,6 @@
 //For perparing jsub files for jlab farm
 //Example usage :
-//root $RHIPO/MakeFarmJob.C --indir=/volatile/clas12/data/rg-a/.../ --run=2835 --jsub=SubmitToFarmTEMPLATE.jsub --nfiles=2 --outdir=/volatile/clas12/.../ --tperfile=300
+//root -l $RHIPO/MakeFarmJob.C --indir=/volatile/clas12/data/rg-a/.../ --run=2835 --jsub=SubmitToFarmTEMPLATE.jsub --nfiles=2 --outdir=/volatile/clas12/.../ --tperfile=300
 {
   TString INDIR;
   TString OUTDIR;
@@ -47,7 +47,11 @@
   if(OUTDIR.Sizeof()==1) {cout<<"No ouput directory, use --outdir=/some/directory/to/put/root/files"<<endl;exit(0);}
   if(RUNNO.Sizeof()==1) {cout<<"No run number, use --run=XXXXXX"<<endl;exit(0);}
   if(FARMFILE.Sizeof()==1) {cout<<"No template jsub file, use --jsub=SomeSubmitFile.jsub"<<endl;exit(0);}
-  
+
+  //Add run name to output directory
+  OUTDIR+="/Run";
+  OUTDIR+=RUNNO;
+  gSystem->Exec(Form("mkdir -p %s",OUTDIR.Data()));
   //Get List of data files to submit
   void *dir=gSystem->OpenDirectory(INDIR);
   if(!dir)  {cout<<"No input directory "<<INDIR<<endl;exit(0);}
