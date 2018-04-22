@@ -1,6 +1,6 @@
 //For perparing jsub files for jlab farm
 //Example usage :
-//root MakeFarmJob.C --indir=/volatile/clas12/data/rg-a/.../ --run=2835 --jsub=SubmitToFarmTEMPLATE.jsub --nfiles=2 --outdir=/volatile/clas12/.../ --tperfile=300
+//root $RHIPO/MakeFarmJob.C --indir=/volatile/clas12/data/rg-a/.../ --run=2835 --jsub=SubmitToFarmTEMPLATE.jsub --nfiles=2 --outdir=/volatile/clas12/.../ --tperfile=300
 {
   TString INDIR;
   TString OUTDIR;
