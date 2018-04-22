@@ -6,6 +6,7 @@ COMMAND: root
 OPTIONS: -l -b -q  --farm --hsdata ConvertAll.C --in=./ --out=./
 OS: centos7
 TRACK: analysis
+SINGLE_JOB:
 OTHER_FILES: $RHIPO/ConvertAll.C
 OUTPUT_DATA: out*.root
 OUTPUT_TEMPLATE:
