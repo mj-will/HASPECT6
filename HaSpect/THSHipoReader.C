@@ -28,6 +28,7 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fHipo->ConfigOnlyBank("REC::Cherenkov");
     fHipo->ConfigOnlyBank("REC::ForwardTagger");
     fHipo->ConfigOnlyBank("REC::Event");
+    fHipo->ConfigOnlyBank("FTCAL::clusters");//needed for FT time
     if(fAddGenerated&&!fMCBank){
       fHipo->ConfigOnlyBank("MC::Particle");
     }
@@ -71,11 +72,16 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fFTEnergy=dynamic_cast<THipoItemF*>(fFTBank->GetItem("energy"));
     fFTPath=dynamic_cast<THipoItemF*>(fFTBank->GetItem("path"));
     fFTDet=dynamic_cast<THipoItemB*>(fFTBank->GetItem("detector"));
+    fFTX=dynamic_cast<THipoItemF*>(fFTBank->GetItem("x"));
+    fFTY=dynamic_cast<THipoItemF*>(fFTBank->GetItem("y"));
+    fFTZ=dynamic_cast<THipoItemF*>(fFTBank->GetItem("z"));
   
     fEvBank=fHipo->GetBank("REC::Event");
     fRecEvSTTime=dynamic_cast<THipoItemF*>(fEvBank->GetItem("STTime"));
 
-  
+    fFTCALClustBank=fHipo->GetBank("FTCAL::clusters");
+    fFTCALClust_t=dynamic_cast<THipoItemF*>(fFTCALClustBank->GetItem("time"));
+
     if(fAddGenerated&&!fMCBank){
       fMCBank=fHipo->GetBank("MC::Particle");
       fMCPx=dynamic_cast<THipoItemF*>(fMCBank->GetItem("px"));
@@ -194,7 +200,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       //  cout<<"Done particle "<<endl;
       while(fSPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle.SetTime(fSTime->Val()-fRecEvSTTime->Val());
+	particle.SetTime(fSTime->Val());
 	particle.SetDeltaE(fSEnergy->Val());
 	particle.SetPath(fSPath->Val()/100);
 	if(fSDet->Val()>10) //FD
@@ -207,10 +213,10 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fCalPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
 	particle.SetEdep(fCalEnergy->Val()+particle.Edep());
-	if(particle.Time()==-(fRecEvSTTime->Val())){
-	  particle.SetTime(fCalTime->Val()-fRecEvSTTime->Val());
-	  particle.SetPath(fCalPath->Val()/100);
-	}
+	//	if(particle.Time()==-(fRecEvSTTime->Val())){
+	particle.SetTime(fCalTime->Val());
+	particle.SetPath(fCalPath->Val()/100);
+	  //}
 	particle.SetDetector(particle.Detector()+100);
      }
       while(fChPindex->FindEntry(fPBank->GetEntry())){
@@ -221,11 +227,14 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       // cout<<"Done cherenkoc "<<endl;
 	
       while(fFTPindex->FindEntry(fPBank->GetEntry())){
-	//Do something if find a particular detector
-	particle.SetTime(fFTTime->Val()-fRecEvSTTime->Val());
-	particle.SetEdep(fFTEnergy->Val());
-	//	particle->SetDeltaE();
-	particle.SetPath(fFTPath->Val()/100);
+	//Do something if find a particular detector    fFTCALClust_t=fFTCALClustBank->GetItem("time");
+	fFTCALClustBank->SetEntry(fFTBank->GetEntry());
+	//particle.SetTime(fFTCALClust_t->Val()); //This is currently HODO time
+	particle.SetTime(fFTTime->Val());
+	//particle.SetEdep(fFTEnergy->Val()); //This is currently HODO energy
+	particle->SetDeltaE(fFTEnergy->Val());
+	//particle.SetPath(fFTPath->Val()/100);
+	particle.SetPath(sqrt(fFTX->Val()*fFTX->Val()+fFTY->Val()*fFTY->Val()+fFTZ->Val()*fFTZ->Val())/1000);
 	particle.SetDetector(-1000);
 	particle.SetPDGcode(fCharge->Val()*1E4);
 	
