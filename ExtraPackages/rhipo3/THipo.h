@@ -47,7 +47,8 @@ class THipoItem  {
   
   
   UInt_t Size(){return fNode->length();}
-  virtual Bool_t FindEntry(Float_t val){return kFALSE;};
+  //virtual Bool_t FindEntry(Float_t val){return kFALSE;};
+  //  virtual Bool_t FindEntry(Float_t val){return kFALSE;};
   void Reset(){fNode->length(0);}
   Int_t GetBankEntry(){return fBankEntry;}
   void SetBankEntry(Int_t *entry){fBankEntry=*entry;}

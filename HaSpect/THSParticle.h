@@ -109,8 +109,9 @@ class THSParticle {
   Double_t Beta(){return fPath/fTime/2.99792e+08*1E9;}//time ns, path m
   Double_t HypBeta(){Double_t pp=fP4.Rho();return pp/sqrt(pp*pp+fPDGMass*fPDGMass);}
   Double_t HypTime(){return fPath/HypBeta()/2.99792e+08*1E9  ;} //in ns
-  Double_t DeltaTime(){return HypTime()-fTime;};
-  Double_t DeltaTimeVer(){return DeltaTime()+fVertex.Z()/2.99792e+08*1E9;}
+  //  Double_t DeltaTime(){return HypTime()-fTime;};
+  Double_t DeltaTime(){return fTime-HypTime();};
+  Double_t DeltaTimeVer(){return DeltaTime()-fVertex.Z()/2.99792e+08*1E9;}
   Int_t Charge();
   Short_t Detector(){return fDetector;}
   

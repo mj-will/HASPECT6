@@ -171,7 +171,7 @@ Bool_t THipo::ConfigBanks(){
   //  Loop through dictionary and get the bank information
   hipo::event  schema;
   std::vector<std::string>  banks=fDictionary->getSchemaList();
-  for(int d = 0; d < banks.size(); d++){
+  for(UInt_t d = 0; d < banks.size(); d++){
     if(!fDictionary->hasSchema(banks[d].c_str())){cout<<"Warning : THipo::ConfigBanks(), no bank "<<banks[d].c_str()<<endl;continue;}
     TString dBank=banks[d];
     if(fOnlyBanks.size()!=0){

@@ -213,10 +213,10 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fCalPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
 	particle.SetEdep(fCalEnergy->Val()+particle.Edep());
-	//	if(particle.Time()==-(fRecEvSTTime->Val())){
-	particle.SetTime(fCalTime->Val());
-	particle.SetPath(fCalPath->Val()/100);
-	  //}
+	if(particle.Detector()<999){//no scintillator time
+	  particle.SetTime(fCalTime->Val());
+	  particle.SetPath(fCalPath->Val()/100);
+	}
 	particle.SetDetector(particle.Detector()+100);
      }
       while(fChPindex->FindEntry(fPBank->GetEntry())){
@@ -229,12 +229,13 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       while(fFTPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector    fFTCALClust_t=fFTCALClustBank->GetItem("time");
 	fFTCALClustBank->SetEntry(fFTBank->GetEntry());
-	//particle.SetTime(fFTCALClust_t->Val()); //This is currently HODO time
-	particle.SetTime(fFTTime->Val());
+	particle.SetTime(fFTCALClust_t->Val()); //This is currently HODO time
+	//	particle.SetTime(fFTTime->Val());
 	//particle.SetEdep(fFTEnergy->Val()); //This is currently HODO energy
-	particle->SetDeltaE(fFTEnergy->Val());
+	particle.SetDeltaE(fFTEnergy->Val());
 	//particle.SetPath(fFTPath->Val()/100);
-	particle.SetPath(sqrt(fFTX->Val()*fFTX->Val()+fFTY->Val()*fFTY->Val()+fFTZ->Val()*fFTZ->Val())/1000);
+	//	particle.SetPath(sqrt(fFTX->Val()*fFTX->Val()+fFTY->Val()*fFTY->Val()+fFTZ->Val()*fFTZ->Val())/1000);
+	particle.SetPath(1.9);
 	particle.SetDetector(-1000);
 	particle.SetPDGcode(fCharge->Val()*1E4);
 	
