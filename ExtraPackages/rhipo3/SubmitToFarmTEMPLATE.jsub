@@ -1,7 +1,8 @@
 PROJECT: clas12
-MEMORY: 1000 MB
+MEMORY: 3000 MB
 TIME: 1440
 DISK_SPACE: 4 GB
+SINGLE_JOB:
 COMMAND: root
 OPTIONS: -l -b -q  --farm --hsdata ConvertAll.C --in=./ --out=./
 OS: centos7

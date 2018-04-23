@@ -86,8 +86,15 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
     }
     cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
     cout<<"  at average of current of "<<fTotCharge/fNScalerReads/0.033<<"nA per read. "<<endl; 
-    return kFALSE;
+
+    if(fChainFiles){
+      if(!NextChainFile())//check if another file and initilaise
+	return kFALSE; //end of all files
+      else fHipo->NextEvent(); //first event of new file
+    }
+    else return kFALSE; //Only analysing 1 file
   }
+
 
   
   fEntry++;

@@ -1,4 +1,4 @@
-//Run with root --hsdata ConvertHSHipoTrigger.C --hsin=out_out.hipo --hsout=file.root
+//Run with root --hsdata ConvertHSHipoTriggerChain.C --hsin=indir --hsout=outdir
 {
 
   THSHipoTrigger* reader=new THSHipoTrigger();
@@ -6,7 +6,7 @@
   //  reader->SetWriteGenBranch("Generated"); //simulation only
 
   TChain chain("hipo");
-  chain.Add(HSin()+"/out_clas_002835.evio.*.hipo");
+  chain.Add(HSin()+"/*.hipo");
 
 
   gBenchmark->Start("time");
