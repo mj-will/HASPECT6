@@ -339,6 +339,7 @@ class THipoBank  {
   //Iterate over entries for each event in item name
   Bool_t NextEntry();
   Int_t GetEntry(){return fEntry;}
+  void SetEntry(Int_t ent){fEntry=ent;}
   Int_t* GetEntryAddress(){return &fEntry;}
   void ResetEntry(){fEntry=-1;}
   Int_t GetEntries();
