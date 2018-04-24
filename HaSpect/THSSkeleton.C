@@ -654,11 +654,12 @@ void THSSkeleton::CreateMyFinalState(){
   for(Int_t io=0;io<topos->GetEntries();io++){
     ContinueLineAfter(Form("void THS%s::Topo_%d(){",fFinalName.Data(),io));
     ContinueLineAfter(Form("  //For topology %s",topos->At(io)->GetName()));
-    // ContinueLineAfter("  //if(IsMissing(&fPARTICLE)) {fGoodEvent=kFALSE;return;} //check if this topology has the correct missing particle");
     ContinueLineAfter("  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors");
     ContinueLineAfter("");
     ContinueLineAfter("  //Reconstruct missing or combined particles");
-    ContinueLineAfter("");
+    ContinueLineAfter("  //HSLorentzVector miss=fBeam+fTarget-fElectron.P4()...;");
+    ContinueLineAfter("  //fMissMass2=miss.M2();");
+    ContinueLineAfter("  //fMissMass=miss.M();");
     ContinueLineAfter("}");
     
   }
@@ -701,6 +702,13 @@ void THSSkeleton::CreateMyFinalState(){
   ReplaceAllMacroText("XXX",fFinalName);
 
   fCurMacro.SaveSource(TString("RunFSRoot")+fFinalName+".C");
+
+  gSystem->Exec(Form("cp %s/../Projects/createFinalState/RunFSHipo.C RunFSHipo%s.C",HSANA.Data(),fFinalName.Data()));
+  fCurMacro=TMacro(TString("RunFSHipo")+fFinalName+".C");
+  fPlace=0;
+  ReplaceAllMacroText("XXX",fFinalName);
+
+  fCurMacro.SaveSource(TString("RunFSHipo")+fFinalName+".C");
 
 }
 

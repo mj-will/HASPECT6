@@ -112,6 +112,7 @@ class THSParticle {
   //  Double_t DeltaTime(){return HypTime()-fTime;};
   Double_t DeltaTime(){return fTime-HypTime();};
   Double_t DeltaTimeVer(){return DeltaTime()-fVertex.Z()/2.99792e+08*1E9;}
+  void ShiftTime(Float_t shift){fTime+=shift;}
   Int_t Charge();
   Short_t Detector(){return fDetector;}
   

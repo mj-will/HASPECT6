@@ -1,15 +1,15 @@
-//root --hsdata --hsfinal=THSXXX RunFSRootXXX.C
+//root --hsdata --hsfinal=THSXXX RunFSHipoXXX.C
 //You need to replace XXX with your final state class name
 {
   //Create FinalState
   THSXXX* fs=new THSXXX();
-  // fs->SetGenerated(); //just analyse generated branch
+   // fs->SetGenerated(); //just analyse generated branch
   //create datamanager
-  THSDataManager* dm=new THSDataManager();
+  THSHipoTrigger* dm=new THSHipoTrigger();
   // dm->SetReadGenBranch("Generated");
   // dm->Init("INPUT.root","HSParticles");
   TChain chain("HSParticles");
-  chain.Add("/indir/out_*root");
+  chain.Add("/indir/out_*hipo");
   dm->InitChain(&chain);
   //connect Project to HSParticles
   fs->SetDataManager(dm);
@@ -22,7 +22,7 @@
   
   gBenchmark->Start("timer");
   
-  while(dm->ReadFinalStateEvent()){//loop over events
+  while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
   }
   gBenchmark->Stop("timer");

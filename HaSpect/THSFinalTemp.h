@@ -3,14 +3,14 @@
 #define THSFINALTEMP_h
 
 #include "THSFinalState.h"
-#include "TLorentzVector.h"
+#include "THSParticle.h"
 #include <vector>
 
 class THSFinalTemp : public THSFinalState{
 
  public :
   THSFinalTemp();
-  ~THSFinalTemp(){};
+  ~THSFinalTemp()=default;
 
 
   //Init functions
@@ -22,8 +22,8 @@ class THSFinalTemp : public THSFinalState{
   protected :
  
   //Initial state
-  TLorentzVector fBeam=TLorentzVector(0,0,10.6,10.6);
-  TLorentzVector fTarget=TLorentzVector(0,0,0,0.938272);
+  HSLorentzVector fBeam=HSLorentzVector(0,0,10.6,10.6);
+  HSLorentzVector fTarget=HSLorentzVector(0,0,0,0.938272);
 
   //Final Particles Detected
  
@@ -33,12 +33,14 @@ class THSFinalTemp : public THSFinalState{
   Double_t f_t;
   Double_t f_Q2;
   Double_t f_W;
+  Double_t f_EGamma;
   Double_t f_Pol;
   Double_t fCMCosTh;
   Double_t fCMPhi;
 
   //Discriminators
   Double_t fMissMass=0;
+  Double_t fMissMass2=0;
 
    public :
   virtual void FinalStateOutTree(TTree* tree);

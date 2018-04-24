@@ -3,13 +3,14 @@
 {
   //Create FinalState
   THSXXX* fs=new THSXXX();
+  fs->SetPermutate(); //turn on permuations
   // fs->SetGenerated(); //just analyse generated branch
   //create datamanager
   THSDataManager* dm=new THSDataManager();
   // dm->SetReadGenBranch("Generated");
   // dm->Init("INPUT.root","HSParticles");
   TChain chain("HSParticles");
-  chain.Add("/indir/out_*root");
+  chain.Add("/indir/out_*hipo");
   dm->InitChain(&chain);
   //connect Project to HSParticles
   fs->SetDataManager(dm);
