@@ -3,7 +3,7 @@
     //Found liblz4 in LD_LIBRARY_PATH 
     gROOT->ProcessLine("#define __LZ4__");
     gSystem->AddIncludePath("-D__LZ4__");
-    //gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("LZ4_h"));
+    gSystem->AddIncludePath(TString("-I")+gSystem->Getenv("LZ4_h"));
      
   }
   else{
