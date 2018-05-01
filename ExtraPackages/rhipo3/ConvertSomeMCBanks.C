@@ -1,4 +1,4 @@
-//root $RHIPO/Hipo2Root.C $RHIPO/ConvertSomeBanks.C file1.hipo file2.hipo ...
+//root $RHIPO/Hipo2Root.C $RHIPO/ConvertSomeMCBanks.C file1.hipo file2.hipo ...
 {
   //Edit this macro to only convert the banks selected with ConfigBank
   THipo Hipo;
@@ -9,6 +9,8 @@
   Hipo.ConfigOnlyBank("RAW::scaler");
   Hipo.ConfigOnlyBank("FT::particles");
   Hipo.ConfigOnlyBank("FTCAL::clusters");
+  Hipo.ConfigOnlyBank("MC::");
+
 
   //Hipo.ConfigOnlyBank("REC::Event");
   //Hipo.ConfigOnlyBank("RUN");

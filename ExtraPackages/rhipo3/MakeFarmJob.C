@@ -24,9 +24,13 @@
     }
     if(cmd.Contains("--run=")){
       RUNNO=cmd(6,cmd.Sizeof());
-      while(RUNNO.Sizeof()<7)
-	RUNNO.Prepend("0");
-      cout<<"Analysing run number "<<RUNNO<<endl;
+      if(RUNNO==TString("GEMC"))
+	cout<<"Analysing gemc runs "<<endl;
+      else{     
+	while(RUNNO.Sizeof()<7)
+	  RUNNO.Prepend("0");
+	cout<<"Analysing run number "<<RUNNO<<endl;
+      }
     }
     if(cmd.Contains("--jsub=")){
       FARMFILE=cmd(7,cmd.Sizeof());
@@ -61,7 +65,7 @@
   while( (fileName=(gSystem->GetDirEntry(dir)))){
     if(fileName==TString(""))break;
     if(!fileName.Contains(".hipo"))continue;
-    if(!fileName.Contains(RUNNO))continue;
+    if(!fileName.Contains(RUNNO)&&RUNNO!=TString("GEMC"))continue;
     DataFiles.push_back(INDIR+fileName);
   }
   cout<<"Found "<<DataFiles.size()<<" files from run "<<RUNNO<<endl;
@@ -78,6 +82,12 @@
   }
   cout<<"Going to run "<<NJOBS<<" jobs "<<endl;
   
+  //Make a submit script
+  TString submitscript=TString("doFarmRun")+RUNNO;
+  gSystem->Exec(Form("rm %s",submitscript.Data()));
+  gSystem->Exec(Form("touch %s",submitscript.Data()));
+  gSystem->Exec(Form("chmod u+x %s",submitscript.Data()));
+
   //Add files to Farm script
   Int_t iFile=0;
   for(Int_t i=0;i<NJOBS;i++){
@@ -122,11 +132,14 @@
 	break;
     }
     
-    script.SaveSource(TString("Run")+RUNNO+Form("_%d_",i)+FARMFILE);
+    TString jsubfile=TString("Run")+RUNNO+Form("_%d_",i)+gSystem->BaseName(FARMFILE);
+    script.SaveSource(jsubfile);
+    //Add to submit script
+    gSystem->Exec(Form("echo 'jsub %s' >> %s",jsubfile.Data(),submitscript.Data()));
     
   }
 
-  
+  cout<<"Best to test 1 job first ! But to submit all you can run "<<submitscript<<endl;
 
 
 }
