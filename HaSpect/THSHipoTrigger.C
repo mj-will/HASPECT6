@@ -51,7 +51,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
 
 void THSHipoTrigger::InitOutput(TString filename){
   THSDataManager::InitOutput(filename);
-  fWriteTree->Branch("TrigFT",&fTrigFT,"TrigFT/I");
+  fWriteTree->Branch("TrigFT",&fTrigFT,"TrigFT/L");
  
 
   fWriteTree->Branch("NRun",&fNRun,"NRun/I");
@@ -107,18 +107,19 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fRunConBank->NextEntry(); //Get RunCon bank as it is not in HipoReader
   if(fRunConBank->GetEntry()<0) return kTRUE; 
 
-  CreateBitPattern(fRunTrig->Val());
-  fTrigFT=0;
-  if(fTrigPeriod==0){//Engineering
-    fTrigFT+=fTrigBits[30]*1;
-    fTrigFT+=fTrigBits[29]*2;
-  }
-  else if(fTrigPeriod==1){//RG-A (02/18)
-    fTrigFT+=fTrigBits[23]*8;
-    fTrigFT+=fTrigBits[25]*4;
-    fTrigFT+=fTrigBits[26]*2;
-    fTrigFT+=fTrigBits[30]*1;
-  }
+  //  CreateBitPattern(fRunTrig->Val());
+  // fTrigFT=0;
+  // if(fTrigPeriod==0){//Engineering
+  //   fTrigFT+=fTrigBits[30]*1;
+  //  fTrigFT+=fTrigBits[29]*2;
+  // }
+  //else if(fTrigPeriod==1){//RG-A (02/18)
+  // fTrigFT+=fTrigBits[23]*8;
+  // fTrigFT+=fTrigBits[25]*4;
+  // fTrigFT+=fTrigBits[26]*2;
+  // fTrigFT+=fTrigBits[30]*1;
+  // }
+  fTrigFT=fRunTrig->Val();
   //Apply filter on FT trigger
   //fSofFTTrig==1 
   if(fSoftFTTrig==1&&!fTrigFT){fWriteThis=kFALSE;return kTRUE;}

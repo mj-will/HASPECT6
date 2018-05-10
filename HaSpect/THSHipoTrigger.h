@@ -58,7 +58,7 @@ class THSHipoTrigger: public THSHipoReader{
    //Trigger variables
   Int_t fSoftFTTrig=0;
   Int_t fTrigPeriod=0;
-  Int_t fTrigFT=0; 
+  Long_t fTrigFT=0; 
  
 
   Bool_t fUseUnGated=kFALSE; //temp fix for wrong DAQ scalers
