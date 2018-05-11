@@ -46,6 +46,7 @@ class THSParticle {
   Short_t fPDGCode=0;           //PDG number
   Short_t fTruthPDG=0;//! true PDG code
   Short_t fDetector=0; //detector code
+  Short_t fStatus=0;
  
   //Allow space for covariance matrix
   //The vector will need decoded into the TMatrix for calculations
@@ -85,6 +86,7 @@ class THSParticle {
   void SetEdep(Double_t edep){fEdep=edep;};
   void SetDeltaE(Double_t edep){fDeltaE=edep;};
   void SetDetector(Int_t det){fDetector=det;};
+  void SetStatus(Int_t status){fStatus=status;}
   void SetMeasMass(Double_t mass){fMeasMass=mass;};
   void TakePDGMass(){SetVectPDG(fP4);}; //Preserves momentum
   void TakePDGMassFromE(){Double_t rho0=fP4.P();Double_t rho=sqrt(fP4.E()*fP4.E()-fPDGMass*fPDGMass);rho/=rho0;fP4.SetXYZT(fP4.X()*rho,fP4.Y()*rho,fP4.Z()*rho,fP4.E());}; //preserves energy
@@ -115,7 +117,8 @@ class THSParticle {
   void ShiftTime(Float_t shift){fTime+=shift;}
   Int_t Charge();
   Short_t Detector(){return fDetector;}
-  
+  Short_t Status(){return fStatus;}
+
   HSLorentzVector* TruthP4p(){return &fTruthP4;};
   HSLorentzVector TruthP4(){return fTruthP4;};
   HSPosition* TruthVer(){return &fTruthV;};

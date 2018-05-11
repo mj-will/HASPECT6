@@ -46,6 +46,8 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fPid=dynamic_cast<THipoItemI*>(fPBank->GetItem("pid"));
     fBeta=dynamic_cast<THipoItemF*>(fPBank->GetItem("beta"));
     fCharge=dynamic_cast<THipoItemB*>(fPBank->GetItem("charge"));
+    fStatus=dynamic_cast<THipoItemS*>(fPBank->GetItem("status"));
+
     //Get the necessary items from REC::Scintillator Bank
     fSBank=fHipo->GetBank("REC::Scintillator");
     fSPindex=dynamic_cast<THipoItemS*>(fSBank->GetItem("pindex"));
@@ -191,7 +193,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       particle.SetXYZM(fPx->Val(),fPy->Val(),fPz->Val(),0);
       particle.SetVertex(fVx->Val(),fVy->Val(),fVz->Val());
       //if(fBeta->Val())particle->SetMeasMass(particle->P4p()->Rho()/fBeta->Val());
-      
+      particle.SetStatus(fStatus->Val());      
       if(!fPid->Val()) particle.SetPDGcode(fCharge->Val()*1E4); //unknown
       else  particle.SetPDGcode(fPid->Val());
        
