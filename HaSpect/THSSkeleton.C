@@ -502,22 +502,19 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
   //Now evaluateMC template
   MoveToLine("evaluate()");
   FindNextLineLike("}");
-  ContinueLineAfter("Double_t "+pdfName+"::evaluateMC() const {",1);
+  ContinueLineAfter("Double_t "+pdfName+"::evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const {",1);
   ContinueLineAfter("// ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE");
   Int_t nv=0;
   Int_t nc=0;
   for(Int_t io=0;io<obss->GetEntries();io++)
-    if(!is_cat[io]) ContinueLineAfter(TString("  Double_t mc")+obss->At(io)->GetName()+Form("=fMCVar[%d];",nv++));
-    else ContinueLineAfter(TString("  Int_t mc")+obss->At(io)->GetName()+Form("=fMCCat[%d];",nc++));
+    // if(!is_cat[io]) ContinueLineAfter(TString("  Double_t mc")+obss->At(io)->GetName()+Form("=fMCVar[%d];",nv++));
+    //else ContinueLineAfter(TString("  Int_t mc")+obss->At(io)->GetName()+Form("=fMCCat[%d];",nc++));
+   if(!is_cat[io]) ContinueLineAfter(TString("  Double_t mc")+obss->At(io)->GetName()+Form("=(*vars)[fTreeEntry*fNvars+%d];",nv++));
+    else ContinueLineAfter(TString("  Int_t mc")+obss->At(io)->GetName()+Form("=(*cats)[fTreeEntry*fNcats+%d];",nc++));
 
   ContinueLineAfter("   return 1.0;");
   ContinueLineAfter("}");
-  // ContinueLineAfter(TString("Int_t ")+pdfName+"::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const");
-  // ContinueLineAfter("{ //return 0; //might be good to check numerical integral sometimes");
-  // ContinueLineAfter("");
-  //  ContinueLineAfter("");
-  // ContinueLineAfter("");
-  
+   
   //Done .C file
 
   //fix categories
@@ -553,13 +550,13 @@ void THSSkeleton::CreateRooFitEventsPDF(TString pdfName,TString obsNames,TString
     }
   fPlace=0;
 
-  if(!is_cat[0]) AddLineAfter("protected",TString("  Double_t fMC")+obss->At(0)->GetName()+";");
-  else AddLineAfter("protected",TString("  Int_t fMC")+obss->At(0)->GetName()+";");
-  for(Int_t io=1;io<obss->GetEntries();io++)
-    if(!is_cat[io]) ContinueLineAfter(TString("  Double_t fMC")+obss->At(io)->GetName()+";");
-    else  ContinueLineAfter(TString("  Int_t fMC")+obss->At(io)->GetName()+";");
+  // if(!is_cat[0]) AddLineAfter("protected",TString("  Double_t fMC")+obss->At(0)->GetName()+";");
+  // else AddLineAfter("protected",TString("  Int_t fMC")+obss->At(0)->GetName()+";");
+  // for(Int_t io=1;io<obss->GetEntries();io++)
+  //   if(!is_cat[io]) ContinueLineAfter(TString("  Double_t fMC")+obss->At(io)->GetName()+";");
+  //   else  ContinueLineAfter(TString("  Int_t fMC")+obss->At(io)->GetName()+";");
   
-  AddLineAfter("Double_t evaluate()","  Double_t evaluateMC() const ;");
+  AddLineAfter("Double_t evaluate()","  Double_t evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const ;");
 
 
   // AddLineAfter("inline virtual ~","  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,const char* rangeName) const;");

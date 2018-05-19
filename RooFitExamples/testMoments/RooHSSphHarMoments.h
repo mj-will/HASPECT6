@@ -50,7 +50,7 @@ public:
   Int_t Mmax=0 ;
 
   Double_t evaluate() const ;
-  Double_t evaluateMC() const ;
+  Double_t evaluateMC(const vector<Float_t> *vars, const vector<Int_t> *cats) const ;
   void MakeSets();
 
   //vector<RooRealProxy> fMoms;

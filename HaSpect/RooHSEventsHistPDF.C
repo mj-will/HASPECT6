@@ -89,6 +89,7 @@ ClassImp(RooHSEventsHistPDF)
    scale("scale",this,other.scale),
    alpha("alpha",this,other.alpha)
  {
+   cout<<"COPYNG "<<other.fRHist<<" "<<other.fEvTree<<endl;
    MakeSets();
    x.SetName(other.x.GetName());
    offset.SetName(other.offset.GetName());
@@ -145,13 +146,15 @@ void RooHSEventsHistPDF::MakeSets(){
   return  fHist->weight(RooArgSet(*fx_off,*falpha),1,kFALSE);
  } 
 
-Double_t RooHSEventsHistPDF::evaluateMC() const {
-  Double_t mcx=fMCVar[0];
+Double_t RooHSEventsHistPDF::evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const {
+  Double_t mcx=(*vars)[0];
  
   return evaluateMC(mcx);  
 }
 Double_t RooHSEventsHistPDF::evaluateMC(Double_t mcx) const {
   Double_t arg=(mcx-fVarMax)*scale+fVarMax;
+  // cout<<fHist<<" "<<arg<<" "<<fx_off<<" "<<falpha<<" "<<fParent<<endl;
+  // if(fParent) cout<<dynamic_cast<RooHSEventsHistPDF*>(fParent)->GetRootHist()<<endl;
   arg=arg-offset;
   fx_off->setVal(arg);
   falpha->setVal(Double_t(alpha));
@@ -161,10 +164,10 @@ Double_t RooHSEventsHistPDF::evaluateMC(Double_t mcx) const {
   
 }
 
-Bool_t RooHSEventsHistPDF::SetEvTree(TChain* tree,TString cut,Long64_t ngen){
+// Bool_t RooHSEventsHistPDF::SetEvTree(TChain* tree,TString cut,Long64_t ngen){
 
-  return RooHSEventsHistPDF::SetEvTree(tree->CloneTree(),cut,ngen); //standard intilisation
-}
+//   return RooHSEventsHistPDF::SetEvTree(tree->CloneTree(),cut,ngen); //standard intilisation
+// }
 Bool_t RooHSEventsHistPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
   Bool_t OK=RooHSEventsPDF::SetEvTree(tree,cut,ngen); //standard intilisation
   //Now also need to create underlying HistPdf
@@ -173,22 +176,24 @@ Bool_t RooHSEventsHistPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
   else return kFALSE;
 }
 void RooHSEventsHistPDF::CreateHistPdf(){
-  fConstInt=fEvTree->GetEntries();
+  cout<<"      RooHSEventsHistPDF::CreateHistPdf()  "<<endl;
+  fConstInt=fNTreeEntries;
   //Essentially cache the PDF into a histogram
   //x-axis = variable
   //y-axis = smearing parameter alpha
 
 
   //For each bin make PDF of var convoluted with gaussian
-  Long64_t NFT=fEvTree->GetEntries();
+  Long64_t NFT=fNTreeEntries;
   TH1D* his1=new TH1D("his1D","his1D",fRHist->GetXaxis()->GetNbins(),fRHist->GetXaxis()->GetXmin(),fRHist->GetXaxis()->GetXmax());
 
   //create 1D template of x variable
   for(Int_t itr=0;itr<NFT;itr++){//loop over events tree
-    fEvTree->GetEntry(itr);
-    Double_t tvar=fMCVar[0];
-    //    cout<<GetIntegralWeight(itr)<<endl;
-    his1->Fill(tvar,GetIntegralWeight(itr));
+    // fEvTree->GetEntry(itr);
+    // Double_t tvar=fMCVar[0];
+    fTreeEntry=itr;
+    Double_t tvar=fvecReal[fTreeEntry*fNvars+0];
+     his1->Fill(tvar,GetIntegralWeight(itr));
   }
   //Could be problems if weights result in -ve bins...
   for(Int_t ix=0;ix<his1->GetEntries();ix++)
@@ -211,7 +216,6 @@ void RooHSEventsHistPDF::CreateHistPdf(){
       his1->SetBinContent(ix,bmean);
       his1->SetBinContent(ix+1,bmean);
     }
-  cout<<"Integral "<<his1->Integral()<<" "<<fEvWeights.size()<<" "<<endl;
   if(fUseEvWeights) cout<<fEvWeights[0]<<" "<<fEvWeights[1]<<endl;
   his1->Smooth();
   //Fill first y bin of 2D hist (no smearing)
@@ -287,6 +291,8 @@ Double_t RooHSEventsHistPDF::analyticalIntegral(Int_t code,const char* rangeName
   return 1; 
 }
 void RooHSEventsHistPDF::ResetTree(){
+  cout<<"vvvvvvvvvvvvvvvvvvvvvvvvv RooHSEventsHistPDF::ResetTree()"<<endl;
+  
   RooHSEventsPDF::ResetTree();
   if(fHist) {
     delete fHist;

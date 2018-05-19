@@ -40,7 +40,7 @@ protected:
   RooRealProxy alpha ;
   
   Double_t evaluate() const ;
-  Double_t evaluateMC() const ;
+  Double_t evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const ;
   Double_t evaluateMC(Double_t mcx) const ;
   void MakeSets();
   
@@ -59,7 +59,6 @@ private:
  public:
 
   virtual Bool_t SetEvTree(TTree* tree,TString cut,Long64_t ngen=0);
-  virtual Bool_t SetEvTree(TChain* tree,TString cut,Long64_t ngen=0);
   void CreateHistPdf();
   virtual void ResetTree();
   

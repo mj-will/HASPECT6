@@ -4,10 +4,10 @@
 #PBS -l walltime=100:00:00
 #PBS -V
 #Make a directory to work in
-#mkdir -p /home/dglazier/$JOBNAME
-#cd /home/dglazier/$JOBNAME
-mkdir -p /scratch/dglazier/$OUTDIR/$JOBNAME
-cd /scratch/dglazier/$OUTDIR/$JOBNAME
+mkdir -p /home/dglazier/$JOBNAME
+cd /home/dglazier/$JOBNAME
+#mkdir -p /scratch/dglazier/$OUTDIR/$JOBNAME
+#cd /scratch/dglazier/$OUTDIR/$JOBNAME
 
 echo ' analysing bin ' $JOBNAME
 echo $HOST

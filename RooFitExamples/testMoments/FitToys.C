@@ -16,17 +16,19 @@
   
   //Get data for fitting
   TDirectory* savedir=gDirectory;
-  TFile* datafile=new TFile("ToyData.root");
+  TFile* datafile=new TFile("ToyDataB.root");
   RooDataSet* ds = dynamic_cast<RooDataSet*>( datafile->Get("ToyData"));
   savedir->cd();
   gDirectory=savedir;
   
   RF->LoadDataSet(ds);
-  
+  gBenchmark->Start("moments");
   
   //Try 5 fits with different initial parameters
   RF->SetFitMethod(0); //use standard roofit
   RF->FitAndStudy(1);
+  gBenchmark->Stop("moments");
+  gBenchmark->Print("moments");
 
   datafile->Close();
   delete datafile;

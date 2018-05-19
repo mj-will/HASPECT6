@@ -13,6 +13,6 @@
   
   RF->SavePlots("");
   //Now generate toys...
-  RF->GenerateToys(10);
+  RF->GenerateToys(3);
 
 }

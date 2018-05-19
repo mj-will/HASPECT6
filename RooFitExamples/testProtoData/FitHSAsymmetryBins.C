@@ -1,5 +1,5 @@
 //Run with 
-//root --hsfit FitHSAsymmetryBins.C --SKProtoPDF.cxx
+//root --hsfit FitHSAsymmetryBins.C --SKNewPDF.cxx
 {
   //Create THSRooFit manager 
   THSRooFit* RF=new THSRooFit("AFit");

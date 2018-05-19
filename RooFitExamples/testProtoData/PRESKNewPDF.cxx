@@ -71,11 +71,11 @@ void SKNewPDF::MakeSets(){
   return 1.0 + PolState*Pol*(A*TMath::Cos(2*TMath::DegToRad()*Phi)+B*TMath::Sin(2*TMath::DegToRad()*Phi));
  } 
 
-Double_t SKNewPDF::evaluateMC() const {
+Double_t SKNewPDF::evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const {
 // ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
-  Double_t mcPhi=fMCVar[0];
-  Double_t mcPol=fMCVar[1];
-  Int_t mcPolState=fMCCat[0];
+  Double_t mcPhi=(*vars)[fTreeEntry*fNvars+0];
+  Double_t mcPol=(*vars)[fTreeEntry*fNvars+1];
+  Int_t mcPolState=(*cats)[fTreeEntry*fNcats+0];
   return 1.0 + mcPolState*mcPol*(A*TMath::Cos(2*TMath::DegToRad()*mcPhi)+B*TMath::Sin(2*TMath::DegToRad()*mcPhi)); 
 }
 

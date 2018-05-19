@@ -30,10 +30,6 @@
   RF->LoadDataSet(chainData);
   gBenchmark->Start("Binned");
   PDF->AddProtoData(RF->GetDataSet());
-  PDF->CheckIntegralParDep(10);
-  RF->SetStudyPDF("SigAsym"); //study this PDF
-  RF->SetNStudyTrials(2);  //Perform 20 trials
-  RF->SetStudyPlot();  //Produce plots for each trial fit
   RF->FitAndStudy(1);
   // gBenchmark->Stop("Binned");
   // gBenchmark->Print("Binned");

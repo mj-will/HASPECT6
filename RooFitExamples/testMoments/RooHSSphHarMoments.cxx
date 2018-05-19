@@ -185,10 +185,10 @@ Double_t RooHSSphHarMoments::evalLegendre(Double_t _Z,Int_t _L,Int_t _M) const{
    return val;
  }
 
-Double_t RooHSSphHarMoments::evaluateMC() const {
+Double_t RooHSSphHarMoments::evaluateMC(const vector<Float_t> *vars, const vector<Int_t> *cats) const {
 // ENTER IDENTICAL EXPRESSION TO evaluate() IN TERMS OF MC VARIABLE ARGUMENTS HERE
-  Double_t mcZ=fMCVar[0];
-  Double_t mcPhi=fMCVar[1];
+  Double_t mcZ=(*vars)[fTreeEntry*fNvars+0];
+  Double_t mcPhi=(*vars)[fTreeEntry*fNvars+1];
   Double_t val=0;
    Int_t iY=0;
    for(Int_t iL=0;iL<=Lmax;iL++)
