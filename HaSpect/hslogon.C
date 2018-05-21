@@ -250,6 +250,8 @@ void HSdata(){
   LoadMacro("THSWeights.C");
   //if(!TClass::GetClass("THSParticle"))   LoadMacro("THSParticle.C");
   LoadMacro(THSPARTICLE);
+  LoadMacro("THSEventInfo.C");
+  LoadMacro("THSRunInfo.C");
   LoadMacro("THSDataManager.C");
   LoadMacro("THSLundReader.C");
   if(gSystem->Getenv("RHIPO")){
