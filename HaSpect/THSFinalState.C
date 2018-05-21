@@ -105,7 +105,7 @@ void THSFinalState::InitFS(){
   for (itmap = fMapPDGtoParticle.begin(); itmap != fMapPDGtoParticle.end(); itmap++)
     {
       //      itmap->second->resize(fMaxPart);
-      for(Int_t i=0;i<fMaxPart;i++)
+      for(UInt_t i=0;i<fMaxPart;i++)
 	itmap->second->push_back(new THSParticle());
     }  
 }
@@ -263,10 +263,8 @@ void THSFinalState::InitDetPartsCharge(){
 //////////////////////////////////////////////////////////////////
 ///Process one event from the input tree
 void THSFinalState::ProcessEvent(){
-  // fTimeRead+=fClock.CpuTime();/////////////////Timing
   //Process one input event
-  //fClock.Start();/////////////////Timing
-  InitEvent();
+   InitEvent();
   if(frDetParts)fNDet=frDetParts->size();
   Int_t ntopo=0;
   while(FindTopology()){ //Find all valid topologies
@@ -328,15 +326,6 @@ Bool_t THSFinalState::WorkOnEvent(){
   return kTRUE;
 }
 void THSFinalState::Finish(){
-  // fTimeRead+=fClock.CpuTime();/////////////////Timing
-
-  cout<<"THSFinalState::Finish() Timings "<<endl;
-  cout<<"Read Time     : "<<fTimeRead<<endl;
-  cout<<"Init Time     : "<<fTimeInit<<endl;
-  cout<<"Topo Time     : "<<fTimeTopo<<endl;
-  cout<<"ProcessTime   : "<<fTimeProcess<<endl;
-  cout<<"InitPartTime  : "<<fTimeInitParts<<endl;
-  cout<<"PermutateTime : "<<fTimePermutate<<endl;
 }
 //////////////////////////////////////////////////////////////
 ///returns true if another valid permuation to be tried \n
@@ -737,6 +726,10 @@ void THSFinalState::SetDataManager(THSDataManager* dm){
   fData=dm;
   SetDetParts(dm->GetParticles());
   SetDetPIDs(dm->GetPIDs());
+
+  SetEventInfo(dm->GetEventInfo());
+  SetRunInfo(dm->GetRunInfo());
+  
   fData->SetFinalState(this);
 }
 //////////////////////////////////////////////////////////////

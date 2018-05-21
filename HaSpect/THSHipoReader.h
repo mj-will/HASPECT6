@@ -55,12 +55,14 @@ class THSHipoReader: public THSDataManager{
   THipoItemB* fSSector=nullptr;
   THipoItemF* fSEnergy=nullptr;
   THipoItemB* fSDet=nullptr;
+  THipoItemB* fSLayer=nullptr;
   THipoItemF* fSPath=nullptr;
 
   THipoItemS* fCalPindex=nullptr;
   THipoItemF* fCalEnergy=nullptr;
   THipoItemF* fCalTime=nullptr;
   THipoItemF* fCalPath=nullptr;
+  THipoItemB* fCalLayer=nullptr;
 
   THipoItemS* fChPindex=nullptr;
   THipoItemS* fChEnergy=nullptr;
@@ -95,4 +97,4 @@ class THSHipoReader: public THSDataManager{
  
 };
 
-#endif //ifdef THSLUNDREADER
+#endif //

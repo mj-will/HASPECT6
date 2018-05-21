@@ -43,10 +43,12 @@ class THSParticle {
   Double32_t fDoca=0;//!
   Double32_t fEdep=0;
   Double32_t fDeltaE=0;
+  Double32_t fPreE=0;
   Short_t fPDGCode=0;           //PDG number
   Short_t fTruthPDG=0;//! true PDG code
   Short_t fDetector=0; //detector code
   Short_t fStatus=0;
+  Short_t fFiducialCut=1;
  
   //Allow space for covariance matrix
   //The vector will need decoded into the TMatrix for calculations
@@ -84,9 +86,11 @@ class THSParticle {
   void SetPath(Double_t path){fPath=path;};
   void SetDoca(Double_t doca){fDoca=doca;};
   void SetEdep(Double_t edep){fEdep=edep;};
+  void SetPreE(Double_t edep){fPreE=edep;};
   void SetDeltaE(Double_t edep){fDeltaE=edep;};
   void SetDetector(Int_t det){fDetector=det;};
   void SetStatus(Int_t status){fStatus=status;}
+  void SetFidCut(Int_t fc){fFiducialCut=fc;}
   void SetMeasMass(Double_t mass){fMeasMass=mass;};
   void TakePDGMass(){SetVectPDG(fP4);}; //Preserves momentum
   void TakePDGMassFromE(){Double_t rho0=fP4.P();Double_t rho=sqrt(fP4.E()*fP4.E()-fPDGMass*fPDGMass);rho/=rho0;fP4.SetXYZT(fP4.X()*rho,fP4.Y()*rho,fP4.Z()*rho,fP4.E());}; //preserves energy
@@ -105,6 +109,7 @@ class THSParticle {
   Double_t Time(){return fTime;}
   Double_t MassDiff(){return fPDGMass-fMeasMass;}
   Double_t Edep(){return fEdep;}
+  Double_t PreE(){return fPreE;}
   Double_t DeltaE(){return fDeltaE;}
   Double_t Doca(){return fDoca;}
   Double_t Path(){return fPath;}
@@ -118,12 +123,13 @@ class THSParticle {
   Int_t Charge();
   Short_t Detector(){return fDetector;}
   Short_t Status(){return fStatus;}
-
+  Short_t FidCut(){return fFiducialCut;}
+ 
   HSLorentzVector* TruthP4p(){return &fTruthP4;};
   HSLorentzVector TruthP4(){return fTruthP4;};
   HSPosition* TruthVer(){return &fTruthV;};
   Short_t TruthPDG(){return fPDGCode;};
-  
+   
  
   void Clear();
   

@@ -29,7 +29,7 @@ class THSHipoTrigger: public THSHipoReader{
  protected :
 
   //banks
-  THipoBank* fRunConBank=nullptr;
+  //THipoBank* fRunConBank=nullptr;
   //  THipoBank* fRecEvBank=nullptr;
   THipoBank* fRawScalBank=nullptr;
     
@@ -77,16 +77,16 @@ class THSHipoTrigger: public THSHipoReader{
   
   Float_t fCharge=0;
   Float_t fTotCharge=0;
-  Float_t fHelicity=0;
+  Short_t fHelicity=0;
   Int_t fNScalerReads=0;
   
   Int_t fTrigBits[sizeof(int) * 8];
 
-  Float_t fCurFactor=0.098088; //attenuation factor due to beam blocker
+  Float_t fCurFactor=1; //attenuation factor due to beam blocker
                              //@(10.7)=9.808%  CLAS-NOTE 2018 - 003
                              //@(6.4) =16.283% CLAS-NOTE 2018 - 004
   
-   void CreateBitPattern(long val);
+  // void CreateBitPattern(long val);
  public :
   
  

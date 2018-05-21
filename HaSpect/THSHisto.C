@@ -324,12 +324,12 @@ void THSHisto::ParticleList(TString name){
 
 }
 void THSHisto::FillParticles(TString name,THSParticle* part){
-  FindHist(name+" P")->Fill(part->P4p()->Rho(),fWeight);//1D
+  FindHist(name+" P")->Fill(part->P4p()->P(),fWeight);//1D
   FindHist(name+" Theta")->Fill(part->P4p()->Theta()*TMath::RadToDeg(),fWeight);//1D
   FindHist(name+" Phi")->Fill(part->P4p()->Phi()*TMath::RadToDeg(),fWeight);//1D
   FindHist(name+" DeltaTime")->Fill(part->DeltaTime(),fWeight);//1D
-  ((TH2D*)FindHist(name+" DeltaTimeVP"))->Fill(part->P4p()->Rho(),part->DeltaTime(),fWeight);
-  ((TH2D*)FindHist(name+" ThetaVP"))->Fill(part->P4p()->Rho(),part->P4p()->Theta()*TMath::RadToDeg(),fWeight);
+  ((TH2D*)FindHist(name+" DeltaTimeVP"))->Fill(part->P4p()->P(),part->DeltaTime(),fWeight);
+  ((TH2D*)FindHist(name+" ThetaVP"))->Fill(part->P4p()->P(),part->P4p()->Theta()*TMath::RadToDeg(),fWeight);
   FindHist(name+" P_RES")->Fill(part->ResRho(),fWeight);//1D
   FindHist(name+" Theta_RES")->Fill(part->ResTheta()*TMath::RadToDeg(),fWeight);//1D
   FindHist(name+" Phi_RES")->Fill(part->ResPhi()*TMath::RadToDeg(),fWeight);//1D

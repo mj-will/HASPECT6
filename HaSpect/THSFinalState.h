@@ -14,6 +14,8 @@
 #include "THSParticle.h"
 #include "THSParticleIter.h"
 #include "THSKinematics.h"
+#include "THSRunInfo.h"
+#include "THSEventInfo.h"
 
 namespace FinalState{
   typedef std::function<void()> VoidFuncs;
@@ -47,7 +49,9 @@ class THSFinalState{
   void SetDetParts(vector<THSParticle> * dpp){frDetParts=dpp;}
   void SetDetPIDs(vector<Short_t> * dpp){frDetPIDs=dpp;}
   void SetGenParts(vector<THSParticle> * dpp){frGenParts=dpp;}
-
+  void SetEventInfo(THSEventInfo* in) {fEventInfo=in;}
+  void SetRunInfo(THSRunInfo* in) {fRunInfo=in;}
+  
   void AddTopology(TString topo,FinalState::VoidFuncs funcI,FinalState::VoidFuncs funcE,TString chPID="",TString incl="");
   THSTopology* FindTopology(); //For current event
   Bool_t CheckForATopology();
@@ -65,7 +69,10 @@ class THSFinalState{
   void SetDataManager(THSDataManager* dm);
  protected :
   THSDataManager* fData=nullptr;
-  
+    //Run and event info
+  THSEventInfo* fEventInfo=nullptr;
+  THSRunInfo* fRunInfo=nullptr;
+
   THSTopology *fCurrTopo=nullptr;
   vector<THSTopology* >fTopos; //vector of topologies
   Int_t fTopoID=0; //Topo ID for this event
@@ -158,13 +165,6 @@ class THSFinalState{
   std::vector<FinalState::VoidFuncs> fTopoFuncs;
   std::vector<FinalState::VoidFuncs> fIterFuncs;
 
-  TStopwatch fClock;
-  Double_t fTimeInit=0;
-  Double_t fTimeInitParts=0;
-  Double_t fTimeTopo=0;
-  Double_t fTimeProcess=0;
-  Double_t fTimeRead=0;
-  Double_t fTimePermutate=0;
   
   //Observables
 

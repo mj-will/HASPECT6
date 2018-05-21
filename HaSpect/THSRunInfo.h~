@@ -1,0 +1,31 @@
+//Datareader class for converting Lund format txt files
+//into THSParticles
+#ifndef THSRUNINFO_h
+#define THSRUNINFO_h
+
+class THSRunInfo{
+
+ public :
+  THSRunInfo()=default;
+  ~THSRunInfo(){}=default;
+  
+ protected :
+  Float_t fTotCharge=0; //total gated charge for run
+  Int_t fNRun=0;//Run Number
+  Short_t fType=0;//Event Type (Data or MC)
+
+
+ public:
+  Int_t NRun(){return fNRun;}
+  void SetNRun(Int_t st){fNRun=st;}
+  Short_t Type(){return fType;}
+  void SetType(Short_t st){fType=st;}
+  Short_t BeamHel(){return fBeamHel;}
+  void SetBeamHel(Short_t st){fBeamHel=st;}
+  Float_t TotalCharge(){return fTotalCharge;}
+  void SetTotalCharge(Float_t st){fTotalCharge=st;}
+
+  
+};
+
+#endif //

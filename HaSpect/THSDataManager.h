@@ -18,6 +18,8 @@
 #pragma link C++ class vector<THSParticle* >+;//want to make tree branch
 
 #include "THSParticle.h"
+#include "THSRunInfo.h"
+#include "THSEventInfo.h"
 #include "THSWeights.h"
 #include "THSFinalState.h"
 
@@ -45,6 +47,8 @@ class THSDataManager{
   vector<Short_t>* GetPIDs(){return &fPIDs;}
   TBranch* GetPIDsBranch(){return fBPIDs;}
   void SetFinalState(THSFinalState* fs){fFinalState=fs;}
+  THSEventInfo* GetEventInfo(){return fEventInfo;}
+  THSRunInfo* GetRunInfo(){return fRunInfo;}
   
   void AddParticle(THSParticle* part){fParticles.push_back(*part);fNin++;};
   void AddGenerated(THSParticle* part){fGenerated.push_back(*part);fNgen++;};
@@ -83,6 +87,11 @@ class THSDataManager{
   UInt_t fNin=0; //number of iinput particles
   UInt_t fNgen=0; //number of generated particles
 
+  //Run and event info
+  THSEventInfo* fEventInfo=nullptr;
+  THSRunInfo* fRunInfo=nullptr;
+  TTree* fRunTree=nullptr;
+  
   //default THSParticles tree reader
   TFile* fReadFile=0;
   TTree* fReadTree =0;

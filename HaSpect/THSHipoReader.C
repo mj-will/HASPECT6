@@ -56,13 +56,15 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fSEnergy=dynamic_cast<THipoItemF*>(fSBank->GetItem("energy"));
     fSPath=dynamic_cast<THipoItemF*>(fSBank->GetItem("path"));
     fSDet=dynamic_cast<THipoItemB*>(fSBank->GetItem("detector"));
+    fSLayer=dynamic_cast<THipoItemB*>(fSBank->GetItem("layer"));
     //Get the necessary items from REC::Calorimeter Bank
     fCalBank=fHipo->GetBank("REC::Calorimeter");
     fCalPindex=dynamic_cast<THipoItemS*>(fCalBank->GetItem("pindex"));
     fCalEnergy=dynamic_cast<THipoItemF*>(fCalBank->GetItem("energy"));
     fCalTime=dynamic_cast<THipoItemF*>(fCalBank->GetItem("time"));
     fCalPath=dynamic_cast<THipoItemF*>(fCalBank->GetItem("path"));
-    //Get the necessary items from REC::Cherenkov Bank
+    fCalLayer=dynamic_cast<THipoItemB*>(fCalBank->GetItem("layer"));
+     //Get the necessary items from REC::Cherenkov Bank
     fChBank=fHipo->GetBank("REC::Cherenkov");
     fChPindex=dynamic_cast<THipoItemS*>(fChBank->GetItem("pindex"));
     fChEnergy=dynamic_cast<THipoItemS*>(fChBank->GetItem("nphe"));
@@ -200,32 +202,61 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       //Now look for the associated detector info
       //we must match the detector pindex to the index of this particle entry
       //  cout<<"Done particle "<<endl;
+      Int_t nscint=0;
+      Double_t deltaE=0;
+      
+      //Scintillators
       while(fSPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle.SetTime(fSTime->Val());
-	particle.SetDeltaE(fSEnergy->Val());
-	particle.SetPath(fSPath->Val()/100);
-	if(fSDet->Val()>10) //FD
+	if(fSDet->Val()==12){//FD-TOF
+	  if(particle.Time()==0||(fSLayer->Val()==2)){ //use FD layer 2 if exists
+	    particle.SetTime(fSTime->Val());
+	    particle.SetPath(fSPath->Val()/100);
+	  }
+	  deltaE+=fSEnergy->Val();
 	  particle.SetDetector(1000*fSSector->Val());
-	else //CD
+	}
+	else  if(fSDet->Val()==4) {//CD-TOF
+	  //	  if(particle.Time()==0){ //use FD layer 2 if exists
+	  //Just take CTOF hit, i.e. replace CND 
+	  particle.SetTime(fSTime->Val());
+	  particle.SetPath(fSPath->Val()/100);
+	  deltaE+=fSEnergy->Val();
 	  particle.SetDetector(10000);
+	}
+	else  if(fSDet->Val()==3) {//CD-Neutron
+	  if(particle.Time()==0){ //use FD layer 2 if exists
+	    particle.SetTime(fSTime->Val());
+	    particle.SetPath(fSPath->Val()/100);
+	  }
+	  deltaE+=fSEnergy->Val();
+	  particle.SetEdep(fSEnergy->Val()); //use edep for CND energy
+	  particle.SetDetector(10000);
+	}
+	nscint++;
       }
-      //  cout<<"Done scintialltoer "<<endl;
-	
+      particle.SetDeltaE(deltaE/nscint); //FD:sum of layers,CD:sum of CTOF/CND
+ 
+      //Calorimeters
       while(fCalPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	particle.SetEdep(fCalEnergy->Val()+particle.Edep());
-	if(particle.Detector()<999){//no scintillator time
-	  particle.SetTime(fCalTime->Val());
-	  particle.SetPath(fCalPath->Val()/100);
+	particle.SetEdep(fCalEnergy->Val()+particle.Edep());//sum Energy
+	if(fCalLayer->Val()==1)	{
+	  particle.SetPreE(fCalEnergy->Val()); //PCAL
+	
+	  if(particle.Time()==0){//no scintillator time
+	    particle.SetTime(fCalTime->Val());
+	    particle.SetPath(fCalPath->Val()/100);
+	  }
 	}
 	particle.SetDetector(particle.Detector()+100);
-     }
+      }
+      
       while(fChPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
-	//particle->AddEdep(fChEnergy->Val());
+	//particle.AddEdep(fChEnergy->Val());
 	particle.SetDetector(particle.Detector()+fChDetector->Val());
-     }
+      }
       // cout<<"Done cherenkoc "<<endl;
 	
       while(fFTPindex->FindEntry(fPBank->GetEntry())){

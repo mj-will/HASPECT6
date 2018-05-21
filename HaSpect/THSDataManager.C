@@ -28,16 +28,22 @@ THSDataManager::~THSDataManager(){
   // if(fReadParticles) delete fReadParticles;
   if(fWeights)delete fWeights;
   if(fEntryList)delete fEntryList;
+
+  if(fEventInfo) delete fEventInfo;
+  if(fRunInfo) delete fRunInfo;
+  
 }
 void THSDataManager::CloseReadTree(){
   if(fReadFile) {
     delete fReadFile;fReadFile=nullptr;
     fReadTree=nullptr;
+    fRunTree=nullptr;
   }
   if(fPerfstats) delete fPerfstats;fPerfstats=nullptr;
 
 }
 Bool_t THSDataManager::InitReader(TString filename,TString name){
+  //Default read root format
   fReadFile=TFile::Open(filename);
   if(!fReadFile) {Error("THSDataManager::Init","No file found %s",filename.Data());return kFALSE;}
   fReadTree=dynamic_cast<TTree*>(fReadFile->Get(name));
@@ -53,6 +59,11 @@ Bool_t THSDataManager::InitReader(TString filename,TString name){
    //generated particles if simualtions
   fReadGenerated=&fGenerated;
   if(fInGenerated)fReadTree->SetBranchAddress(fReadGName.Data(),&fReadGenerated);
+
+  //Get Event and Run info if exists
+  if(fReadTree->GetBranch("EventInfo"))fReadTree->SetBranchAddress("EventInfo",&fEventInfo);
+  fRunTree=dynamic_cast<TTree*>(fReadFile->Get("HSRunInfo"));
+  if(fRunTree) fRunTree->SetBranchAddress("Info",&fRunInfo);
   
   //TTreeCache::SetLearnEntries(100);
   fReadTree->SetCacheSize(50E6);//10MB
@@ -228,9 +239,18 @@ void THSDataManager::InitOutput(TString filename){
   TTree* UnSplitTree=new TTree("HSUnSplit","unsplit tree for MakeSelector");
   UnSplitTree->Branch(fReadBName,&fParticles,256000,0);
   UnSplitTree->Branch("PIDs",&fPIDs,64000,0);
+
+  if(fEventInfo){
+    fWriteTree->Branch("EventInfo",&fEventInfo);
+    UnSplitTree->Branch("EventInfo",&fEventInfo,64000,0);
+  }
+  if(fRunInfo){
+    fRunTree=new TTree("HSRunInfo","once per run information");
+    fRunTree->Branch("Info",&fRunInfo);
+  }
   UnSplitTree->Write();
   delete UnSplitTree;
-  
+
   if(fAddGenerated)fWriteTree->Branch(fWriteGName,&fGenerated);
   Info("THSDataManager::InitOutput","Saving particles to %s",filename.Data());
 }
@@ -238,10 +258,12 @@ void THSDataManager::CloseOutput(){
   if(!fWriteFile) return;
   fWriteFile->cd();
   if(fWriteTree)fWriteTree->Write();
+  if(fRunTree)fRunTree->Write();
   fWriteFile->Close();
   delete fWriteFile;
   fWriteFile=nullptr;
   fWriteTree=nullptr;
+  fRunTree=nullptr;
 }
 void THSDataManager::PrintEvent(Long64_t entry){
 

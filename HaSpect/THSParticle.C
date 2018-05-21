@@ -34,6 +34,7 @@ void THSParticle::Clear(){
   fDoca=0;//!
   fEdep=0;
   fDeltaE=0;
+  fPreE=0;
   fPDGCode=0;           //PDG number
   fTruthPDG=0;//! true PDG code
   fDetector=0; //detector code
@@ -47,6 +48,9 @@ void THSParticle::CopyParticle(THSParticle* part,Bool_t andPDG){
   SetPath(part->Path());
   SetDoca(part->Doca());
   SetEdep(part->Edep());
+  SetDeltaE(part->DeltaE());
+  SetPreE(part->PreE());
+  SetStatus(part->Status());
   if(andPDG) SetPDGcode(part->PDG());
   SetDetector(part->Detector());
 }

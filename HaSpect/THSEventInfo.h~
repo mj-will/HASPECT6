@@ -1,0 +1,17 @@
+//Datareader class for converting Lund format txt files
+//into THSParticles
+#ifndef THSEVENTINFO_h
+#define THSEVENTINFO_h
+
+class THSEventInfo{
+
+ public :
+  THSEventInfo()=default;
+  ~THSEventInfo(){}=default;
+  
+ public :
+  
+ 
+};
+
+#endif //
