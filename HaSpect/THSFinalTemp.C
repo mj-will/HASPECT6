@@ -36,6 +36,10 @@ THSFinalTemp::THSFinalTemp(){
   THSFinalState::InitFS();
 }
 
+void THSFinalTemp::FileStart(){
+  fTrigger.SetParticles(frDetParts);
+  fTrigger.SetEventInfo(fEventInfo);
+}
 
 //Define topology Iterator functions
 // void THSFinalTemp::Init_IterX(){

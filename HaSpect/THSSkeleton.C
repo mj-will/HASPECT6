@@ -410,6 +410,10 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
   FindNextLineLike("fChain->SetBranchAddress(\"PIDs\"");	
   ContinueLineAfter(" THSFinalState::SetDetPIDs(PIDs);");
+  FindNextLineLike("fChain->SetBranchAddress(\"EventInfo\"");	
+  ContinueLineAfter(" THSFinalState::SetEventInfo(EventInfo);");
+  ContinueLineAfter(" FileStart();");
+  
   branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
   if(branch.Contains("Generated")){
     ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetGenParts(Generated);");
@@ -652,6 +656,12 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter(Form("void THS%s::Topo_%d(){",fFinalName.Data(),io));
     ContinueLineAfter(Form("  //For topology %s",topos->At(io)->GetName()));
     ContinueLineAfter("  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors");
+    ContinueLineAfter("  //Define starttime from electron candidate");
+    ContinueLineAfter("  fTrigger.StartTime(&fElectron);");
+    ContinueLineAfter("  //Subtract sarttime from all particles");
+    ContinueLineAfter("  //e.g. fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);");
+    ContinueLineAfter("  fTrigger.SubtractStartTime(ADDPARTICLESHERE);");
+    ContinueLineAfter("");
     ContinueLineAfter("");
     ContinueLineAfter("  //Reconstruct missing or combined particles");
     ContinueLineAfter("  //HSLorentzVector miss=fBeam+fTarget-fElectron.P4()...;");

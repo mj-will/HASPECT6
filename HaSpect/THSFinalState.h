@@ -41,6 +41,7 @@ class THSFinalState{
   virtual void FinaliseEvent(){fCurrTopo=nullptr;};
   virtual void InitEvent(){fGotCorrectOne=kFALSE;  fNPerm=0; fTopoID=-1;fNTried=0;};
   virtual void InitFS();
+  virtual void FileStart(){};
 
   void InitGenerated();
   void InitDetected();

@@ -1,5 +1,4 @@
-//Datareader class for converting Lund format txt files
-//into THSParticles
+//Information required 1 time per event
 #ifndef THSEVENTINFO_h
 #define THSEVENTINFO_h
 

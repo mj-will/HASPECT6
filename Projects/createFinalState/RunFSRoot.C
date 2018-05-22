@@ -4,10 +4,10 @@
   //Create FinalState
   THSXXX* fs=new THSXXX();
   // fs->SetGenerated(); //just analyse generated branch
+   fs->SetMaxParticles(10);
   //create datamanager
   THSDataManager* dm=new THSDataManager();
   // dm->SetReadGenBranch("Generated");
-  // dm->Init("INPUT.root","HSParticles");
   TChain chain("HSParticles");
   chain.Add("/indir/out_*root");
   dm->InitChain(&chain);

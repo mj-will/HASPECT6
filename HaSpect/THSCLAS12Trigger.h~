@@ -1,0 +1,27 @@
+#ifndef THSRUNINFO_h
+#define THSRUNINFO_h
+
+class THSCLAS12Trigger{
+
+ public :
+  THSCLAS12Trigger()=default;
+  ~THSCLAS12Trigger()=default;
+
+
+ protected:
+  vector<Short_t> HSEventSectors=std::vector(11,0);
+
+ public:
+  Short_t Sector(Int_t det);
+  Short_t HitsInCD();
+  Short_t HitsInFT();
+  Short_t HitsInFD();
+  Short_t HitsInSector(Int_t sect);
+  Short_t FDSectorsHit();
+  void EventReset();
+  Bool_t TrigStatus(Short_t status);
+
+  
+};
+
+#endif

@@ -4,6 +4,7 @@
 
 #include "THSFinalState.h"
 #include "THSParticle.h"
+#include "THSCLAS12Trigger.h"
 #include <vector>
 
 class THSFinalTemp : public THSFinalState{
@@ -17,10 +18,12 @@ class THSFinalTemp : public THSFinalState{
   void Init_Generated();
   //void Init_IterX();
   //void Topo_X();
+  virtual void FileStart();
 
   void Kinematics();
   protected :
- 
+   THSCLAS12Trigger fTrigger;
+
   //Initial state
   HSLorentzVector fBeam=HSLorentzVector(0,0,10.6,10.6);
   HSLorentzVector fTarget=HSLorentzVector(0,0,0,0.938272);
