@@ -67,7 +67,7 @@ inline Float_t THSCLAS12Trigger::StartTime(Float_t ptime){
   //supply chosen (e-) particle vertex time
   Float_t rftime=fEventInfo->RFTime();
   //Find the nearest rf beam bucket
-  fStartTime=fSTimePeak-4.0080160/2*((Int_t)(std::round(((fSTimePeak-(ptime-rftime))/4.0080160*2))))+rftime;
+  fStartTime=fSTimePeak-4.0080160*((Int_t)(std::round(((fSTimePeak-(ptime-rftime))/4.0080160))))+rftime;
   return fStartTime;
 }
 

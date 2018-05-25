@@ -22,7 +22,8 @@
   
   gBenchmark->Start("timer");
   
-  while(dm->ReadFinalStateEvent()){//loop over events
+  fs->FileStart();
+  while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
   }
   gBenchmark->Stop("timer");

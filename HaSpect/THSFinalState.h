@@ -56,7 +56,8 @@ class THSFinalState{
   void AddTopology(TString topo,FinalState::VoidFuncs funcI,FinalState::VoidFuncs funcE,TString chPID="",TString incl="");
   THSTopology* FindTopology(); //For current event
   Bool_t CheckForATopology();
-  
+  virtual  Bool_t CheckParticle(THSParticle* part);
+    
   void AddParticle(THSParticle* part,Bool_t AddToFinal,Int_t genID);
   void ConfigParent(THSParticle* parent,THSParticle* child);
   vector<THSParticleConfig* > HowManyParticles(Int_t pdg);

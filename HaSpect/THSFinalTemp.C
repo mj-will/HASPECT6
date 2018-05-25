@@ -37,8 +37,19 @@ THSFinalTemp::THSFinalTemp(){
 }
 
 void THSFinalTemp::FileStart(){
+  //May be called when a new file is opened
+  
+  //Give the event information to the trigger
   fTrigger.SetParticles(frDetParts);
   fTrigger.SetEventInfo(fEventInfo);
+
+  //Configure the cuts (default are delta timing cuts in ns)
+  fCuts.SetElCut(2,2); //Just FT,FD
+  fCuts.SetPionPCut(0,2,0,2);//FT,FDTOF,CD,FDCAL
+  fCuts.SetPionMCut(0,2,0,2);//FT,FDTOF,CD,FDCAL
+  fCuts.SetProtCut(0,2,1,2);//FT,FDTOF,CD,FDCAL
+  fCuts.SetGammaCut(2,2,0,2);//FT,FDTOF,CD,FDCAL
+
 }
 
 //Define topology Iterator functions
@@ -51,8 +62,22 @@ void THSFinalTemp::FileStart(){
 // }
 
 void THSFinalTemp::Kinematics(){
+  //configure trigger for this event
+  fTrigger.ReadParticles();
   //Do calculations if Good Event
 
+}
+//////////////////////////////////////////////////
+/// Define conditions for track to be considered
+/// good in event. Adding conditions on junk tracks
+///  can greatly reduce combitorials etc.
+/// kFALSE=> track ignored completely
+Bool_t THSFinalTemp::CheckParticle(THSParticle* part){
+  if(part->Detector()<0)return kTRUE; //All FT tracks
+ if(part->PDG()==45)return kFALSE; //? what are these?
+   if(part->Time()==0)return kFALSE;   //Track needs time
+  if(part->Charge()&&part->DeltaE()<2)return kFALSE; //Charged track needs deltaE>2
+  return kTRUE;
 }
 
 void THSFinalTemp::FinalStateOutTree(TTree* tree){

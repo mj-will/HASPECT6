@@ -5,6 +5,7 @@
 #include "THSFinalState.h"
 #include "THSParticle.h"
 #include "THSCLAS12Trigger.h"
+#include "THSCLAS12DeltaTime.h"
 #include <vector>
 
 class THSFinalTemp : public THSFinalState{
@@ -19,11 +20,14 @@ class THSFinalTemp : public THSFinalState{
   //void Init_IterX();
   //void Topo_X();
   virtual void FileStart();
+  virtual Bool_t  CheckParticle(THSParticle* part);
 
   void Kinematics();
   protected :
-   THSCLAS12Trigger fTrigger;
 
+  THSCLAS12Trigger fTrigger;//For CLAS12 trigger info
+  THSCLAS12DeltaTime fCuts; //For particle cuts
+  
   //Initial state
   HSLorentzVector fBeam=HSLorentzVector(0,0,10.6,10.6);
   HSLorentzVector fTarget=HSLorentzVector(0,0,0,0.938272);

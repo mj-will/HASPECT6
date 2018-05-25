@@ -78,6 +78,7 @@ class THSParticle {
   void SetP4(HSLorentzVector *v){fP4=*v;}
   void SetXYZT(Double_t X,Double_t Y,Double_t Z,Double_t T){fP4.SetXYZT(X,Y,Z,T);}
   void SetXYZM(Double_t X,Double_t Y,Double_t Z,Double_t M){fP4.SetXYZT(X,Y,Z,sqrt(M*M+X*X+Y*Y+Z*Z));}
+  void SetP(Double_t nP){Double_t rp=nP/fP4.P();fP4.SetXYZT(fP4.X()*rp,fP4.Y()*rp,fP4.Z()*rp,sqrt(fP4.M()*fP4.M()+nP*nP));}
   void SetVertex(HSPosition v){fVertex=v;}
   void SetVertex(Double_t X,Double_t Y,Double_t Z){fVertex.SetXYZ(X,Y,Z);}
   //void SetPol(HSPosition p){fPol=p;}

@@ -9,7 +9,6 @@
   //Set up the input chain to be analysed,could remove HSin() if you want
   TChain* tree=new TChain("TREENAME","datachain");
   tree->Add(HSin()+"FILENAMES");
-  TTreePerfStats* Perfstats = new TTreePerfStats("ioperf", tree);
 
   //if using proof
   //Give proof destination file (env variables can't be read directly
@@ -22,7 +21,6 @@
   gBenchmark->Stop("SelectorTimer");
   gBenchmark->Print("SelectorTimer");
   tree->PrintCacheStats();
-  Perfstats->Print();
 
   //Not actually sure if this is needed or not...
   if(gProof)gProof->ClearData(TProof::kUnregistered | TProof::kForceClear);

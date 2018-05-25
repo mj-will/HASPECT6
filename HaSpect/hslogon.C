@@ -229,6 +229,9 @@ void HSFinal(TString pname){
   LoadMacro("THSCombitorial.C");
   LoadMacro("THSParticleIter.C");
   LoadMacro("THSTopology.C");
+  LoadMacro("THSCuts.C");
+  LoadMacro("THSCLAS12DeltaTime.C");
+  LoadMacro("THSCLAS12Trigger.C");
   LoadMacro("THSFinalState.C");
   LoadMacro(pname+".C");
 

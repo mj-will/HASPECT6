@@ -382,10 +382,10 @@ void THSSkeleton::HSFinalState(){
   ContinueLineAfter("   THSOutput::HSProcessFill();");
   ContinueLineAfter("}");
 
-  fPlace=0;
-  FindNextLineLike("GetEntry(entry)");
-  ContinueLineAfter("  b_PIDs->GetEntry(entry);//Check if event contains valid topology",-1);
-  ContinueLineAfter("  if(!CheckForATopology()) return kTRUE;");
+  // fPlace=0;
+  // FindNextLineLike("GetEntry(entry)");
+  // ContinueLineAfter("  b_PIDs->GetEntry(entry);//Check if event contains valid topology",-1);
+  // ContinueLineAfter("  if(!CheckForATopology()) return kTRUE;");
 
 
   fPlace=0; 
@@ -662,6 +662,9 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter("  //e.g. fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);");
     ContinueLineAfter("  fTrigger.SubtractStartTime(ADDPARTICLESHERE);");
     ContinueLineAfter("");
+    ContinueLineAfter("  //Can apply some timing cuts now");
+    ContinueLineAfter("  if(!fCuts.ElCut(&fElectron)){fGoodEvent=kFALSE;return;}");
+    ContinueLineAfter("  //etc, e.g if(!fCuts.PionPCut(&fPip1)){fGoodEvent=kFALSE;return;}");
     ContinueLineAfter("");
     ContinueLineAfter("  //Reconstruct missing or combined particles");
     ContinueLineAfter("  //HSLorentzVector miss=fBeam+fTarget-fElectron.P4()...;");

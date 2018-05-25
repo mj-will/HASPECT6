@@ -149,13 +149,17 @@ THSTopology* THSFinalState::FindTopology(){
   // if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   if(IsPermutating()) return fCurrTopo;//Topology hasn't changed  with permutation
   // fClock.Start();//////////////////////////Timing
-   if(fTopoID==-1){//only fill fThisTopo first time
+  if(fTopoID==-1){//only fill fThisTopo first time
     fThisTopo.clear();
-    fThisTopo.reserve(frDetParts->size());
-   //Assume all topologies have the same particle ID scheme
+    //    fThisTopo.reserve(frDetParts->size());
+    //Assume all topologies have the same particle ID scheme
     //So here just use the first one
-    for(UInt_t ip=0;ip<frDetParts->size();ip++){   
-      fThisTopo.emplace_back(fTopos[0]->ParticleID(frDetParts->at(ip).PDG()));
+    for(UInt_t ip=0;ip<frDetParts->size();ip++){
+      THSParticle* part=&(frDetParts->at(ip));
+      //if(!CheckParticle(part)) continue; //is this a good track?
+      // fThisTopo.emplace_back(fTopos[0]->ParticleID(part->PDG()));
+      Int_t pid=fTopos[0]->ParticleID(part->PDG());
+      fThisTopo.push_back(pid);
     }
   }
   
@@ -190,7 +194,7 @@ void THSFinalState::InitParticles(){
   // //Get first combination
   FirstParticles();
 }
-/////////////////////////////////////////////////////////////////
+//////////////////////////
 ///Check Npart limits, to get rid of events were there are too many
 ///particles,
 void THSFinalState::CheckParticles(){
@@ -218,13 +222,20 @@ void THSFinalState::InitDetParts(){
     }  
   for(UInt_t ip=0;ip<fNParts;ip++){
     THSParticle* part=&(frDetParts->at(ip));
+    if(!CheckParticle(part)) continue;
     //Find the particle vector given by this topology
-    vector<THSParticle*> *vecParts=fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())];
+     vector<THSParticle*> *vecParts=fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())];
     vecParts->push_back(part);
     if(vecParts->size()==fMaxPart) {fCurrTopo=nullptr; return;}
  
    }
  
+}
+/////////////////////////////////////////////////////////////
+///Check if this particle should be considered for the event
+//or do we thinnk it is junk
+Bool_t THSFinalState::CheckParticle(THSParticle* part){
+  return kTRUE;
 }
 //////////////////////////////////////////////////////////////
 ///Read in the particles from this input event
