@@ -44,6 +44,7 @@ class THSParticle {
   Double32_t fEdep=0;
   Double32_t fDeltaE=0;
   Double32_t fPreE=0;
+  Float_t fTrChi2=0;
   Short_t fPDGCode=0;           //PDG number
   Short_t fTruthPDG=0;//! true PDG code
   Short_t fDetector=0; //detector code
@@ -88,6 +89,7 @@ class THSParticle {
   void SetDoca(Double_t doca){fDoca=doca;};
   void SetEdep(Double_t edep){fEdep=edep;};
   void SetPreE(Double_t edep){fPreE=edep;};
+  void SetTrChi2(Float_t chi2){fTrChi2=chi2;};
   void SetDeltaE(Double_t edep){fDeltaE=edep;};
   void SetDetector(Int_t det){fDetector=det;};
   void SetStatus(Int_t status){fStatus=status;}
@@ -104,8 +106,7 @@ class THSParticle {
   HSLorentzVector* P4p(){return &fP4;}
   HSPosition Vertex(){return fVertex;}
   //HSPosition Pol(){return fPol;}
-  Short_t PDG(){return fPDGCode;}
-  Double_t PDGMass(){return fPDGMass;}
+   Double_t PDGMass(){return fPDGMass;}
   Double_t MeasMass(){return fMeasMass;}
   Double_t Time(){return fTime;}
   Double_t MassDiff(){return fPDGMass-fMeasMass;}
@@ -120,12 +121,14 @@ class THSParticle {
   //  Double_t DeltaTime(){return HypTime()-fTime;};
   Double_t DeltaTime(){return fTime-HypTime();};
   Double_t DeltaTimeVer(){return DeltaTime()-fVertex.Z()/2.99792e+08*1E9;}
-  void ShiftTime(Float_t shift){fTime+=shift;}
-  Int_t Charge();
+  Float_t TrChi2(){return fTrChi2;}
   Short_t Detector(){return fDetector;}
   Short_t Status(){return fStatus;}
   Short_t FidCut(){return fFiducialCut;}
- 
+  Short_t PDG(){return fPDGCode;}
+  Int_t Charge();
+  void ShiftTime(Float_t shift){fTime+=shift;}
+
   HSLorentzVector* TruthP4p(){return &fTruthP4;};
   HSLorentzVector TruthP4(){return fTruthP4;};
   HSPosition* TruthVer(){return &fTruthV;};
@@ -171,6 +174,22 @@ inline Int_t THSParticle::Charge(){
     return charge;
   }
   else return 0;
+}
+inline void THSParticle::Clear(){
+  fP4.SetXYZT(0,0,0,0);
+  fPDGMass=0;
+  fMeasMass=0; //Or other PID info
+  fTime=0;
+  fPath=0;
+  fDoca=0;//!
+  fEdep=0;
+  fDeltaE=0;
+  fPreE=0;
+  fTrChi2=0;
+  fPDGCode=0;           //PDG number
+  fTruthPDG=0;//! true PDG code
+  fDetector=0; //detector code
+
 }
 
 //inline bool THSParticle::operator<( const THSParticle& rhs ) {cout<<" "<<rhs.fP4.Rho()<<endl;return fP4.Rho() < rhs.fP4.Rho(); }

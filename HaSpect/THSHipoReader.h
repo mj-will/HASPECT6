@@ -35,6 +35,9 @@ class THSHipoReader: public THSDataManager{
   THipoBank *fMCBank=nullptr;
   THipoBank *fFTBank=nullptr;
   THipoBank *fEvBank=nullptr;
+  THipoBank *fTrBank=nullptr;
+  THipoBank *fTBTrBank=nullptr;
+  THipoBank *fCVTrBank=nullptr;
   //  THipoBank *fCVTBank=nullptr;
   THipoBank *fFTCALClustBank=nullptr;
    //fHipo->GetBank("FTCAL::clusters");
@@ -67,6 +70,17 @@ class THSHipoReader: public THSDataManager{
   THipoItemS* fChPindex=nullptr;
   THipoItemS* fChEnergy=nullptr;
   THipoItemB* fChDetector=nullptr;
+
+  THipoItemS* fTrPindex=nullptr;
+  THipoItemS* fTrIndex=nullptr;
+  THipoItemS* fTrNDF=nullptr;
+  THipoItemB* fTrDet=nullptr;
+  THipoItemB* fTrq=nullptr;
+
+  THipoItemS* fTBTrNDF=nullptr;
+  THipoItemF* fTBTrChi2=nullptr;
+  THipoItemS* fCVTrNDF=nullptr;
+  THipoItemF* fCVTrChi2=nullptr;
 
   THipoItemS* fFTPindex=nullptr;
   THipoItemF* fFTTime=nullptr;

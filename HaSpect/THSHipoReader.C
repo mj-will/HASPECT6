@@ -28,6 +28,9 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fHipo->ConfigOnlyBank("REC::Cherenkov");
     fHipo->ConfigOnlyBank("REC::ForwardTagger");
     fHipo->ConfigOnlyBank("REC::Event");
+    fHipo->ConfigOnlyBank("TimeBasedTrkg::TBTracks");
+    fHipo->ConfigOnlyBank("CVTRec::Tracks");
+    fHipo->ConfigOnlyBank("REC::Track");
     fHipo->ConfigOnlyBank("FTCAL::clusters");//needed for FT time
     if(fAddGenerated&&!fMCBank){
       fHipo->ConfigOnlyBank("MC::Particle");
@@ -79,6 +82,20 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fFTX=dynamic_cast<THipoItemF*>(fFTBank->GetItem("x"));
     fFTY=dynamic_cast<THipoItemF*>(fFTBank->GetItem("y"));
     fFTZ=dynamic_cast<THipoItemF*>(fFTBank->GetItem("z"));
+  
+    fTrBank=fHipo->GetBank("REC::Track");
+    fTrPindex=dynamic_cast<THipoItemS*>(fTrBank->GetItem("pindex"));
+    fTrIndex=dynamic_cast<THipoItemS*>(fTrBank->GetItem("index"));
+    fTrDet=dynamic_cast<THipoItemB*>(fTrBank->GetItem("detector"));
+    fTrq=dynamic_cast<THipoItemB*>(fTrBank->GetItem("q"));
+    fTrNDF=dynamic_cast<THipoItemS*>(fTrBank->GetItem("NDF"));
+ 
+    fTBTrBank=fHipo->GetBank("TimeBasedTrkg::TBTracks");
+    fTBTrNDF=dynamic_cast<THipoItemS*>(fTBTrBank->GetItem("ndf"));
+    fTBTrChi2=dynamic_cast<THipoItemF*>(fTBTrBank->GetItem("chi2"));
+    fCVTrBank=fHipo->GetBank("CVTRec::Tracks");
+    fCVTrNDF=dynamic_cast<THipoItemS*>(fCVTrBank->GetItem("ndf"));
+    fCVTrChi2=dynamic_cast<THipoItemF*>(fCVTrBank->GetItem("chi2"));
   
     fEvBank=fHipo->GetBank("REC::Event");
     fRecEvSTTime=dynamic_cast<THipoItemF*>(fEvBank->GetItem("STTime"));
@@ -145,7 +162,8 @@ Int_t THSHipoReader::GetRunNumber(TString filen){
 
 
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
-  //if entry ==-2 we have been called from a derived class who has
+  //cout<<fTrPindex<<" "<<fTrIndex<<" "<<fTrDet<<" "<<fTrq<<" "<<fCharge<<endl;
+    //if entry ==-2 we have been called from a derived class who has
   //already got the event
   if(entry!=-2){
     if(!fHipo->NextEvent()) {//end of 1 file
@@ -251,11 +269,27 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	}
 	particle.SetDetector(particle.Detector()+100);
       }
-      
+      //Cerenkov
       while(fChPindex->FindEntry(fPBank->GetEntry())){
 	//Do something if find a particular detector
 	//particle.AddEdep(fChEnergy->Val());
 	particle.SetDetector(particle.Detector()+fChDetector->Val());
+      }
+      
+      //Trackers	
+      while(fTrPindex->FindEntry(fPBank->GetEntry())){
+	Int_t dett=fTrDet->Val();
+	Int_t qq=fTrq->Val();
+	Int_t chargee=fCharge->Val();
+	if(dett==5){//CVT
+	  fCVTrBank->SetEntry(fTrIndex->Val());
+	  particle.SetTrChi2(fCVTrChi2->Val()/fCVTrNDF->Val());
+	}
+	else if(dett==6){//DC
+	  fTBTrBank->SetEntry(fTrIndex->Val());
+	  particle.SetTrChi2(fTBTrChi2->Val()/fTBTrNDF->Val());
+	}
+	
       }
       // cout<<"Done cherenkoc "<<endl;
 	

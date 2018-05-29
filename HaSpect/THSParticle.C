@@ -25,21 +25,6 @@ void THSParticle::Print(Option_t *) const{
   // fP4.Print("");
   //fVertex.Print("");
 }
-void THSParticle::Clear(){
-  fP4.SetXYZT(0,0,0,0);
-  fPDGMass=0;
-  fMeasMass=0; //Or other PID info
-  fTime=0;
-  fPath=0;
-  fDoca=0;//!
-  fEdep=0;
-  fDeltaE=0;
-  fPreE=0;
-  fPDGCode=0;           //PDG number
-  fTruthPDG=0;//! true PDG code
-  fDetector=0; //detector code
-
-}
 void THSParticle::CopyParticle(THSParticle* part,Bool_t andPDG){
   SetP4(part->P4());
   SetVertex(part->Vertex());
