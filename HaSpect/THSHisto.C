@@ -330,7 +330,7 @@ void THSHisto::FillParticles(TString name,THSParticle* part){
   FindHist(name+" DeltaTime")->Fill(part->DeltaTime(),fWeight);//1D
   ((TH2D*)FindHist(name+" DeltaTimeVP"))->Fill(part->P4p()->P(),part->DeltaTime(),fWeight);
   ((TH2D*)FindHist(name+" ThetaVP"))->Fill(part->P4p()->P(),part->P4p()->Theta()*TMath::RadToDeg(),fWeight);
-  // FindHist(name+" P_RES")->Fill(part->ResRho(),fWeight);//1D
+  // FindHist(name+" P_RES")->Fill(part->ResP(),fWeight);//1D
   // FindHist(name+" Theta_RES")->Fill(part->ResTheta()*TMath::RadToDeg(),fWeight);//1D
   // FindHist(name+" Phi_RES")->Fill(part->ResPhi()*TMath::RadToDeg(),fWeight);//1D
 

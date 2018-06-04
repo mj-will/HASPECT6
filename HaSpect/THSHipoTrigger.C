@@ -1,9 +1,28 @@
+/**
+	\class THSHipoTrigger
+	
+	Class to fill once per run THSRunInfo and 
+	once per event THSEventInfo from hipo files.
+	
+	Inherits from THSHipoReader which sorts the THSParticle vector
+	for the event tracks.
+
+	Mainly uses REC::Event and RAW::Scaler banks.
+
+	This class uses the stand-alone THipo library to interface
+	to the values in the banks
+
+*/
 #include "THSHipoTrigger.h"
 
 THSHipoTrigger::THSHipoTrigger(){
   fRunInfo=new THSRunInfo();
   fEventInfo=new THSEventInfo();
 }
+
+/////////////////////////////////////////////////////////////
+/// Configure the REC::Event and RAW::Scaler banks
+/// Additional items may be added in a similar fashion
 Bool_t THSHipoTrigger::Init(TString filename,TString name){
 
   if(!fRawScalBank){
@@ -44,9 +63,14 @@ void THSHipoTrigger::InitOutput(TString filename){
   //  fWriteTree->Branch("TrigFT",&fTrigFT,"TrigFT/L");
  }
 
+/////////////////////////////////////////////////////////
+/// Read the event from THipo.
+/// Write RunInfo at the end of file (when the gated charge is known).
+/// Call THSHipoReader::ReadEvent to fill event THSParticle vector.
+/// Fill the EventInfo from REC::Event.
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
-  //cout<<"THSHipoTrigger::ReadEvent("<<endl;    
+  cout<<"THSHipoTrigger::ReadEvent("<<endl;    
 
   //Note include an extra fill in case there is an extra scaler current
   if(!fHipo->NextEvent()) {
@@ -59,7 +83,7 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
       fRunInfo->SetMeanCurrent(fTotCharge/fNScalerReads/0.033);
       fRunTree->Fill();
     }
-    //cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
+    cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
     //cout<<"  at average of current of "<<fTotCharge/fNScalerReads/0.033<<"nA per read. "<<endl; 
 
     if(fChainFiles){
@@ -96,25 +120,6 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   return kTRUE;
 
 }
-/////////////////////////////////////////////////////
-///function to convert trigger bit pattern
-// void  THSHipoTrigger::CreateBitPattern(long val)
-// {
-//    unsigned int mask = 1 << (sizeof(int) * 8 - 1);
-
-//    Int_t Nbits=sizeof(int) * 8;
-   
-//    for(int i = 0; i <Nbits; i++){
-     
-//      if( (val & mask) == 0 ){
-//        fTrigBits[Nbits-i-1]=0;
-//      }
-//      else{
-//        fTrigBits[Nbits-i-1]=1;    
-//      }
-//      mask  >>= 1;
-//    }
-// }
 void  THSHipoTrigger::RawScaler()
 {
   Double_t GatedFC=0;

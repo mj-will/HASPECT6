@@ -1,12 +1,13 @@
 /**
 	\class THSFinalState
 	
-	Class to control particlular analysis
-	Users need to create their own specific final state class
+	Class to control particlular analysis.
+	Users need to create their own specific final state class.
 	It should operate on 3 classes of data:
-	real, mc rec, mc gen
-	input should be in form of events extracted
-	from trees or text files,...
+	real, mc rec, mc gen.
+	input should be via a THSDataManager interface
+	or if standard root format (i.e. ouput from THSDataManager)
+	you may set  particles, eventinfo and runinfo directly 
 	
 	The main task is to take detected particles and
 	convert them into information needed for subsequent
@@ -299,7 +300,11 @@ Bool_t THSFinalState::FSProcess(){
   if(IsGoodEvent()){
     UserProcess(); 
   }
-   if(fTryPerm)
+  //Clear added particles
+  for(UInt_t ic=0;ic<fConfigs.size();ic++){
+    fConfigs[ic]->Particle()->MinorClear();
+  }
+  if(fTryPerm)
     PermutateParticles();
   if(IsPermutating()){
     return kTRUE;
@@ -399,13 +404,22 @@ Bool_t THSFinalState::IsCorrectTruth(THSParticle *part){
     }
   }
 
-  if(part->TruthP4()==frGenParts->at(match).P4()&&part->TruthPDG()==frGenParts->at(match).PDG())
+  if(part->TruthP4()==frGenParts->at(match).P4()&&part->TruthPDG()==frGenParts->at(match).PDG()){
+    Double_t resangle=part->ResAngle();
+      // fCurResAngle+=resangle;
+    if(fAccurateTruth){//if given an accurate angle use it 
+      if(resangle<fAccurateTruth)
+	return kTRUE;
+      else return kFALSE;
+    }
     return kTRUE;
+  }
   return kFALSE;
 }
 
 ///////////////////////////////////////////////
 ///Check if our final vectors match with truth
+
 void THSFinalState::CheckTruth(){
   if(fIsGenerated) return;
   //Already got one for this event
@@ -736,12 +750,14 @@ void THSFinalState::AutoIter(){
 void THSFinalState::SetDataManager(THSDataManager* dm){
   fData=dm;
   SetDetParts(dm->GetParticles());
+  SetGenParts(dm->GetGenerated());
   SetDetPIDs(dm->GetPIDs());
 
   SetEventInfo(dm->GetEventInfo());
   SetRunInfo(dm->GetRunInfo());
   
   fData->SetFinalState(this);
+  FileStart();
 }
 //////////////////////////////////////////////////////////////
 ///Print permuations to screen for debugging

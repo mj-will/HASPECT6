@@ -317,7 +317,7 @@ TString HSfinal(){
 /// Checks for and returns HSIN variable
 TString HSin(){
   if(!gSystem->Getenv("HSIN")) cout<<"Warning no HSIN env variable defined but hsin() called..."<<endl;
-  return TString(gSystem->Getenv("HSIN"))+"";
+  return TString(gSystem->Getenv("HSIN"))+"/";
 }
 
 //////////////////////////////////////////

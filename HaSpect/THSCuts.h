@@ -1,6 +1,3 @@
-///////////////////////////////////////////////////
-///Persistant cuts base class for use with THSFinalState
-///Defaults to time cuts on each partcle
 #ifndef THSCUTS_h
 #define THSCUTS_h
 

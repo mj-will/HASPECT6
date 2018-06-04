@@ -38,8 +38,9 @@ class THSEventInfo{
   void SetBeamPol(Float_t st){fBeamPol=st;}
   Float_t TarPol(){return fTarPol;}
   void SetTarPol(Float_t st){fTarPol=st;}
-  
-  Int_t getTrigBit(Int_t  k)
+
+ 
+  Int_t TrigBit(Int_t  k)
   { //borrowed from M.Dugger
     return (fTrigBit & (1<<k)) != 0;
   }

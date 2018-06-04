@@ -1,3 +1,16 @@
+/**
+	\class THSHipoReader
+	
+	Class to create THSParticle from hipo banks.
+	
+	Inherits from THSDataManager (see comments there).
+
+	Mainly uses REC::Particle bank with associated REC:: detectors.
+
+	This class uses the stand-alone THipo library to interface
+	to the values in the banks
+
+*/
 #include <sstream>
 #include <string>
 #include "THSHipoReader.h"
@@ -15,6 +28,8 @@ THSHipoReader::THSHipoReader(){
   
  
 }
+////////////////////////////////////////////////////////////
+/// Initialise banks and items
 Bool_t THSHipoReader::Init(TString filename,TString name){
   fCurFileName=gSystem->BaseName(filename);
   cout<<"THSHipoReader::Init "<<fCurFileName<<endl;
@@ -117,9 +132,16 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
   }
   return kTRUE;
 }
+////////////////////////////////////////////////////////
+//nothing to do for hipo files (I think)
 void THSHipoReader::CloseReadTree(){
   //noting to do for hipo files (I think)
 }
+
+//////////////////////////////////////////////////////////////
+///Make output files, generally 1 for each input file
+///Calling SetCombine files allows all input files to be written to 1 output
+///Watch file sizes though!
 void THSHipoReader::InitOutput(TString filename){
   //CLAS file names ~ out_clas_003311.evio.3.hipo ~out_clas_RUNNO.evio.FILENO.hipo
   //Want the option to write all files into 1 run output file
@@ -140,6 +162,9 @@ void THSHipoReader::InitOutput(TString filename){
   }
 
 }
+///////////////////////////////////////////////////////////////
+///Close output root file after each input hipo file
+///If SetCombineFiles set, merge all files into 1
 void THSHipoReader::CloseOutput(){
   if(!fCombineFiles){ //only merge files if fCombineFiles=kTRUE
     THSDataManager::CloseOutput();
@@ -153,17 +178,21 @@ void THSHipoReader::CloseOutput(){
   else
     THSDataManager::CloseOutput();//last file
 }
-
+//////////////////////////////////////////////////////////////
+///Get run number from file name for purposes of combining files
+///This could be got from the banks (it is written in RunInfo)
 Int_t THSHipoReader::GetRunNumber(TString filen){
   TString base(gSystem->BaseName(filen));
   TString sNum0(base(base.First("0"),6));
   return sNum0.Atoi();
 }
-
-
+/////////////////////////////////////////////////////////////////
+///The important function.
+/// Read the event from THipo.
+/// Get values from THipo and but into THSParticle class.
+/// Called once per hipo event.
 Bool_t THSHipoReader::ReadEvent(Long64_t entry){
-  //cout<<fTrPindex<<" "<<fTrIndex<<" "<<fTrDet<<" "<<fTrq<<" "<<fCharge<<endl;
-    //if entry ==-2 we have been called from a derived class who has
+  //if entry ==-2 we have been called from a derived class who has
   //already got the event
   if(entry!=-2){
     if(!fHipo->NextEvent()) {//end of 1 file
@@ -176,6 +205,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
     }
     fEntry++;
   }
+  
   if(fEntry%100000==0) cout<<fEntry<<endl;
   fParticles.clear();//reset fParticles
   fGenerated.clear();//reset fParticles
@@ -200,11 +230,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
   
   if(fPBank){ //Filling reconstructed fParticles
     UInt_t Nin=fPBank->GetEntries();
-    //in case some events have more particles
-    // while(Nin>fReadParticles->size()){
-    //   fReadParticles->push_back(THSParticle());
-    // }
-    Int_t ip=0;
+     Int_t ip=0;
     fParticles.reserve(Nin);
     fPIDs.reserve(Nin);
     while(fPBank->NextEntry()){

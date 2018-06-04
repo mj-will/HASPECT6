@@ -19,6 +19,8 @@
 #include <Math/Vector4D.h>
 #include <Math/Point3D.h>
 #include <Math/DisplacementVector3D.h>
+#include <Math/VectorUtil.h> //for boosts etc.
+
 using namespace std;
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> > HSLorentzVector;
@@ -116,7 +118,7 @@ class THSParticle {
   Double_t Doca(){return fDoca;}
   Double_t Path(){return fPath;}
   Double_t Beta(){return fPath/fTime/2.99792e+08*1E9;}//time ns, path m
-  Double_t HypBeta(){Double_t pp=fP4.Rho();return pp/sqrt(pp*pp+fPDGMass*fPDGMass);}
+  Double_t HypBeta(){Double_t pp=fP4.P();return pp/sqrt(pp*pp+fPDGMass*fPDGMass);}
   Double_t HypTime(){return fPath/HypBeta()/2.99792e+08*1E9  ;} //in ns
   //  Double_t DeltaTime(){return HypTime()-fTime;};
   Double_t DeltaTime(){return fTime-HypTime();};
@@ -134,8 +136,10 @@ class THSParticle {
   HSPosition* TruthVer(){return &fTruthV;};
   Short_t TruthPDG(){return fPDGCode;};
    
- 
+  TLorentzVector GetTLorentzVector(){return TLorentzVector(fP4.X(),fP4.Y(),fP4.Z(),fP4.T());}
+  
   void Clear();
+  void MinorClear();
   
   void CopyParticle(THSParticle* part,Bool_t andPDG);
   //Utility functions
@@ -154,14 +158,15 @@ class THSParticle {
   //order in vector based on particle momentum
   //nb comparitive operator cannot work on pointers so vectors need
   //to be filled with object not pointers for this to work
-  friend bool operator< ( const THSParticle& lhs, const THSParticle& rhs ){return lhs.fP4.Rho() < rhs.fP4.Rho(); };
+  friend bool operator< ( const THSParticle& lhs, const THSParticle& rhs ){return lhs.fP4.P() < rhs.fP4.P(); };
 
   Double_t p3Distance(HSMomentum vec){return (fP4.Vect()-vec).Mag2();}
 
   Double_t ResTheta(){return fP4.Theta()-fTruthP4.Theta();};
   Double_t ResPhi(){return fP4.Phi()-fTruthP4.Phi();};
-  Double_t ResRho(){return fP4.Rho()-fTruthP4.Rho();};
+  Double_t ResP(){return fP4.P()-fTruthP4.P();};
   Double_t ResE(){return fP4.E()-fTruthP4.E();};
+  Double_t ResAngle(){return ROOT::Math::VectorUtil::Angle(fP4,fTruthP4);};
   ClassDef(THSParticle,4) //class THSParticle
 };
 inline Int_t THSParticle::Charge(){
@@ -177,6 +182,7 @@ inline Int_t THSParticle::Charge(){
 }
 inline void THSParticle::Clear(){
   fP4.SetXYZT(0,0,0,0);
+  fTruthP4.SetXYZT(0,0,0,0);
   fPDGMass=0;
   fMeasMass=0; //Or other PID info
   fTime=0;
@@ -188,6 +194,19 @@ inline void THSParticle::Clear(){
   fTrChi2=0;
   fPDGCode=0;           //PDG number
   fTruthPDG=0;//! true PDG code
+  fDetector=0; //detector code
+
+}
+inline void THSParticle::MinorClear(){
+  fP4.SetXYZT(0,0,0,0);
+  fMeasMass=0; //Or other PID info
+  fTime=0;
+  fPath=0;
+  fDoca=0;//!
+  fEdep=0;
+  fDeltaE=0;
+  fPreE=0;
+  fTrChi2=0;
   fDetector=0; //detector code
 
 }

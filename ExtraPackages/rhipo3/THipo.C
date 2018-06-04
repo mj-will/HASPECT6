@@ -138,13 +138,8 @@ Long64_t THipo::ProcessFile(TString filename){
   return fNEvents;
 }
 Bool_t THipo::NextEvent(){//Read next event in file
-  gBenchmark->Start("THipo::NextEvent::libcppReader");
-  if(!fReader->next()) {gBenchmark->Stop("THipo::NextEvent::libcppReader");return kFALSE;}
-  gBenchmark->Stop("THipo::NextEvent::libcppReader");
- 
-  gBenchmark->Start("THipo::NextEvent::OutTree");
+   if(!fReader->next()) {return kFALSE;}
   // Loop over groups if require output (put values in vectors)
-  // if(fOutTree){
   for(UInt_t ig=0;ig<fBanks.size();ig++){
     fCurBank=fBanks.at(ig);
     fCurBank->ResetEntry();
@@ -154,7 +149,6 @@ Bool_t THipo::NextEvent(){//Read next event in file
   if(fOutTree)fOutTree->Fill();
   
   fNEvents++;
-  gBenchmark->Stop("THipo::NextEvent::OutTree");
   return kTRUE;
 }
 Bool_t THipo::ConfigBank(TString bankname){

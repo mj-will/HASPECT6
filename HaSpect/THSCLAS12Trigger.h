@@ -4,6 +4,7 @@
 #include <TTree.h>
 #include "THSParticle.h"
 #include "THSEventInfo.h"
+#include "THSRunInfo.h"
 #include <cmath>
 #include <vector>
 
@@ -18,10 +19,13 @@ class THSCLAS12Trigger{
   vector<Short_t> fEventSectors=std::vector<Short_t>(11,0);
   vector<THSParticle> *fParticles=nullptr;
   THSEventInfo* fEventInfo=nullptr;
+  THSRunInfo* fRunInfo=nullptr;
   Float_t fStartTime=0;
-  Float_t fSTimePeak=111.75;
-  //  Float_t fSTimePeak=112.25;
-  Float_t fTimeShiftFT=-385.05;
+  Float_t fSTimePeak=124.25;
+  Float_t fTimeShiftFT=-384.65;
+  //Float_t fStartTime=124.25; //GEMC
+  //Float_t fSTimePeak=124.25; //GEMC
+  //Float_t fTimeShiftFT=0; // GEMC
   
  public:
   Short_t Sector(Int_t det);
@@ -35,14 +39,16 @@ class THSCLAS12Trigger{
 
   void SetParticles(vector<THSParticle> *parts){fParticles=parts;}
   void SetEventInfo(THSEventInfo* info){fEventInfo=info;}
+  void SetRunInfo(THSRunInfo* info){fRunInfo=info;if(fRunInfo->Type())SetSim();}
+  void SetSim(){fSTimePeak=124.25;fTimeShiftFT=0;};
   
   void ReadParticles();
 
   Float_t StartTime(Float_t ptime); //calculate event start time
   Float_t StartTime(THSParticle* part); //calculate event start time
 
-  void FindTimeOffSetFT(TTree* tree);
-  void FindTimeRFTimePeak(TTree* tree);
+  void FindTimeOffSetFT(TTree* tree,TString option="goff");
+  void FindTimeRFTimePeak(TTree* tree,TString option="goff");
   
   void SubtractStartTime(THSParticle* part); //subtract from HSParticle  
   void SubtractStartTime(THSParticle* part0,THSParticle* part1);

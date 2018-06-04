@@ -2,6 +2,8 @@
 #ifndef THSRUNINFO_h
 #define THSRUNINFO_h
 
+#include <TTree.h>
+
 class THSRunInfo{
 
  public :
@@ -9,6 +11,7 @@ class THSRunInfo{
   ~THSRunInfo()=default;
   
  protected :
+  // TTree* fTree=nullptr; //! Tree containg this RunInfo class
   Float_t fTotCharge=0; //total gated charge for run
   Float_t fMeanCurrent=0; //average current (needs attenuation factor)
   Int_t fNRun=0;//Run Number
@@ -25,6 +28,8 @@ class THSRunInfo{
   void SetMeanCurrent(Float_t st){fMeanCurrent=st;}
   Float_t MeanCurrent(){return fMeanCurrent;}
 
+  void LoadTree(TString filename);
+  // TTree* GetTree(){return fTree;};
   
 };
 

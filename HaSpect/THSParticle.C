@@ -1,3 +1,33 @@
+/**
+	\class THSParticle
+
+	Class responsible for handling event particle information.
+	THSDataManager uses a vector<THSParticle> as it main data.
+	Data members are used to hold information from different detectors
+	while functions provide additional derived information.
+
+	For performance reasons this class utilises the TMath Gen Vector
+	(https://root.cern.ch/doc/v608/Vector.html) 
+	rather than the more common TLorentzVector. This halves
+	the disk space as it is saved as float in file as well as being
+	somewhat faster.
+
+	As well as measured 4-vectors and vertices, in the case of simulated 
+	events THSParticle can also keep the truth (generated values).
+	This can supply resolution information as well as being of use
+	in ToyMC type studies.
+
+	Example of caluclating a missing mass
+
+	    HSLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4();
+
+	Here fBeam, fTarget are HSLorentzVectors, while fElectron, fProton, 
+	fPip and fPim are THSParticles which are having their 
+	4-vectors accessed via P4()
+*/
+
+
+
 //--Author      DI Glazier 23/03/2018
 //--Rev
 //--Update
@@ -35,6 +65,7 @@ void THSParticle::CopyParticle(THSParticle* part,Bool_t andPDG){
   SetEdep(part->Edep());
   SetDeltaE(part->DeltaE());
   SetPreE(part->PreE());
+  SetTrChi2(part->TrChi2());
   SetStatus(part->Status());
   if(andPDG) SetPDGcode(part->PDG());
   SetDetector(part->Detector());

@@ -89,7 +89,7 @@ class THSDataManager{
 
   //Run and event info
   THSEventInfo* fEventInfo=nullptr;
-  THSRunInfo* fRunInfo=nullptr;
+  THSRunInfo* fRunInfo=new THSRunInfo();
   TTree* fRunTree=nullptr;
   
   //default THSParticles tree reader

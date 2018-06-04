@@ -1,3 +1,68 @@
+/**
+        \class THSDataManager
+	Interface to different data formats
+	Can read ROOT, HIPO, LUND,...files and converts into HSData format
+	for writing or immediate event processing
+	HSData format :
+
+	vector< THSParticle >  + THSEventInfo + THSRunInfo
+
+	For CLAS12 data see derived classes THSHipoReader and THSHipoTrigger
+
+	For reading ROOT files for example,
+
+	    THSDataManager* dm=new THSDataManager();
+	    TChain chain("HSParticles");
+	    chain.Add("*.root");
+	    dm->InitChain(&chain);
+	    vector<THSParticle> *parts=dm->GetParticles();
+	    THSEventInfo* event=dm->GetEventInfo();
+	    while(dm->ReadEvent())//loop over events
+	      parts->at(0).P4().E()  ... event->TrigBit(30) .... 
+
+	For reading CLAS12 HIPO files you need enviroment variables
+	RHIPO, CHIPO and LZ4_h set. For more info see
+	https://github.com/dglazier/HASPECT6/wiki/hiporoot
+	
+	    THSHipoTrigger* dm=new THSHipoTrigger();
+	    TChain chain("HSParticles");
+	    chain.Add("/home/dglazier/clas12data/out_clas_003432.evio.0.hipo");
+	    dm->InitChain(&chain);
+	    vector<THSParticle> *parts=dm->GetParticles();
+	    THSEventInfo* event=dm->GetEventInfo();
+	    while(dm->ReadEvent())//loop over events
+	      parts->at(0).P4().E() ... event->TrigBit(30) .... 
+
+	For reading LUND files
+	
+	    THSLundReader* dm=new THSLundReader();
+	    TChain chain("HSParticles");
+	    chain.Add("*.ld");
+	    dm->InitChain(&chain);
+	    vector<THSParticle> *parts=dm->GetParticles();
+	    THSEventInfo* event=dm->GetEventInfo();
+	    while(dm->ReadEvent())//loop over events
+	      parts->at(0).P4().E() ... 
+
+
+	In general it is more likely that this class will be used with 
+	THSFinalState:
+
+	    THS2pi* fs=new THS2pi();
+	    fs->SetDataManager(dm);
+	    TFile* outfile=new TFile("hipofile.root","recreate");
+	    TTree* outtree=new TTree("FinalTree","output tree");
+	    fs->FinalStateOutTree(outtree); //connect ouput tree to project branches
+	    while(dm->ReadEvent()){//loop over events
+	    fs->ProcessEvent();
+	    }
+
+	In this way the final state analysis can be applied to any input file 
+	type that has a THSDataManger interface
+
+
+*/
+
 #include "THSDataManager.h"
 #include "TTreeCache.h"
 #include "TSystem.h"
@@ -63,8 +128,11 @@ Bool_t THSDataManager::InitReader(TString filename,TString name){
   //Get Event and Run info if exists
   if(fReadTree->GetBranch("EventInfo"))fReadTree->SetBranchAddress("EventInfo",&fEventInfo);
   fRunTree=dynamic_cast<TTree*>(fReadFile->Get("HSRunInfo"));
-  if(fRunTree) fRunTree->SetBranchAddress("Info",&fRunInfo);
-  
+  if(fRunTree){
+    fRunInfo->LoadTree(filename);
+  }
+  //if(fRunTree) fRunTree->SetBranchAddress("Info",&fRunInfo);
+  if(fFinalState) fFinalState->FileStart();
   //TTreeCache::SetLearnEntries(100);
   fReadTree->SetCacheSize(50E6);//10MB
   fReadTree->StopCacheLearningPhase();

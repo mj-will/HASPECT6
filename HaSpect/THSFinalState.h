@@ -17,15 +17,12 @@
 #include "THSRunInfo.h"
 #include "THSEventInfo.h"
 
+//Typedef for pointer to function
+//used to link a derived class function with using its data members
+//To a function call in AddTopology and link to a call in THSTopology 
 namespace FinalState{
   typedef std::function<void()> VoidFuncs;
 }
-//Developments :
-//Add THSParticleIter class for combitorials
-//To limit number of combitorials
-//First loop over beam particles, assign status of other particles
-//based on timing coincidence (0=reject;1=coincidence;2=random sample)
-//Run check topology based on status
 class THSTopology;
 class THSParticleConfig;
 class THSDataManager;
@@ -167,11 +164,12 @@ class THSFinalState{
   std::vector<FinalState::VoidFuncs> fTopoFuncs;
   std::vector<FinalState::VoidFuncs> fIterFuncs;
 
-  
+  Float_t fAccurateTruth=0; //opening angle for determining truth
   //Observables
 
   //Discriminators
   
+
  public :
   void Finish();
   Bool_t IsGoodEvent(){return fGoodEvent;}
@@ -186,7 +184,7 @@ class THSFinalState{
   virtual Bool_t IsCorrectTruth(THSParticle *part);
   virtual void FinalStateOutTree(TTree* tree){tree->Branch("Final",&fFinal);};
   virtual void CheckTruth();
-
+  void SetAccurateTruth(Float_t ang){fAccurateTruth=TMath::DegToRad()*ang;};
   void SetVerbose(Int_t ver){fPrintVerbose=ver;}
   void CheckCombi(){fCheckCombi=kTRUE;}
   

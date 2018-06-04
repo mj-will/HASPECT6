@@ -34,6 +34,8 @@
     }
     if(cmd.Contains("--jsub=")){
       FARMFILE=cmd(7,cmd.Sizeof());
+      TString rhipo=gSystem->Getenv("RHIPO");
+      FARMFILE.Prepend(rhipo+"/");
       cout<<"Using template script "<<FARMFILE<<endl;
     }
     if(cmd.Contains("--nfiles=")){
