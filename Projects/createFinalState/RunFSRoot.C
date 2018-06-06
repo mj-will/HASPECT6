@@ -7,7 +7,6 @@
    fs->SetMaxParticles(10);
   //create datamanager
   THSDataManager* dm=new THSDataManager();
-  // dm->SetReadGenBranch("Generated");
   TChain chain("HSParticles");
   chain.Add("/indir/out_*root");
   dm->InitChain(&chain);
@@ -22,7 +21,6 @@
   
   gBenchmark->Start("timer");
   
-  fs->FileStart();
   while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
   }

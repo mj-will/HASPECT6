@@ -100,7 +100,7 @@ class THSDataManager{
   Long64_t fEntry=0;
   Long64_t fNIgnoreEntry=0;
   TString fReadBName="Particles"; //default branchname
-  TString fReadGName=""; //by default no gnereated branch
+  TString fReadGName="Generated"; //by default no gnereated branch
   TString fWriteGName=""; //by default no gnereated branch
   TString fIDName="UID"; //by default uid
   Bool_t fAddGenerated=kFALSE; //also generated vector?

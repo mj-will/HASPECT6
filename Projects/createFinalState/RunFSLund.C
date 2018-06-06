@@ -1,17 +1,12 @@
-//root --hsdata --hsfinal=THSXXX RunFSLund.C
+//root --hsdata --hsfinal=THSXXX RunFSLundXXX.C
 //You need to replace XXX with your final state class name
 {
   //Create FinalState
   THSXXX* fs=new THSXXX();
-  //  fs->SetPermutate(); //turn on permuations
-  fs->SetGenerated(); //just analyse generated branch
   //create datamanager
   THSLundReader* dm=new THSLundReader();
-  dm->SetWriteGenBranch("Generated");
   dm->Init("/lund/file/name.lund","HSParticles");
-  //connect Project to HSParticles
-  // pKK->SetDetParts(dm->GetParticles());
-  fs->SetGenParts(dm->GetGenerated());
+  fs->SetDataManager(dm);
   Int_t counter=0;
   
   //create ouput tree

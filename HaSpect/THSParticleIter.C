@@ -177,7 +177,6 @@ THSParticle* THSParticleIter::NextParticle(){
 ///example usage : piterator.SelectXofY(3,2, new THSPermutation());
 
 void THSParticleIter::SelectXofY(Int_t _X, Int_t _Y, THSCombitorial* sel_iter){
-  cout<<"SelectXofY "<<_X<<" "<<_Y<<endl;
   //recursively create iterators
   if(fEvParts.size()!=UInt_t(_X*_Y)) cout<<"Warning ParticleIter::SelectXofY not sufficeint Event Particles Set "<<fEvParts.size()<<" when we need "<<_X*_Y<<endl;
   if(fEvParts[0])fPDG=fEvParts[0]->PDG();

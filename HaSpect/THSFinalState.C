@@ -2,18 +2,68 @@
 	\class THSFinalState
 	
 	Class to control particlular analysis.
+	The main task is to take detected particles and
+	convert them into information needed for subsequent
+	fitting of observables, e.g LorentzVectors for AmpTools
+	Double_ts for RooFit
+
 	Users need to create their own specific final state class.
 	It should operate on 3 classes of data:
 	real, mc rec, mc gen.
-	input should be via a THSDataManager interface
+	Input should be via a THSDataManager interface
 	or if standard root format (i.e. ouput from THSDataManager)
-	you may set  particles, eventinfo and runinfo directly 
+	you may set  particles, eventinfo and runinfo directly.
+
+	A sub event is created for each read event and valid combinations 
+	of detected particles. (i.e. it creates multiple events for each event
+        that is read, each sub event is given a unique ID UID in the 
+	output tree)
+	An event is read if it has detected particles that may constitute a 
+	the predefined particle topologies for this final state. This is done 
+	via the AddTopology function
+
+	    //include topology for analysis
+	    AddTopology("pi+:pi-:gamma:gamma:proton:e-",
+                 bind(&THSep_omegap::Init_Iter0, this),
+                 bind(&THSep_omegap::Topo_0, this),
+                 PID,INCLUSIVE);
+
+	Access to the detected particles in the topology is then given 
+	by the AddParticle function
+
+	    AddParticle(&fElectron,kTRUE,4);
+	    AddParticle(&fProton,kTRUE,3);
+	    AddParticle(&fPip,kTRUE,0);
+	    AddParticle(&fGamma1,kTRUE,-1);
+	    AddParticle(&fGamma2,kTRUE,-1);
+	    ...
+
+	What constitutes a valid combination
+	is managed by the class THSParticleIter, which also
+	fills the particles for each combitorial. If there
+	are particles which decay in a short time scale
+	(e.g. pi0, omega,...; not Delta, excited states,..)
+	Then they should be decalred via the ConfigParent function
+	to make sure the correct combitorials are made
+
+	    AddParticle(&fPi0,kTRUE,2);
+	    ConfigParent(&fPi0,&fGamma1);
+	    ConfigParent(&fPi0,&fGamma2);
+
+	In general the user will just have to define there own 
+	Topo_0(),Topo_1(),.. function for each topology they declared.
+	These functions should contain calculations specific to that topology
 	
-	The main task is to take detected particles and
-	convert them into information needed for subsequent
-	fitting of observables, e.g TLorentzVectors for AmpTools
-	Double_t s for RooFit
+	Also the function Kinematics() should be defined for calculations 
+	common to all topologies.
 	
+	Finally FinalStateOutTree(TTree* tree) should define all the branches
+	for the output tree. Additional variables given as branches should
+	be data members of the THSFinalState or users class.
+	
+             tree->Branch("MissMass",&fMissMass,"MissMass/D");
+
+
 	@example THSFinalTemp.C
 */
 
@@ -22,6 +72,7 @@
 #include "THSFinalState.h"
 #include "THSTopology.h"
 #include "THSDataManager.h"
+#include "THSLundReader.h"
 
 THSFinalState::THSFinalState(){
   
@@ -605,7 +656,7 @@ void THSFinalState::AutoIter(){
     Int_t ntype=0;
     Int_t Nconfig_pid=0;
     vector<Short_t> types;
-    cout<<"Look through configs "<<fConfigs.size()<<endl;
+    //cout<<"Look through configs "<<fConfigs.size()<<endl;
     for(UInt_t jp=0;jp<fConfigs.size();jp++){
       if(fConfigs[jp]->GetNChild())continue; //not a detected particle
       //make sure this particle is in the true topology
@@ -615,7 +666,7 @@ void THSFinalState::AutoIter(){
 	Nconfig_pid++;
 	if(std::count(types.begin(),types.end(),fConfigs[jp]->PDG())==0){
 	  //Found a new PDG type
-	  cout<<"new type "<<fConfigs[jp]->PDG()<<endl;
+	  //cout<<"new type "<<fConfigs[jp]->PDG()<<endl;
 	  ntype++;
 	  types.push_back(fConfigs[jp]->PDG());
 	  vector<THSParticleConfig* > new_one;
@@ -648,7 +699,7 @@ void THSFinalState::AutoIter(){
  	  //Now look to see if there are identical particle of this parent type
 	  //We do not want to double count these
 	  vector<THSParticleConfig* > all_parents=HowManyParticles(parent->PDG());
-	  cout<<"Parents "<<all_parents.size()<<" "<<child->PDG()<<" "<<child_pdg.size()<<endl;
+	  //cout<<"Parents "<<all_parents.size()<<" "<<child->PDG()<<" "<<child_pdg.size()<<endl;
 	  Int_t NUsedParents=1;
 	  for(UInt_t io=0;io<all_parents.size();io++){
 	    if(all_parents[io]==parent)continue; //don't count this one again
@@ -755,6 +806,12 @@ void THSFinalState::SetDataManager(THSDataManager* dm){
 
   SetEventInfo(dm->GetEventInfo());
   SetRunInfo(dm->GetRunInfo());
+
+  if(dynamic_cast<THSLundReader*>(dm)){//LUND reader=>only Generated
+    SetGenerated();
+  }
+  if(fIsGenerated)
+    fData->SetWriteGenBranch("Generated");
   
   fData->SetFinalState(this);
   FileStart();

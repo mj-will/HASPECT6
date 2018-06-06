@@ -3,15 +3,10 @@
 {
   //Create FinalState
   THSep_omegap* fs=new THSep_omegap();
-  //  fs->SetPermutate(); //turn on permuations
-  fs->SetGenerated(); //just analyse generated branch
   //create datamanager
   THSLundReader* dm=new THSLundReader();
-  dm->SetWriteGenBranch("Generated");
-  dm->Init("/lund/file/name.lund","HSParticles");
-  //connect Project to HSParticles
-  // pKK->SetDetParts(dm->GetParticles());
-  fs->SetGenParts(dm->GetGenerated());
+  dm->Init("Epto_omega_0.ld","HSParticles");
+  fs->SetDataManager(dm);
   Int_t counter=0;
   
   //create ouput tree

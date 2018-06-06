@@ -120,11 +120,17 @@ Bool_t THSDataManager::InitReader(TString filename,TString name){
   fReadTree->SetBranchAddress("PIDs",&fReadPIDs);
   fBParticles=fReadTree->GetBranch(fReadBName.Data());
   fBPIDs=fReadTree->GetBranch("PIDs");
-  cout<<"set brandch "<<fReadParticles<<" "<<&fParticles<<endl;
+  cout<<"THSDataManager::InitReader set branch "<<fReadParticles<<" "<<&fParticles<<endl;
    //generated particles if simualtions
   fReadGenerated=&fGenerated;
-  if(fInGenerated)fReadTree->SetBranchAddress(fReadGName.Data(),&fReadGenerated);
-
+  //if(fInGenerated)fReadTree->SetBranchAddress(fReadGName.Data(),&fReadGenerated);
+  if(fReadTree->GetBranch(fReadGName.Data())){
+    fReadTree->SetBranchAddress(fReadGName.Data(),&fReadGenerated);
+    fInGenerated=kTRUE;
+    cout<<"THSDataManager::InitReader set branch "<<fReadGName<<" "<<fReadGenerated<<" "<<endl;
+  }
+  else fReadGenerated=nullptr;
+  
   //Get Event and Run info if exists
   if(fReadTree->GetBranch("EventInfo"))fReadTree->SetBranchAddress("EventInfo",&fEventInfo);
   fRunTree=dynamic_cast<TTree*>(fReadFile->Get("HSRunInfo"));

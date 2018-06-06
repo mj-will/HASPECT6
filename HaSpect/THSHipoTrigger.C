@@ -16,7 +16,7 @@
 #include "THSHipoTrigger.h"
 
 THSHipoTrigger::THSHipoTrigger(){
-  fRunInfo=new THSRunInfo();
+  //fRunInfo=new THSRunInfo();
   fEventInfo=new THSEventInfo();
 }
 
@@ -70,7 +70,7 @@ void THSHipoTrigger::InitOutput(TString filename){
 /// Fill the EventInfo from REC::Event.
 Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
 
-  cout<<"THSHipoTrigger::ReadEvent("<<endl;    
+  //cout<<"THSHipoTrigger::ReadEvent("<<endl;    
 
   //Note include an extra fill in case there is an extra scaler current
   if(!fHipo->NextEvent()) {

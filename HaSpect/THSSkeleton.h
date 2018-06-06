@@ -29,6 +29,7 @@ class THSSkeleton :public TObject  {
   Bool_t fIsFinalState=kFALSE;   //Use THSProject 
   Bool_t fIsFinalStatePerm=kFALSE;   //Use THSProject Permutations
   Bool_t fMadeSelector=kFALSE;
+  Bool_t fIsCLAS12=kFALSE;
   Int_t fNLPS=0;   //Use Longitidinal phase space class with NLPS particles
 
   TString fFileName;   // The input filename containing the tree
@@ -60,6 +61,7 @@ class THSSkeleton :public TObject  {
   void SetFinalStateTopo(TString topos){fFinalTopo=topos;};
   void SetFinalStateParts(TString finals){fFinalParts=finals;};
   void SetFinalStateParents(TString finals){fFinalParents=finals;};
+  void SetCLAS12(){fIsCLAS12=kTRUE;}
   void SetFileName(TString name){fFileName=name;}
   void SetSelName(TString name){fSelName=name;}
   void CreateSelector(TString selname,TString filename,TString treename,TString opt="");

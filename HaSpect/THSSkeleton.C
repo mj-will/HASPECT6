@@ -620,7 +620,23 @@ void THSSkeleton::CreateMyFinalState(){
       ContinueLineAfter(Form("  THSParticle f%s=THSParticle(\"%s\");",TString(sparticle(0,sparticle.First(":"))).Data(),TString(sparticle(sparticle.First(":")+1,sparticle.First(";")-sparticle.First(":")-1)).Data()));
     }
   }
- 
+  if(fIsCLAS12){
+    fPlace=0;
+    FindNextLineLike("THSParticle.h");
+    ContinueLineAfter("#include \"THSCLAS12Trigger.h\"");
+    ContinueLineAfter("#include \"THSCLAS12DeltaTime.h\"");
+    
+    FindNextLineLike("//Initial state");
+    fPlace-=2;
+    ContinueLineAfter("  THSCLAS12Trigger fTrigger;//For CLAS12 trigger info");
+    ContinueLineAfter("  THSCLAS12DeltaTime fCuts; //For particle cuts");
+
+    FindNextLineLike("//Initial state");
+    ContinueLineAfter("  HSLorentzVector fBeam=HSLorentzVector(0,0,10.6,10.6);");
+   
+  }
+
+  
   fCurMacro.SaveSource(TString("THS")+fFinalName+".h");
   ///////////////////////////////////////////////////////
   
@@ -655,16 +671,18 @@ void THSSkeleton::CreateMyFinalState(){
   for(Int_t io=0;io<topos->GetEntries();io++){
     ContinueLineAfter(Form("void THS%s::Topo_%d(){",fFinalName.Data(),io));
     ContinueLineAfter(Form("  //For topology %s",topos->At(io)->GetName()));
-    ContinueLineAfter("  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors");
-    ContinueLineAfter("  //Define starttime from electron candidate");
-    ContinueLineAfter("  fTrigger.StartTime(&fElectron);");
-    ContinueLineAfter("  //Subtract sarttime from all particles");
-    ContinueLineAfter("  //e.g. fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);");
-    ContinueLineAfter("  fTrigger.SubtractStartTime(ADDPARTICLESHERE);");
-    ContinueLineAfter("");
-    ContinueLineAfter("  //Can apply some timing cuts now");
-    ContinueLineAfter("  if(!fCuts.ElCut(&fElectron)){fGoodEvent=kFALSE;return;}");
-    ContinueLineAfter("  //etc, e.g if(!fCuts.PionPCut(&fPip1)){fGoodEvent=kFALSE;return;}");
+    if(fIsCLAS12){
+      ContinueLineAfter("  //if(fElectron.Detector()>0) {fGoodEvent=kFALSE;return;} //Put some cuts on particle detectors");
+      ContinueLineAfter("  //Define starttime from electron candidate");
+      ContinueLineAfter("  fTrigger.StartTime(&fElectron);");
+      ContinueLineAfter("  //Subtract sarttime from all particles");
+      ContinueLineAfter("  //e.g. fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);");
+      ContinueLineAfter("  fTrigger.SubtractStartTime(ADDPARTICLESHERE);");
+      ContinueLineAfter("");
+      ContinueLineAfter("  //Can apply some timing cuts now");
+      ContinueLineAfter("  if(!fCuts.ElCut(&fElectron)){fGoodEvent=kFALSE;return;}");
+      ContinueLineAfter("  //etc, e.g if(!fCuts.PionPCut(&fPip1)){fGoodEvent=kFALSE;return;}");
+    }
     ContinueLineAfter("");
     ContinueLineAfter("  //Reconstruct missing or combined particles");
     ContinueLineAfter("  //HSLorentzVector miss=fBeam+fTarget-fElectron.P4()...;");
@@ -673,7 +691,7 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter("}");
     
   }
-
+  
   fPlace=0;
   FindNextLineLike("//Set final state");
   fPlace+=3;
@@ -692,8 +710,35 @@ void THSSkeleton::CreateMyFinalState(){
 	ContinueLineAfter(Form("  ConfigParent(&f%s,&f%s);",TString(sparticle(0,sparticle.First(":"))).Data(),childs->At(ic)->GetName()));
     }
   }
-  fPlace=0;
 
+
+  if(fIsCLAS12){//CLAS12 specific lines
+    FindNextLineLike("FileStart(){");
+    fPlace++;
+    ContinueLineAfter("  fTrigger.SetParticles(frDetParts); //the detected particles");
+     ContinueLineAfter("  fTrigger.SetEventInfo(fEventInfo);//once per event info");
+    ContinueLineAfter("  fTrigger.SetRunInfo(fRunInfo);//once per run info");
+    ContinueLineAfter("");
+    ContinueLineAfter("  //Configure the cuts (default are delta timing cuts in ns)");
+    ContinueLineAfter("  fCuts.SetElCut(2,2); //Just FT,FD");
+    ContinueLineAfter("  fCuts.SetPionPCut(0,2,0,2);//FT,FDTOF,CD,FDCAL");
+    ContinueLineAfter("  fCuts.SetPionMCut(0,2,0,2);//FT,FDTOF,CD,FDCAL");
+    ContinueLineAfter("  fCuts.SetProtCut(0,2,1,2);//FT,FDTOF,CD,FDCAL");
+    ContinueLineAfter("  fCuts.SetGammaCut(2,2,0,2);//FT,FDTOF,CD,FDCAL");
+
+    FindNextLineLike("Kinematics(){");
+    ContinueLineAfter("  //configure trigger for this event");
+    ContinueLineAfter("  fTrigger.ReadParticles();");
+
+    FindNextLineLike("CheckParticle(THSParticle* part){");
+    ContinueLineAfter("  if(part->Detector()<0)return kTRUE; //All FT tracks");
+    ContinueLineAfter("  if(part->PDG()==45)return kFALSE; //? what are these?");
+    ContinueLineAfter("  if(part->Time()==0)return kFALSE;   //Track needs time");
+    ContinueLineAfter("  if(part->Charge()&&part->DeltaE()<2)return kFALSE; //Charged track needs deltaE>2");
+    ContinueLineAfter("");
+  }
+
+  fPlace=0;
   fCurMacro.SaveSource(TString("THS")+fFinalName+".C");
 
 

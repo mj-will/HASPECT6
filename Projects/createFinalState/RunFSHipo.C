@@ -3,11 +3,9 @@
 {
   //Create FinalState
   THSXXX* fs=new THSXXX();
-   // fs->SetGenerated(); //just analyse generated branch
+   // fs->SetGenerated(); //just analyse gemc generated branch
   //create datamanager
   THSHipoTrigger* dm=new THSHipoTrigger();
-  // dm->SetReadGenBranch("Generated");
-  // dm->Init("INPUT.root","HSParticles");
   TChain chain("HSParticles");
   chain.Add("/indir/out_*hipo");
   dm->InitChain(&chain);

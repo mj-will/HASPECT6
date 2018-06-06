@@ -8,17 +8,11 @@ Bool_t THSLundReader::Init(TString filename,TString name){
   //Get first event header for Nparticles.
   //We will assume for now all events have same final state
   fTxtIn>>fNin;
-  //fReadParticles=new vector<THSParticle>;
-  // for(UInt_t i=0;i<fNin;i++)//create lorentzvector for each 
-  //   fReadParticles->push_back(new THSParticle());
-  //if(fAddGenerated){
-  // fReadGenerated=new vector<THSParticle*>;
-    // for(UInt_t i=0;i<fNin;i++)//create lorentzvector for each 
-    //   fReadGenerated->push_back(new THSParticle());
-  //}
   Info("InitLundEvent","Opened file with %d particles",fNin);
   fTxtIn.close();
   fTxtIn.open(filename.Data());//move back to start
+
+  //fEventInfo=new THSEventInfo();
   return kTRUE;
 
 }
@@ -45,7 +39,7 @@ Bool_t THSLundReader::ReadEvent(Long64_t entry){
   fParticles.reserve(fNin);//reset fParticles
   fPIDs.clear();//reset fParticles
   fPIDs.reserve(fNin);//reset fParticles
-  
+  cout<<"Read "<<fNin<<endl;
   for(UInt_t i=0;i<fNin;i++){
     getline(fTxtIn,sline);
     streamlinep.str(sline);//set sline as string in stream
