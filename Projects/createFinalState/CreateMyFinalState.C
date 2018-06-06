@@ -10,6 +10,8 @@
   sk->SetFinalStateParts("");
    //define any parent particles that may have decayed, for example
   sk->SetFinalStateParents("");
+  //Uncomment for CLAS12 functionality
+  //sk->SetCLAS12();
  //Make some code
   sk->CreateMyFinalState();
 }
