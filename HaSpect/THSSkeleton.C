@@ -725,6 +725,8 @@ void THSSkeleton::CreateMyFinalState(){
     ContinueLineAfter("  fCuts.SetPionMCut(0,2,0,2);//FT,FDTOF,CD,FDCAL");
     ContinueLineAfter("  fCuts.SetProtCut(0,2,1,2);//FT,FDTOF,CD,FDCAL");
     ContinueLineAfter("  fCuts.SetGammaCut(2,2,0,2);//FT,FDTOF,CD,FDCAL");
+    ContinueLineAfter("");
+    ContinueLineAfter("  if(THSFinalState::frGenParts) fTrigger.SetSim();//Should get this from RunInfo but not correct in EB at the moment");
 
     FindNextLineLike("Kinematics(){");
     ContinueLineAfter("  //configure trigger for this event");
