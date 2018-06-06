@@ -22,7 +22,6 @@
 	the predefined particle topologies for this final state. This is done 
 	via the AddTopology function
 
-	    //include topology for analysis
 	    AddTopology("pi+:pi-:gamma:gamma:proton:e-",
                  bind(&THSep_omegap::Init_Iter0, this),
                  bind(&THSep_omegap::Topo_0, this),
@@ -208,7 +207,7 @@ THSTopology* THSFinalState::FindTopology(){
     //So here just use the first one
     for(UInt_t ip=0;ip<frDetParts->size();ip++){
       THSParticle* part=&(frDetParts->at(ip));
-      //if(!CheckParticle(part)) continue; //is this a good track?
+      if(!CheckParticle(part)) continue; //is this a good track?
       // fThisTopo.emplace_back(fTopos[0]->ParticleID(part->PDG()));
       Int_t pid=fTopos[0]->ParticleID(part->PDG());
       fThisTopo.push_back(pid);
@@ -216,7 +215,7 @@ THSTopology* THSFinalState::FindTopology(){
   }
   
   std::sort(fThisTopo.begin(),fThisTopo.begin()+fThisTopo.size());
-  // cout<<"ThisTopology ";
+  // cout<<"ThisTopology "<<frDetParts->size()<<" = ";
   // for(UInt_t i=0;i<fThisTopo.size();i++)
   //   cout<<fThisTopo[i]<<" ";
   // cout<<endl;
@@ -271,17 +270,18 @@ void THSFinalState::InitDetParts(){
   for (itmap = fMapPDGtoParticle.begin(); itmap != fMapPDGtoParticle.end(); itmap++)
     {
       itmap->second->clear();
-    }  
-  for(UInt_t ip=0;ip<fNParts;ip++){
+    }
+  
+  for(UInt_t ip=0;ip<frDetParts->size();ip++){
     THSParticle* part=&(frDetParts->at(ip));
     if(!CheckParticle(part)) continue;
     //Find the particle vector given by this topology
-     vector<THSParticle*> *vecParts=fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())];
+    vector<THSParticle*> *vecParts=fMapPDGtoParticle[fCurrTopo->ParticleID(part->PDG())];
     vecParts->push_back(part);
     if(vecParts->size()==fMaxPart) {fCurrTopo=nullptr; return;}
- 
-   }
- 
+    //  cout<<vecParts->size()<<" "<<ip<<" "<<fCurrTopo->ParticleID(part->PDG())<<endl;
+  }
+  
 }
 /////////////////////////////////////////////////////////////
 ///Check if this particle should be considered for the event
