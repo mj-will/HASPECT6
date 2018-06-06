@@ -71,6 +71,7 @@ void THSep_omegap::FileStart(){
   fCuts.SetProtCut(0,2,1,2);//FT,FDTOF,CD,FDCAL
   fCuts.SetGammaCut(2,2,0,2);//FT,FDTOF,CD,FDCAL
   
+  if(THSFinalState::frGenParts) fTrigger.SetSim();//Should get this from RunInfo but not correct in EB at the moment
 }
 
 //Define topology Iterator functions
@@ -123,7 +124,7 @@ void THSep_omegap::Topo_1(){
   fTrigger.StartTime(&fElectron);
   //Subtract sarttime from all particles
   //e.g. fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);
-  fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim,&fGamma1,&fGamma2);
+  fTrigger.SubtractStartTime(&fElectron,&fProton,&fPip,&fPim);
 
   //Can apply some timing cuts now
   if(!fCuts.ElCut(&fElectron)){fGoodEvent=kFALSE;return;}
@@ -134,6 +135,8 @@ void THSep_omegap::Topo_1(){
   HSLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPip.P4()-fPim.P4();
   fMissMass2=miss.M2();
   fMissMass=miss.M();
+  fPi0.SetP4(miss);
+  fPi0.TakePDGMass();
 }
 // void THSep_omegap::Topo_X(){
 // }
