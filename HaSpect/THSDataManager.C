@@ -137,9 +137,8 @@ Bool_t THSDataManager::InitReader(TString filename,TString name){
   if(fRunTree){
     fRunInfo->LoadTree(filename);
   }
-  //if(fRunTree) fRunTree->SetBranchAddress("Info",&fRunInfo);
-  if(fFinalState) fFinalState->FileStart();
-  //TTreeCache::SetLearnEntries(100);
+  //if(fFinalState) fFinalState->FileStart();
+
   fReadTree->SetCacheSize(50E6);//10MB
   fReadTree->StopCacheLearningPhase();
   fPerfstats = new TTreePerfStats("ioperf", fReadTree);
@@ -171,7 +170,7 @@ Bool_t THSDataManager::NextChainFile(){
     fCurFileName.Append(fFileAppend);
     InitOutput(fOutDir+"/"+fCurFileName);
   }
-  if(fEntryList) FilterFinalStateEvent();//If filtering via entrlist, redo for this file
+  // if(fEntryList) FilterFinalStateEvent();//If filtering via entrlist, redo for this file
   return kTRUE;
 }
 Bool_t THSDataManager::ReadEvent(Long64_t entry){
@@ -191,81 +190,57 @@ Bool_t THSDataManager::ReadEvent(Long64_t entry){
   else return kFALSE;
   return kTRUE; 
 }
-void THSDataManager::FilterFinalStateEvent(Long64_t entry){
-  if(fEntryList) delete fEntryList;fEntryList=nullptr;
-  fEntryList=new TEntryList();
-  //Fill EntryList with events passing finalstate topology
-  fReadTree->DropBranchFromCache(fBParticles);
-  fReadTree->AddBranchToCache(fBPIDs,kTRUE);
-  fReadTree->StopCacheLearningPhase();
-  for(Int_t i=0;i<fReadTree->GetEntries();i++){
-     fBPIDs->GetEntry(i);
-     if(fFinalState->CheckForATopology())
-       fEntryList->Enter(i);
-  }
-  fReadTree->SetEntryList(fEntryList);
-  fReadTree->DropBranchFromCache(fBPIDs);
-  fReadTree->AddBranchToCache(fBParticles,kTRUE);
+// void THSDataManager::FilterFinalStateEvent(Long64_t entry){
+//   if(fEntryList) delete fEntryList;fEntryList=nullptr;
+//   fEntryList=new TEntryList();
+//   //Fill EntryList with events passing finalstate topology
+//   fReadTree->DropBranchFromCache(fBParticles);
+//   fReadTree->AddBranchToCache(fBPIDs,kTRUE);
+//   fReadTree->StopCacheLearningPhase();
+//   for(Int_t i=0;i<fReadTree->GetEntries();i++){
+//      fBPIDs->GetEntry(i);
+//      if(fFinalState->CheckForATopology())
+//        fEntryList->Enter(i);
+//   }
+//   fReadTree->SetEntryList(fEntryList);
+//   fReadTree->DropBranchFromCache(fBPIDs);
+//   fReadTree->AddBranchToCache(fBParticles,kTRUE);
 
-  cout<<"THSDataManager::FilterFinalStateEvent found final state entries = "<<fEntryList->GetN()<<endl;
-}
-Bool_t THSDataManager::ReadFinalStateEvent(Long64_t entry){
-  //Default reader for root files with vector<THSParticle*> branches
-  if(fEntry<fReadTree->GetEntries()){
-
-    fBPIDs->GetEntry(fEntry);
-    while(!fFinalState->CheckForATopology()){
-      fEntry++;
-       fBPIDs->GetEntry(fEntry);
-       if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
-    }
-     fReadTree->GetEntry(fEntry);
-    fEntry++;
-  }
-  else if(fChainFiles){
-    if(fChainFileN<=fChainFiles->GetEntries()){//next file
-      NextChainFile();  
-      if(!fReadFile) return kFALSE;
-      fBPIDs->GetEntry(fEntry);
-      while(!fFinalState->CheckForATopology()){
-	fEntry++;
-	fBPIDs->GetEntry(fEntry);
-        if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
-     }
-      //fBParticles->GetEntry(fEntry);
-      fReadTree->GetEntry(fEntry);
-      fEntry++;
-      
-    }
-  }
-  else return kFALSE;
-  return kTRUE; 
-}
+//   cout<<"THSDataManager::FilterFinalStateEvent found final state entries = "<<fEntryList->GetN()<<endl;
+// }
 // Bool_t THSDataManager::ReadFinalStateEvent(Long64_t entry){
 //   //Default reader for root files with vector<THSParticle*> branches
-//   if(fEntry<fEntryList->GetN()){
-//    fReadTree->LoadTree(fEntry);
-//     Long64_t en=fEntryList->GetEntry(fEntry);
-//     //  cout<<en<<" "<<fEntry<<" "<<fEntryList->Next()<<endl;
-//     // Long64_t en=fReadTree->GetEntryList()->Next();
-//     //fBPIDs->GetEntry(en);
-//     //fBParticles->GetEntry(en);
-//     fReadTree->GetEntry(en);
+//   if(fEntry<fReadTree->GetEntries()){
+
+//     fBPIDs->GetEntry(fEntry);
+//     while(!fFinalState->CheckForATopology()){
+//       fEntry++;
+//        fBPIDs->GetEntry(fEntry);
+//        if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
+//     }
+//      fReadTree->GetEntry(fEntry);
 //     fEntry++;
 //   }
 //   else if(fChainFiles){
 //     if(fChainFileN<=fChainFiles->GetEntries()){//next file
 //       NextChainFile();  
 //       if(!fReadFile) return kFALSE;
-//       Long64_t en=fEntryList->GetEntry(fEntry);
-//       fReadTree->GetEntry(en);
-//        fEntry++;
+//       fBPIDs->GetEntry(fEntry);
+//       while(!fFinalState->CheckForATopology()){
+// 	fEntry++;
+// 	fBPIDs->GetEntry(fEntry);
+//         if(fEntry==fReadTree->GetEntries()-1) break;//read last entry so can go to next chain     
+//      }
+//       //fBParticles->GetEntry(fEntry);
+//       fReadTree->GetEntry(fEntry);
+//       fEntry++;
       
 //     }
 //   }
 //   else return kFALSE;
 //   return kTRUE; 
 // }
+
 Bool_t THSDataManager::InitChain(TChain* chain){
   //loop over all files in chain
   fChainFiles=chain->GetListOfFiles();

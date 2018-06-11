@@ -813,7 +813,7 @@ void THSFinalState::SetDataManager(THSDataManager* dm){
   if(fIsGenerated)
     fData->SetWriteGenBranch("Generated");
   
-  fData->SetFinalState(this);
+  // fData->SetFinalState(this);
   FileStart();
 }
 //////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@
 #include "THSRunInfo.h"
 #include "THSEventInfo.h"
 #include "THSWeights.h"
-#include "THSFinalState.h"
+//#include "THSFinalState.h"
 
 class THSDataManager{
 
@@ -33,8 +33,8 @@ class THSDataManager{
   Bool_t InitTreeReader(TString filename,TString name);
   Bool_t InitReader(TString filename,TString name);
   virtual Bool_t ReadEvent(Long64_t entry=-1);
-  virtual Bool_t ReadFinalStateEvent(Long64_t entry=-1);
-  virtual void FilterFinalStateEvent(Long64_t entry=-1);
+  //virtual Bool_t ReadFinalStateEvent(Long64_t entry=-1);
+  //virtual void FilterFinalStateEvent(Long64_t entry=-1);
   virtual void PrintEvent(Long64_t=0);
   virtual void WriteParticles();
   virtual void PostWrite(){} //in case want to reset anything after write
@@ -46,7 +46,7 @@ class THSDataManager{
   vector<THSParticle>* GetGenerated(){return &fGenerated;}
   vector<Short_t>* GetPIDs(){return &fPIDs;}
   TBranch* GetPIDsBranch(){return fBPIDs;}
-  void SetFinalState(THSFinalState* fs){fFinalState=fs;}
+  //void SetFinalState(THSFinalState* fs){fFinalState=fs;}
   THSEventInfo* GetEventInfo(){return fEventInfo;}
   THSRunInfo* GetRunInfo(){return fRunInfo;}
   
@@ -73,7 +73,7 @@ class THSDataManager{
   Long64_t GetNIgnored(){return fNIgnoreEntry;}
   void PrintPerfStats();
  protected :
-  THSFinalState* fFinalState=nullptr;
+  //THSFinalState* fFinalState=nullptr;
   TEntryList* fEntryList=nullptr;
   //GENERAL VECTORS FOR READING/WRITING
   vector<THSParticle> fParticles; //vector of  particles
