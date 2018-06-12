@@ -9,7 +9,8 @@
 #include "TTree.h" 
 #include "TVector.h" 
 #include "TChain.h" 
-#include "TEntryList.h" 
+#include "TEntryList.h"
+#include "TDirectory.h"
 #include <vector>
 #include <map>
 
