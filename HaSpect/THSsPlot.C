@@ -436,7 +436,7 @@ void THSsPlot::FitAndStudy(Int_t Nfits){
   //save any canvases produced
   Info("THSsPlot::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetName()).Data());
   SavePlots(fOutDir+TString("Results")+GetName()+".root");
-  StudyFit();
+  //StudyFit();
   //save weights to file
   if(GetWeights()){
     GetWeights()->PrintWeight();

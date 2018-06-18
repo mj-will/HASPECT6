@@ -31,7 +31,7 @@
 using namespace RooFit;
 using namespace std;
 
-class RooHS1StepStudy;
+//class RooHS1StepStudy;
 
 class THSRooFit : public TNamed {
  protected:
@@ -216,7 +216,7 @@ public:
     else Warning("THSRooFit::AddHSPDF_Ranges","Pdf named %s is not a ROooHSEventsPDF",pdfname.Data());
   }
 
-  void StudyFit();
+  //void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}
   void SetStudyPDF(TString pdfn){fStudyPDF=pdfn;}
   void SetStudyPlot(Bool_t plot=kTRUE){fStudyPlot=plot;}

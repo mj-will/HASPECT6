@@ -15,7 +15,7 @@
 #include <RooConstVar.h>
 #include "RooMinimizer.h"
 #include "RooMinuit.h"
-#include "RooHS1StepStudy.h"
+//#include "RooHS1StepStudy.h"
 #include "RooRandom.h"
 #include <RooStudyManager.h>
 #include <RooStats/SequentialProposal.h>
@@ -1007,7 +1007,7 @@ void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
     } 
     //Configured the fir for this bin now do it
     if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
-    rf->StudyFit();
+    //rf->StudyFit();
     if(cleanup){
       delete rf;rf=nullptr;
     }
@@ -1065,7 +1065,7 @@ void THSRooFit::FitAndStudy(Int_t Nfits){
     }
   Info("THSRooFit::FitAndStudy","Save to %s",(fOutDir+TString("Results")+GetTitle()).Data());
   SavePlots(fOutDir+TString("Results")+GetTitle()+".root");
-  StudyFit();
+  //StudyFit();
   
 }
 void THSRooFit::FitSplitIntegral(Int_t Nfits){
@@ -1102,23 +1102,23 @@ void THSRooFit::FitSplitIntegral(Int_t Nfits){
     SavePlots("");	
   } 
 }
-void THSRooFit::StudyFit(){
-  if(!fNStudyTrials) return;
-  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
+// void THSRooFit::StudyFit(){
+//   if(!fNStudyTrials) return;
+//   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
 
-  Info("THSRooFit::StudyFit()","will attempt %d trials on %s",fNStudyTrials,fStudyPDF.Data());
-  RooHS1StepStudy this_study(GetName(),"testing the fit systematics");
-  this_study.attach(*fWS);
-  this_study.SetOutDir(GetOutDir());
-  this_study.SetPDFName(fStudyPDF);
-  this_study.SetPlot(fStudyPlot);
-  if(fNStudyTrials<0) this_study.UseAll(); //Use all events in tree rather than yield parameter
-  if(fBinnedFit)this_study.GetRooFit()->SetBinnedFit();
-  for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
-    this_study.GetRooFit()->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));
-  RooStudyManager mgr(*fWS,this_study);
-  mgr.run(TMath::Abs(fNStudyTrials)) ;
-}
+//   Info("THSRooFit::StudyFit()","will attempt %d trials on %s",fNStudyTrials,fStudyPDF.Data());
+//   RooHS1StepStudy this_study(GetName(),"testing the fit systematics");
+//   this_study.attach(*fWS);
+//   this_study.SetOutDir(GetOutDir());
+//   this_study.SetPDFName(fStudyPDF);
+//   this_study.SetPlot(fStudyPlot);
+//   if(fNStudyTrials<0) this_study.UseAll(); //Use all events in tree rather than yield parameter
+//   if(fBinnedFit)this_study.GetRooFit()->SetBinnedFit();
+//   for(Int_t ill=0;ill<fFitOptions.GetSize();ill++)
+//     this_study.GetRooFit()->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));
+//   RooStudyManager mgr(*fWS,this_study);
+//   mgr.run(TMath::Abs(fNStudyTrials)) ;
+// }
 ///////////////////////////////////////////////////////////////
 ///Attempt many fit swith randomly selected parameters
 ///Take the fit result with the best likelihood
