@@ -68,8 +68,11 @@ vector<Int_t> THSCombitorial::Single_Combination(vector<Int_t> c,Int_t n,Int_t p
         } while(k < x);
         k = k - r;
     }
-    c[p-1] = c[p-2] + x - k;
-
+    if(p>1)
+      c[p-1] = c[p-2] + x - k;
+    else //picking 1, selection=index
+      c[p-1] = x;
+    
     vector<Int_t> result(c.begin(),c.begin()+p);
     return result;
 }
