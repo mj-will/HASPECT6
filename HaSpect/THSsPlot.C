@@ -379,7 +379,6 @@ THSRooFit*  THSsPlot::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyTr
     RFa->AddFitOption(*((RooCmdArg*)fFitOptions.At(ill)));
  
   TDirectory *saveDir=gDirectory;
-  ctree->GetDirectory()->cd();
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else RFa->LoadDataSet(ctree);//use whole tree

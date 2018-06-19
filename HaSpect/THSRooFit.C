@@ -878,7 +878,6 @@ THSRooFit*  THSRooFit::CreateSubFitBins(TTree* ctree,TString rfname,Bool_t CopyT
   if(!ctree) return RFa; 
   //Load the data tree if given
   TDirectory *saveDir=gDirectory;
-  if(ctree->GetDirectory())ctree->GetDirectory()->cd();
   if(CopyTree)RFa->LoadDataSet(ctree->CopyTree(fCut));//will use any EntryList
   else if(fCut.Sizeof()>1)RFa->LoadDataSet(ctree->CopyTree(fCut));
   else RFa->LoadDataSet(ctree);//use whole tree
