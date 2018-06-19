@@ -43,6 +43,7 @@ class THSKinematics{
   Double_t Phi(){return fPhi;}
 
   void SetTarget(HSLorentzVector tar){fTar=tar;};
+  void SetTarget(TLorentzVector tar){fTar=HSLorentzVector(tar.X(),tar.Y(),tar.Z(),tar.T());}
   
   /////////////////////////////////////////////////////////////
   /// Set electron scattering and target 4-vectors \n
@@ -55,6 +56,14 @@ class THSKinematics{
     fCM=fGamma+fTar;
     fCMBoost=fCM.BoostToCM();
    }
+   void SetElecsTarget(TLorentzVector in,TLorentzVector sc,TLorentzVector tar){
+    fElin=HSLorentzVector(in.X(),in.Y(),in.Z(),in.T());
+    fElsc=HSLorentzVector(sc.X(),sc.Y(),sc.Z(),sc.T());
+    fGamma=fElin-fElsc;
+    fTar=HSLorentzVector(tar.X(),tar.Y(),tar.Z(),tar.T());
+    fCM=fGamma+fTar;
+    fCMBoost=fCM.BoostToCM();
+   }
   /////////////////////////////////////////////////////////////
   /// Set incoming photon and target 4-vectors \n
   /// Use them to calculate cm 4-vector
@@ -64,11 +73,21 @@ class THSKinematics{
     fCM=gamma+tar;
     fCMBoost=fCM.BoostToCM();
  }
+ void SetGammaTarget(TLorentzVector gamma,TLorentzVector tar){
+    fGamma=HSLorentzVector(gamma.X(),gamma.Y(),gamma.Z(),gamma.T());
+    fTar=HSLorentzVector(tar.X(),tar.Y(),tar.Z(),tar.T());
+    fCM=fGamma+fTar;
+    fCMBoost=fCM.BoostToCM();
+ }
   ///////////////////////////////////////////////////////////
   /// Set primary decay products of the CM system. 
   void SetMesonBaryon(HSLorentzVector mes,HSLorentzVector bar){
     fMes=mes;
     fBar=bar;
+  }
+  void SetMesonBaryon(TLorentzVector mes,TLorentzVector bar){
+    fMes=HSLorentzVector(mes.X(),mes.Y(),mes.Z(),mes.T());
+    fBar=HSLorentzVector(bar.X(),bar.Y(),bar.Z(),bar.T());
   }
  ///////////////////////////////////////////////////////////
   /// Set decay products of the meson. \n
@@ -77,12 +96,20 @@ class THSKinematics{
     fMes_d1=d1;
     fMes_d2=d2;
   }
+   void SetMesonDecay(TLorentzVector d1,TLorentzVector d2){
+    fMes_d1=HSLorentzVector(d1.X(),d1.Y(),d1.Z(),d1.T());
+    fMes_d2=HSLorentzVector(d2.X(),d2.Y(),d2.Z(),d2.T());
+  }
  ///////////////////////////////////////////////////////////
   /// Set decay products of the baryon. \n
   /// d1 will be used to calculate angles in GJ and helicity frame.
   void SetBaryonDecay(HSLorentzVector d1,HSLorentzVector d2){
     fBar_d1=d1;
     fBar_d2=d2;
+  }
+  void SetBaryonDecay(TLorentzVector d1,TLorentzVector d2){
+    fBar_d1=HSLorentzVector(d1.X(),d1.Y(),d1.Z(),d1.T());
+    fBar_d2=HSLorentzVector(d2.X(),d2.Y(),d2.Z(),d2.T());
   }
 
   HSLorentzVector Gamma(){return fGamma;}
@@ -101,8 +128,14 @@ class THSKinematics{
     //return transfer.M2();
     return (p0-p1).M2();
   }
+  Double_t t(TLorentzVector p0,TLorentzVector p1){
+    // HSLorentzVector transfer=p0-p1;
+    //return transfer.M2();
+    return (p0-p1).M2();
+  }
   Double_t t0(){return t0(fGamma,fMes);}//default gamma-meson
   Double_t t0(HSLorentzVector p0,HSLorentzVector p1);
+  Double_t t0(TLorentzVector p0,TLorentzVector p1){return t0(HSLorentzVector(p0.X(),p0.Y(),p0.Z(),p0.T()),HSLorentzVector(p1.X(),p1.Y(),p1.Z(),p1.T()));};
 
   Double_t Cosx(){return fCosx;}  
   Double_t Cosy(){return fCosy;}  
