@@ -39,13 +39,14 @@ class THSOutput :  public THSHisto{
   TList* fStepDir=nullptr; //Directory containing source code
   TList* fCodeList=nullptr;  //pointer to the list of source code
   TList* fListOfFiles=nullptr; //list of analysed file names
+  Double_t fgID=0; //global event ID number, should be set in first instance of THSOutput and preserved through further steps. Required to synchornise differnt trees as PROOF does not preserve event ordering
   Long64_t fEntry=0; //current entry number in Chain
+  Long64_t fgIDoff=0; //starting offset for ID number
   TObject fMessages; //For access to Info,Error,...
   Bool_t fSort=kFALSE; //option to reorder events back to inital order in PROOF (which will randomise tree order)
  
   Bool_t fSaveID=kFALSE; //Ony save ID if this is the first THSOutput tree, subsequent trees will aready contain this branch
-  Double_t fgID=0; //global event ID number, should be set in first instance of THSOutput and preserved through further steps. Required to synchornise differnt trees as PROOF does not preserve event ordering
-  Long64_t fgIDoff=0; //starting offset for ID number
+  Bool_t fIsProof=kFALSE;
  public :
  THSOutput() {}   
   //THSOutput() : fFile(0), fProofFile(0), fOutTree(0),fCurTree(0), fEntryList(0),fStepDir(0),fSelInput(0),fSelOutput(0), fCodeList(0),fListOfFiles(0) {fSort=kFALSE;fSaveID=kFALSE;fgID=0;fgIDoff=0;}   

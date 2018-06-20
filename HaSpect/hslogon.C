@@ -41,7 +41,7 @@ void HSUserPath(TString opt);
 TString MACPATH; //additional macro path needed for proof
 Bool_t gISFARM=kFALSE;
 TString THSPARTICLE("THSParticle.C");
-
+TList* gHSMacroList=new TList();
 ///////////////////////////////////////////////////////
 ///Initialises functions demanded by the user
 void hslogon(){
@@ -221,10 +221,9 @@ void HSselector(){
  */
 void HSFinal(TString pname){
   HSfinal(pname);
-  if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
-  LoadMacro(THSPARTICLE);
-  LoadMacro("THSWeights.C");
-  LoadMacro("THSDataManager.C");
+  HSdata();
+  // if(!TClass::GetClass("THSParticle")) LoadMacro("THSParticle.C");
+  //LoadMacro(THSPARTICLE);
   LoadMacro("THSKinematics.C");
   LoadMacro("THSCombitorial.C");
   LoadMacro("THSParticleIter.C");
@@ -282,13 +281,15 @@ void startproof(Int_t Nw){
 
 void LoadMacro(TString macro){
   //Different methods depending on whether proof or not
+  TString PWD=gSystem->Getenv("PWD");
   TString HSANA=gSystem->Getenv("HSANA");
   TString HSUSER=gSystem->Getenv("HSUSER");
-
+  if(gHSMacroList->FindObject(macro)) return; //already loaded
+  gHSMacroList->Add(new TNamed(macro,macro));
   cout<<"Loading hsmacro "<<macro<<endl;
   if(gProof) {
     if(gSystem->Which("./",macro)){
-      macro=macro;
+      macro=PWD+"/"+macro+"+"; //needs to compile to prevent warnings
     }	
     else if(gSystem->Which(HSUSER,macro)){
       macro=HSUSER+"/"+macro;
@@ -303,8 +304,8 @@ void LoadMacro(TString macro){
     gProof->Load(macro+"+");
   }
   else gROOT->LoadMacro(macro+"+");//don't use HSANA in case want to overwrite with macro in current directory
-  
-}
+
+ }
 
 //////////////////////////////////////////
 /// Checks for and returns HSPROJ variable

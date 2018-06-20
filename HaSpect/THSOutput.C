@@ -57,12 +57,18 @@ void THSOutput::HSBegin(TList* input,TList* output){
   ImportSysDirtoList(gSystem->pwd(),fCodeList);//the directory the user analysis code is in
   ImportSysDirtoList(gSystem->Getenv("HSANA"),fCodeList); //the directory the HasPEct core code is
   //if(gProof)fSelInput->Add(fCodeList);//add to input so can give to Slaves, if fInput doesn't exit then not running on PROOF and this fCodeList is OK
- }
+  if(input) {//input only exist if proof
+    if(input->FindObject("HSPROOF")) fIsProof=kTRUE;
+  }
+}
 void  THSOutput::HSSlaveBegin(TList* input,TList* output){
   //need to reconnect with selector in case running on proof
   fOutName = gSystem->Getenv("HSOUT"); //outfile name must be set as an enviroment variable
   if(input) {//input only exists if proof Proof loses env variables (in root 6)
     if(input->FindObject("HSOUT")) fOutName=input->FindObject("HSOUT")->GetTitle();
+  }
+  if(input) {//input only exist if proof
+    if(input->FindObject("HSPROOF")) fIsProof=kTRUE;
   }
  if(!fSelOutput){
     fSelInput=input; //connect to the selector input list
@@ -101,14 +107,12 @@ void THSOutput::HSNotify(TTree* tree){
 }
 void THSOutput::HSProcessStart(Long64_t entry){
   fEntry=entry;
-  //if(fSaveID) fgID++;
   if(!fSaveID){
     fCurTree->GetBranch("UID")->GetEntry(fEntry); //make sure get ID branch to write to new file
     fgID=fCurTree->GetLeaf("UID")->GetValue();
   }
 }
 void THSOutput::HSProcessFill(){
-  //if(fSaveID) fgID=fEntry;
   if(fSaveID) fgID++;
   if(fOutTree) fOutTree->Fill();
   //if(!fSaveID)fgID+=fgIDoff; //in case multiple calls to fill change ID
@@ -118,9 +122,7 @@ void THSOutput::HSSlaveTerminate(){
 }
 void THSOutput::HSTerminate(){
 
-  
-  //TURN OFF saving of code and entrylists
-  //LEave code here as might prove useful in the future
+   //LEave code here as might prove useful in the future
   //Write analysis code to a file.
   //if 1 root file given as output just store there
   //else if writing to directory create a new file HSCode.root
@@ -130,6 +132,7 @@ void THSOutput::HSTerminate(){
   TDirectory* savedir=gDirectory;
   if(fOutName.EndsWith(".root")) {CodeFileName=fOutName;outfile=TFile::Open(fOutName,"update");}
   else {CodeFileName="/HSCode.root"; outfile=TFile::Open(fOutName+CodeFileName,"recreate");}
+   
   //Also want input file so can copy code from there
    TString InDirName=gSystem->Getenv("HSIN");
    TString InFileName;
@@ -138,6 +141,7 @@ void THSOutput::HSTerminate(){
    gErrorIgnoreLevel = kFatal; //temp turn off errors as it is OK if this file does not exist
    infile=TFile::Open(InDirName+"/HSCode.root");
    gErrorIgnoreLevel = 0;
+
    if(!infile){//No HSCode file, assume in input file, if not will create first save dir
      infile=TFile::Open(TString(fListOfFiles->At(0)->GetTitle())+"/"+fListOfFiles->At(0)->GetName()); //Note need to take 1 as add dummy entry Start for proof workers that don't get data
      if(fListOfFiles->GetEntries()>1)Warning("HSTerminate()"," Just going to find previous code from first file, there were %d",fListOfFiles->GetEntries());
@@ -151,31 +155,9 @@ void THSOutput::HSTerminate(){
    
    outfile->Close();
    SafeDelete(outfile);
-   //make sure new tree events are back in fgID order
-   // if(gProof&&(fSort==kTRUE)){
-   //   TIter next(fSelOutput);
-   //   TProofOutputFile* elpofile=0;
-   //   TObject* outo=0;
-   //   TFile* infile=0; //pointer to input file
-   //   //iterate over any proof files which are in the ouput list
-   //   while((outo=dynamic_cast<TObject*>(next()))){
-   //     if((elpofile=dynamic_cast<TProofOutputFile*>(outo))){
-   // 	 TFile* elfile = elpofile->OpenFile("UPDATE");
-   // 	 //First sort tree to regain original ordering
-   // 	 TIter fnext(elfile->GetListOfKeys());
-   // 	 TKey* fkey=0;
-   // 	 //Look for a trees in saved file
-   // 	 while ((fkey = (TKey*)fnext())){
-   // 	   if(TString(fkey->GetClassName())==TString("TTree")){
-   // 	     SortTree(dynamic_cast<TTree*>(elfile->Get(fkey->GetName())));
-   // 	   }
-   // 	 }
-   //     }
-   //   }
-   // }
-
+ 
    //in case of proof must add uid at end as cannot synch fgID in proof
-   if(gProof&&(fSaveID==kTRUE)){
+   if(fIsProof){
      cout<<"THSOutput::Terminate going to add UID branch, may take a while"<<endl;
      TIter next(fSelOutput);
      TProofOutputFile* elpofile=0;
@@ -321,8 +303,9 @@ void THSOutput::InitOutTree(){
      fOutTree->SetDirectory(fFile);
      fOutTree->AutoSave();
      //if proof will add UID in terminate so it is incremented properly
-     if(!fOutTree->GetBranch("UID")&&!gProof)fOutTree->Branch("UID", &fgID, "UID/D");
-     //if(!fSaveID)//copy existing global ID
+     if(!fOutTree->GetBranch("UID")&&!fIsProof)fOutTree->Branch("UID", &fgID, "UID/D");
+     fOutTree->Print();
+      //if(!fSaveID)//copy existing global ID
        // fOutTree->SetBranchAddress("UID",fCurTree->GetBranch("UID")->GetAddress());
    }
 }

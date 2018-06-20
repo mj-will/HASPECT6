@@ -79,6 +79,7 @@ Bool_t HSSelFinal::Process(Long64_t entry)
    
   
  
+   THSFinalState::ProcessEvent();
 
    return kTRUE;
 }
