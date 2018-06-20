@@ -27,7 +27,7 @@ void THSSkeleton::CreateSelector(TString selname,TString filename,TString treena
   if(!fFile)
     Fatal("THSSkeleton::THSkeleton(TString filename,TString treename)","No file %s found",fFileName.Data());
   fTree=(TTree*)fFile->Get(fTreeName);
-  if(!fTree)
+  if(!fTree&&!fIsFinalState)
     Fatal("THSSkeleton::THSkeleton(TString filename,TString treename)","No tree %s found",fTreeName.Data());
 
   //check if skelton code exists already
@@ -35,12 +35,24 @@ void THSSkeleton::CreateSelector(TString selname,TString filename,TString treena
   TString sOverwrite;
   if(gSystem->FindFile("./",selfile)){Info("THSSkeleton::THSkeleton(TString filename,TString treename)","Selector Code already exists to exit type y");cin>>sOverwrite;};
   if(sOverwrite==TString("y")) exit(0);
-  //fTree->MakeSelector(fSelName);
-  if(fIsFinalState)fOption+="=legacy";
-  fTree->MakeSelector(fSelName,fOption);
+  if(fIsFinalState){
+    fOption+="=legacy";
+    TString HSANA=gSystem->Getenv("HSANA");
+    gSystem->Exec(Form("cp %s/HSSelFinal.h %s.h",HSANA.Data(),fSelName.Data()));
+    gSystem->Exec(Form("cp %s/HSSelFinal.C %s.C",HSANA.Data(),fSelName.Data()));
+    fCurMacro=TMacro(fSelName+".h");
+    ReplaceAllMacroText("HSSelFinal",fSelName);
+    fCurMacro.SaveSource(fSelName+".h");
+
+    fCurMacro=TMacro(fSelName+".C");
+    ReplaceAllMacroText("HSSelFinal",fSelName);
+    fCurMacro.SaveSource(fSelName+".C");
+ 
+  }
+  else{
+    fTree->MakeSelector(fSelName,fOption);
+  }
   fMadeSelector=kTRUE;
-
-
   AddHSOutput();
 }
 
@@ -367,20 +379,20 @@ void THSSkeleton::HSFinalState(){
   //First deal with .C
   fCurMacro=TMacro(fSelName+".C");
 
-  AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetMaxParticles(15);//only analyse events with any species having less than 15 particles");
+  // AddLineAfter("THSOutput::HSSlaveBegin(fInput,fOutput);","   SetMaxParticles(15);//only analyse events with any species having less than 15 particles");
   
-  AddLineAfter("// The return value is currently not used.",TString("   "));
-  ContinueLineAfter("  ");
-  ContinueLineAfter("  //You must define the UserProcess function if you want to do additional");
-  ContinueLineAfter("  //analyssis to making the FinalState tree, e.g. histogramming");
-  ContinueLineAfter("  THSFinalState::ProcessEvent();");
+  // AddLineAfter("// The return value is currently not used.",TString("   "));
+  // ContinueLineAfter("  ");
+  // ContinueLineAfter("  //You must define the UserProcess function if you want to do additional");
+  // ContinueLineAfter("  //analyssis to making the FinalState tree, e.g. histogramming");
+  // ContinueLineAfter("  THSFinalState::ProcessEvent();");
 
-  ///Add user process function
-  fPlace=0;
-  FindNextLineLike("::Process(Long64_t entry)");
-  ContinueLineAfter(Form("void %s::UserProcess(){",fSelName.Data()),-2);
-  ContinueLineAfter("   THSOutput::HSProcessFill();");
-  ContinueLineAfter("}");
+  // ///Add user process function
+  // fPlace=0;
+  // FindNextLineLike("::Process(Long64_t entry)");
+  // ContinueLineAfter(Form("void %s::UserProcess(){",fSelName.Data()),-2);
+  // ContinueLineAfter("   THSOutput::HSProcessFill();");
+  // ContinueLineAfter("}");
 
   // fPlace=0;
   // FindNextLineLike("GetEntry(entry)");
@@ -406,24 +418,24 @@ void THSSkeleton::HSFinalState(){
   fCurMacro=TMacro(fSelName+".h");
   AddLineAfter("#include \"THSOutput.h\"",TString("#include \"")+fFinalName+".h\"");
   ReplaceMacroText("public THSOutput",TString("public THSOutput, public ")+fFinalName);
-  TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
-  ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
-  FindNextLineLike("fChain->SetBranchAddress(\"PIDs\"");	
-  ContinueLineAfter(" THSFinalState::SetDetPIDs(PIDs);");
-  FindNextLineLike("fChain->SetBranchAddress(\"EventInfo\"");	
-  ContinueLineAfter(" THSFinalState::SetEventInfo(EventInfo);");
-  ContinueLineAfter(" FileStart();");
+  // TString branch=FindNextLineLike("fChain->SetBranchAddress(\"Particles\"");	
+  // ContinueLineAfter(" THSFinalState::SetDetParts(Particles);");
+  // FindNextLineLike("fChain->SetBranchAddress(\"PIDs\"");	
+  // ContinueLineAfter(" THSFinalState::SetDetPIDs(PIDs);");
+  // FindNextLineLike("fChain->SetBranchAddress(\"EventInfo\"");	
+  // ContinueLineAfter(" THSFinalState::SetEventInfo(EventInfo);");
+  // ContinueLineAfter(" FileStart();");
   
-  branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
-  if(branch.Contains("Generated")){
-    ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetGenParts(Generated);");
-  }
-  fPlace=0;
-  FindNextLineLike("Terminate();");
-  ContinueLineAfter("  //Additional final state analysis function");
-  ContinueLineAfter(Form("  virtual void UserProcess();"));
+  // branch=FindNextLineLike("fChain->SetBranchAddress(\"Generated\"");
+  // if(branch.Contains("Generated")){
+  //   ContinueLineAfter(" if(fChain->GetBranch(\"Generated\"))THSFinalState::SetGenParts(Generated);");
+  // }
+  // fPlace=0;
+  // FindNextLineLike("Terminate();");
+  // ContinueLineAfter("  //Additional final state analysis function");
+  // ContinueLineAfter(Form("  virtual void UserProcess();"));
   
-  ReplaceMacroText("SetMakeClass(1)","SetMakeClass(0)");
+  // ReplaceMacroText("SetMakeClass(1)","SetMakeClass(0)");
 
   fCurMacro.SaveSource(fSelName+".h");
   //////////////////////////////////////////////////////////////////  
@@ -431,7 +443,7 @@ void THSSkeleton::HSFinalState(){
   fCurMacro=TMacro(TString("Control_")+fSelName+".C");
   // AddLineAfter("HSout(","  HSMacPath(\"ADDITIONALMACROPATH_WHEREPROJECTIS\");");
   //ContinueLineAfter("  HSfinal(\""+fFinalName+"\");");
-  ReplaceMacroText("HSUnSplit","HSParticles");
+  // ReplaceMacroText("HSUnSplit","HSParticles");
   fCurMacro.SaveSource(TString("Control_")+fSelName+".C");
 }
 
