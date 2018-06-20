@@ -12,7 +12,7 @@
 
   //if using proof
   //Give proof destination file (env variables can't be read directly
-  if(gProof) {gProof->AddInput(new TNamed("HSOUT",HSout().Data()));tree->SetProof();}
+  if(gProof) {gProof->AddInput(new TNamed("HSOUT",HSout().Data()));gProof->AddInput(new TNamed("HSPROOF","Using Proof"));tree->SetProof();}
 
   gBenchmark->Start("SelectorTimer");
 
