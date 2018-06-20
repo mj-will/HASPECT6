@@ -28,7 +28,7 @@ public :
    TBranch        *b_PIDs=nullptr;   //!
    TBranch        *b_EventInfo=nullptr;   //!
 
-   HSSelFinal(TTree * /*tree*/ =0) = default;
+   HSSelFinal(TTree * /*tree*/ =0){};
    virtual ~HSSelFinal() { }
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
