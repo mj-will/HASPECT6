@@ -126,13 +126,12 @@ void THSOutput::HSTerminate(){
   //Write analysis code to a file.
   //if 1 root file given as output just store there
   //else if writing to directory create a new file HSCode.root
-  //fListOfFiles=dynamic_cast<TList*>(fSelOutput->FindObject("HSInFiles"));
+  if(fIsProof) fListOfFiles=dynamic_cast<TList*>(fSelOutput->FindObject("HSInFiles"));
   TString CodeFileName;
   TFile *outfile=0;
   TDirectory* savedir=gDirectory;
   if(fOutName.EndsWith(".root")) {CodeFileName=fOutName;outfile=TFile::Open(fOutName,"update");}
   else {CodeFileName="/HSCode.root"; outfile=TFile::Open(fOutName+CodeFileName,"recreate");}
-   
   //Also want input file so can copy code from there
    TString InDirName=gSystem->Getenv("HSIN");
    TString InFileName;
@@ -141,21 +140,23 @@ void THSOutput::HSTerminate(){
    gErrorIgnoreLevel = kFatal; //temp turn off errors as it is OK if this file does not exist
    infile=TFile::Open(InDirName+"/HSCode.root");
    gErrorIgnoreLevel = 0;
-
-   if(!infile){//No HSCode file, assume in input file, if not will create first save dir
+ 
+    if(!infile&&fListOfFiles->GetEntries()){//No HSCode file, assume in input file, if not will create first save dir
      infile=TFile::Open(TString(fListOfFiles->At(0)->GetTitle())+"/"+fListOfFiles->At(0)->GetName()); //Note need to take 1 as add dummy entry Start for proof workers that don't get data
      if(fListOfFiles->GetEntries()>1)Warning("HSTerminate()"," Just going to find previous code from first file, there were %d",fListOfFiles->GetEntries());
    }
    //Copy code from current directory and add to previous code in input file
    CopyCode(outfile,infile);
-   outfile->cd();
+    outfile->cd();
    WriteListtoFile(fStepDir);
-   infile->Close();
-   SafeDelete(infile);
-   
-   outfile->Close();
-   SafeDelete(outfile);
- 
+   if(infile){
+     infile->Close();
+     SafeDelete(infile);
+   }
+   if(outfile){
+     outfile->Close();
+     SafeDelete(outfile);
+   }
    //in case of proof must add uid at end as cannot synch fgID in proof
    if(fIsProof){
      cout<<"THSOutput::Terminate going to add UID branch, may take a while"<<endl;
@@ -317,28 +318,32 @@ void THSOutput::CopyCode(TDirectory* curDir,TDirectory* prevDir){
   //The code is saved as TMacros ans are stored in a TList (easier to use than TDirectory)
   TDirectory* savedir=gDirectory;
   TDirectory* prevStep=0;
-  //Check to see if code already exists in parent file
-  TIter next(prevDir->GetListOfKeys());
-  TKey* key=0;
-  //Look for a directory in the input root file which includes HSStep
+  if(prevDir){
+    //Check to see if code already exists in parent file
+    TIter next(prevDir->GetListOfKeys());
+    TKey* key=0;
+    //Look for a directory in the input root file which includes HSStep
     //it will be copied to the new output root file
-  while ((key = (TKey*)next())) if(TString(key->GetName()).Contains("HSStep")){
-      prevStep=dynamic_cast<TDirectory*>(key->ReadObj());
+    
+    while ((key = (TKey*)next())) if(TString(key->GetName()).Contains("HSStep")){
+	prevStep=dynamic_cast<TDirectory*>(key->ReadObj());
       break;
+      }
+    if(prevStep){
+      //We have the saved last step, we will save this in the current source step
+      //so as to contain the full analysis chain
+      //the current step will have the HSStep_number incremented by 1
+      fStepName= prevStep->GetName();
+      TString prevstepi=TString(fStepName(fStepName.Index("_")+1,fStepName.Length()-fStepName.Index("_"))); //get the number as a string
+      Int_t prevStepN=prevstepi.Atoi(); //convert it to an int
+      TString stepi;
+      stepi=stepi.Itoa(prevStepN+1,10); //add 1 and convert back to string
+      fStepName.ReplaceAll(prevstepi,stepi); //now have the new step name
     }
-  if(prevStep){
-    //We have the saved last step, we will save this in the current source step
-    //so as to contain the full analysis chain
-    //the current step will have the HSStep_number incremented by 1
-    fStepName= prevStep->GetName();
-    TString prevstepi=TString(fStepName(fStepName.Index("_")+1,fStepName.Length()-fStepName.Index("_"))); //get the number as a string
-    Int_t prevStepN=prevstepi.Atoi(); //convert it to an int
-    TString stepi;
-    stepi=stepi.Itoa(prevStepN+1,10); //add 1 and convert back to string
-    fStepName.ReplaceAll(prevstepi,stepi); //now have the new step name
+    else fStepName="HSStep_0";
   }
   else fStepName="HSStep_0";
-
+  cout<<"CodeLeist "<<fCodeList<<endl;
   //create list of current source, prepare to add previous code form in file
   //if(fStepDir) delete fStepDir; //cleanup previous step directory
   fStepDir=(TList*)fCodeList->Clone();
