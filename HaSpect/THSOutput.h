@@ -49,7 +49,6 @@ class THSOutput :  public THSHisto{
   Bool_t fIsProof=kFALSE;
  public :
  THSOutput() {}   
-  //THSOutput() : fFile(0), fProofFile(0), fOutTree(0),fCurTree(0), fEntryList(0),fStepDir(0),fSelInput(0),fSelOutput(0), fCodeList(0),fListOfFiles(0) {fSort=kFALSE;fSaveID=kFALSE;fgID=0;fgIDoff=0;}   
   virtual ~THSOutput();
 
   // virtual void InitOutput(); //Configure the output file and tree 
