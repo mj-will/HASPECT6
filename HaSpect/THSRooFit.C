@@ -16,6 +16,7 @@
 #include "RooMinimizer.h"
 #include "RooMinuit.h"
 //#include "RooHS1StepStudy.h"
+#include "RooHSEventsHistPDF.h"
 #include "RooRandom.h"
 #include <RooStudyManager.h>
 #include <RooStats/SequentialProposal.h>
@@ -964,6 +965,9 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
 	hspdf->SetEvTree(chainMC,fCut);
 	hspdf->AddProtoData(rf->GetDataSet());
+	RooHSEventsHistPDF* histspdf=0;
+	if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
+	  histspdf->CreateHistPdf();
 	delete chainMC;
       }
     } 
