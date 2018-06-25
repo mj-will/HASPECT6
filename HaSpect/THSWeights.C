@@ -379,3 +379,42 @@ void THSWeights::WeightBySelection(TTree* tree,TCut cut,Double_t wgt){
   cout<<"THSWeights::WeightBySelection Added "<<listEntries<<" events with a weight of "<<wgt<<" from selection " <<cut<<endl;
   saveDir->cd();
 }
+
+
+////////////////////////////////////////////////////////////
+///Given a tree selection weight events that pass with wgt
+///and enter the weight into this object. wgt is a branch in the tree
+void THSWeights::WeightBySelection(TTree* tree,TCut cut,TString wgt){
+  TDirectory *saveDir=gDirectory;
+  if(fFile) fFile->cd();
+  //Find events which pass cut
+  tree->Draw(">>wlist",cut,"entrylist");
+  TEntryList *elist =nullptr; 
+  elist=dynamic_cast<TEntryList*>(gDirectory->Get("wlist"));
+  elist->Print();
+  Long64_t listEntries = elist->GetN();
+  //Now only want ID branch
+  tree->SetBranchStatus("*",0);
+  tree->SetBranchStatus(fIDName,1);
+  tree->SetBranchStatus(wgt,1);
+  Double_t wID=0;
+  Double_t eventWeight;
+  tree->SetBranchAddress(fIDName,&wID);
+  tree->SetBranchAddress(wgt,&eventWeight);
+  
+  tree->SetEntryList(elist,"");
+  //loop over events which passed cut
+  for (Long64_t el = 0; el < listEntries; el++) {
+    Long64_t entryNumber = tree->GetEntryNumber(el);
+    tree->GetEntry(entryNumber);
+    FillWeight(wID,eventWeight);
+  }
+  delete elist;elist=nullptr;
+  tree->SetEntryList(nullptr);
+  
+  //turn all branches back on
+  tree->ResetBranchAddresses();
+  tree->SetBranchStatus("*",1);
+  cout<<"THSWeights::WeightBySelection Added "<<listEntries<<" events with a weight taken from branch " << wgt << " from tree " << tree->GetName() << " according to selection " <<cut<<endl;
+  saveDir->cd();
+}
