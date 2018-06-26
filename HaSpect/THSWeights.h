@@ -78,6 +78,7 @@ class THSWeights : public TNamed{
   void Save();
   void LoadSaved(TString fname,TString wname);
   void WeightBySelection(TTree* tree,TCut cut,Double_t wgt);
+  void WeightBySelection(TTree* tree,TCut cut,TString wgt);
   
   ClassDef(THSWeights, 3)  // Writeble Weight map  class
 };
