@@ -28,7 +28,7 @@ THSTopology::THSTopology(TString topo,FinalState::VoidFuncs funcE,
     Int_t charge=0;
     if(((TObjString*)OptList->At(i))->String()==TString("Rootino+")) {pdg=fNoID;charge=1;}
     else if(((TObjString*)OptList->At(i))->String()==TString("Rootino-")) {pdg=-fNoID;charge=-1;}
-    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) {pdg=-22;charge=-1;}
+    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) {pdg=-22;charge=0;}
     else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSFinalState::AddTopology","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
     else{
       pdg=TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String())->PdgCode();
@@ -131,7 +131,7 @@ void THSTopology::SetChargePID(TString parts){
     Int_t charge=0;
     if(((TObjString*)OptList->At(i))->String()==TString("Rootino+")) {pdg=fNoID;charge=1;}
     else if(((TObjString*)OptList->At(i))->String()==TString("Rootino-")) {pdg=-fNoID;charge=-1;}
-    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) {pdg=-22;charge=-1;}
+    else if(((TObjString*)OptList->At(i))->String()==TString("Beam")) {pdg=-22;charge=0;}
     else if(!TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String()))Error("THSFinalState::SetInclusive","Particle not found = %s",((TObjString*)OptList->At(i))->String().Data());
     else{
       pdg=TDatabasePDG::Instance()->GetParticle(((TObjString*)OptList->At(i))->String())->PdgCode();
