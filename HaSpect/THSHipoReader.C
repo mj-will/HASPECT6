@@ -326,9 +326,9 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	//	particle.SetTime(fFTTime->Val());
 	//particle.SetEdep(fFTEnergy->Val()); //This is currently HODO energy
 	particle.SetDeltaE(fFTEnergy->Val());
-	//particle.SetPath(fFTPath->Val()/100);
+	particle.SetPath(fFTPath->Val()/100); //Note as of 5.4.0 units will change, need to remove /100
 	//	particle.SetPath(sqrt(fFTX->Val()*fFTX->Val()+fFTY->Val()*fFTY->Val()+fFTZ->Val()*fFTZ->Val())/1000);
-	particle.SetPath(1.9);
+	//	particle.SetPath(1.9);
 	particle.SetDetector(-1000);
 	particle.SetPDGcode(fCharge->Val()*1E4);
 	
