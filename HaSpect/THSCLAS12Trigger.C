@@ -40,7 +40,7 @@
 ///Input arguemnts are the tree to be analysed and draw option (goff by default)
 void THSCLAS12Trigger::FindTimeOffSetFT(TTree* tree,TString option){
   TH1F* hisFTCLAS12=new TH1F("ftclas12","ftclas12",10000,-500,500);
-  tree->Draw("Particles[0].DeltaTime()-Particles.DeltaTime()>>ftclas12","Particles.Detector()<0&&Particles[0].Time()!=0&&Particles.Detector()!=10000",option);
+  tree->Draw("Particles[0].DeltaTime()-Particles.DeltaTime()>>ftclas12","Particles.Detector()<0&&Particles[0].Time()!=0&&Particles.Time()!=Particles[0].Time()&&Particles.Detector()!=10000",option);
   TSpectrum s1(1);
   //use TSpectrum to find time difference peak
   Int_t nfound = s1.Search(hisFTCLAS12,1,"",0.50);
@@ -49,7 +49,7 @@ void THSCLAS12Trigger::FindTimeOffSetFT(TTree* tree,TString option){
   //Use this as FT time shift
   fTimeShiftFT=xpeaks[0];
   cout<<"THSCLAS12Trigger::FindTimeOffSetFT Detected FT offset of "<<fTimeShiftFT<<endl;
-  delete  hisFTCLAS12;
+  if(option==TString("goff"))delete  hisFTCLAS12;
 }
 ////////////////////////////////////////////////////////////////////////
 ///Look for global CLAS12-RFTime peak in Particles.DeltaTime()-EventInfo.fRFTime
@@ -66,7 +66,7 @@ void THSCLAS12Trigger::FindTimeRFTimePeak(TTree* tree,TString option){
   xpeaks = s20.GetPositionX();
   fSTimePeak=xpeaks[0];
   cout<<"THSCLAS12Trigger::FindTimeRFTimePeak position "<<fSTimePeak<<endl;
-  delete his;
+  if(option==TString("goff"))delete his;
 }
 ////////////////////////////////////////////////////////////////////////
 ///subtract the event startime from the given particle

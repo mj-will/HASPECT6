@@ -59,7 +59,7 @@ inline Short_t THSCLAS12DeltaTime::Detector(Int_t det){
 //////////////////////////////////////////////////
 ///Timing cuts for CLAS12 electrons
 inline Bool_t THSCLAS12DeltaTime::ElCut(THSParticle* part){
-  if(part->Time()==0) return kFALSE;
+  // if(part->Time()==0) return kFALSE;
   
   Short_t det=Detector(part->Detector());
   if(det>1) //CD or unkown
@@ -86,7 +86,7 @@ inline Bool_t THSCLAS12DeltaTime::ProtCut(THSParticle* part){
 //////////////////////////////////////////////////
 ///Timing cuts for CLAS12 pi+
 inline Bool_t THSCLAS12DeltaTime::PionPCut(THSParticle* part){
-  if(part->Time()==0) return kFALSE;
+  //if(part->Time()==0) return kFALSE;
   
   Short_t det=Detector(part->Detector());
   if(det>3) return kFALSE;
@@ -98,7 +98,7 @@ inline Bool_t THSCLAS12DeltaTime::PionPCut(THSParticle* part){
 //////////////////////////////////////////////////
 ///Timing cuts for CLAS12 pi-
 inline Bool_t THSCLAS12DeltaTime::PionMCut(THSParticle* part){
-  if(part->Time()==0) return kFALSE;
+  // if(part->Time()==0) return kFALSE;
   
   Short_t det=Detector(part->Detector());
   if(det>3) return kFALSE;
