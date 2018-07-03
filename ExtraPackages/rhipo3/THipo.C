@@ -310,7 +310,7 @@ Bool_t THipoBankParser::ReConfigBank3(THipoBank* bank){
       case 3: dynamic_cast<THipoItemI*>(bank->GetItem(CodeToItem(vcode)))->ResetNode(fReader->getBranch<int32_t>(bank->GetName(),CodeToItem(vcode).Data())); break;
       case 4: dynamic_cast<THipoItemF*>(bank->GetItem(CodeToItem(vcode)))->ResetNode(fReader->getBranch<float_t>(bank->GetName(),CodeToItem(vcode).Data())); break;
       case 5: dynamic_cast<THipoItemD*>(bank->GetItem(CodeToItem(vcode)))->ResetNode(fReader->getBranch<double_t>(bank->GetName(),CodeToItem(vcode).Data())); break;
-      case 8: dynamic_cast<THipoItemL*>(bank->GetItem(CodeToItem(vcode)))->ResetNode(fReader->getBranch<long>(bank->GetName(),CodeToItem(vcode).Data())); break;
+      case 8: dynamic_cast<THipoItemL*>(bank->GetItem(CodeToItem(vcode)))->ResetNode(fReader->getBranch<int64_t>(bank->GetName(),CodeToItem(vcode).Data())); break;
        default: break;
     } 
   }

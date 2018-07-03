@@ -1,3 +1,10 @@
+///////////////////////////////////////////////
+//
+// Author: Derek Glazier, University of Glasgow
+///////////////////////////////////////////////
+// MACOS Bugfix from Sylvester Joosten
+// https://github.com/tylern4/hipo_tools/commit/c6bc57dcd6d34d1975a941bee97601e743e57947
+
 #ifndef THIPO_h
 #define THIPO_h
 
@@ -249,9 +256,9 @@ class THipoItemD : public THipoItem{
 class THipoItemL : public THipoItem{
 
  public:
- THipoItemL(hipo::node<long>* node,Int_t *entry):THipoItem(entry) {fNodeL=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeL);fNode->type(8);};
+ THipoItemL(hipo::node<int64_t>* node,Int_t *entry):THipoItem(entry) {fNodeL=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeL);fNode->type(8);};
  virtual ~THipoItemL(){};
-  virtual void ResetNode(hipo::node<long>* node){fNodeL=nullptr;fNode=nullptr;fNodeL=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeL);fNode->type(8);};
+  virtual void ResetNode(hipo::node<int64_t>* node){fNodeL=nullptr;fNode=nullptr;fNodeL=node;fNode=dynamic_cast<hipo::generic_node*>(fNodeL);fNode->type(8);};
 
   //virtual void TreeBranch(TTree* outtree){
   //fBranch=outtree->Branch(fBranchname,GetAddress(),fBranchname+"["+fNBranchname+"]/L");}
@@ -273,11 +280,11 @@ class THipoItemL : public THipoItem{
     }
     return kFALSE;
   }
-  long Val(){return fNodeL->getValue(fBankEntry);}
+  int64_t Val(){return fNodeL->getValue(fBankEntry);}
  private:
   
-  hipo::node<long>* fNodeL=nullptr;
-  vector<long> fVecL;
+  hipo::node<int64_t>* fNodeL=nullptr;
+  vector<int64_t> fVecL;
 
 };
  /* inline Bool_t THipoItem::FindEntry(Float_t val){ */
