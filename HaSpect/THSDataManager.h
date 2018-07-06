@@ -15,7 +15,7 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
-#pragma link C++ class vector<THSParticle* >+;//want to make tree branch
+//#pragma link C++ class vector<THSParticle* >+;//want to make tree branch
 
 #include "THSParticle.h"
 #include "THSRunInfo.h"
