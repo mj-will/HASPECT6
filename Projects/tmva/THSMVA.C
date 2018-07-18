@@ -11,6 +11,9 @@
 #include "THSMVA.h"
 //#include "isnan"
 
+ClassImp(THSMVA);
+
+
 ////////////////////////////////////////////////////////////
 /// Here I put Doxygen readable comments explaing what each function does
 
@@ -18,124 +21,137 @@ THSMVA::THSMVA(){
 
 }
 
+// TODO : AddParticles, AddVariables, SetParticles, SetVariables
+
 /**
- * Print the variables that have been set.
+ * Set the names for all the particle/variable combinations
  *
  */
 
-void THSMVA::PrintVars(){
-    std::cout<<"Particles : "<<std::endl;
-    for (UInt_t i=0; i < particleNames.size(); i++){
-        std::cout<<"        "<< particleNames[i]<<std::endl;
+void THSMVA::SetNames() {
+
+    if (fNames.size()) {
+        std::cout<<"ERROR: Names already set"<<std::endl;
+        exit(1);
     }
-    std::cout<<"Particle propeties : "<<std::endl;
-    for (UInt_t i=0; i < particleProperties.size(); i++){
-        std::cout<<"                 "<< particleProperties[i]<<std::endl;
+
+    std::cout<<"Setting up variables..."<<std::endl;
+
+    fNames.resize(fParticleID.size());
+    fTreeVarsF.resize(fParticleID.size());
+    fTreeVarsI.resize(fParticleID.size());
+
+    //std::cout<<"Starting loop..."<<std::endl;
+
+    fVariableCount = 0;
+    fParticleCount = 0;
+
+    for (auto const& p : fParticleID) {
+        for (auto const& v : fVariableID) {
+            fNames[fParticleCount].push_back(p+v);
+            //std::cout<<"Added name..."<<std::endl;
+            if (fTypes[fVariableCount] == "F") fTreeVarsF[fParticleCount].push_back(0);
+            if (fTypes[fVariableCount] == "I") fTreeVarsI[fParticleCount].push_back(0);
+            fVariableCount++;
+        }
+        fVariableCount = 0;
+        fParticleCount++;
     }
-    std::cout<<"Variables : "<<std::endl;
-    for (UInt_t i=0; i < variableNames.size(); i++){
-        std::cout<<"        "<< variableNames[i]<<std::endl;
-    }
-    std::cout<<"Number of variables : "<<nVars<<std::endl;
+
+    std::cout<<"Printing sizes..."<<std::endl;
+    std::cout<<fTreeVarsF.size()<<" / "<<fTreeVarsF[0].size()<<std::endl;
 }
+
+void THSMVA::PrintVar() {
+    
+    // check sizes
+    std::cout<<"Variable Names :"<<std::endl;
+    for (auto const& names : fNames){
+        for (auto const& n: names) {
+            std::cout<<n<<std::endl;
+        }
+    }
+}
+
+void THSMVA::PrintTopologies() {
+    fCounter = 0;
+    std::cout<<"Printing topologies for each particle..."<<std::endl;
+    for (auto const& particle : fParticleTopologies) {
+        std::cout<<"Particle: "<<fCounter<<std::endl; fCounter++;
+        for (auto const& t : particle) {
+            std::cout<<t<<std::endl;
+        }
+    }
+}
+
+/**
+ * Set the topologies in which the particles are present
+ *
+ */
+
+void THSMVA::SetTopologies() {
+    std::cout<<"Setting Topologies..."<<std::endl;
+     
+    if (fParticleTopologies.empty()) {
+        fParticleTopologies.resize(fParticleID.size());
+        fParticleCount = 0;
+        for (auto const& particle : fParticleID) {
+
+            if (particle == "El") {fParticleTopologies[fParticleCount] = fElTopologies;}
+            else if (particle == "P") {fParticleTopologies[fParticleCount] = fPTopologies;}
+            else if (particle == "Pip") {fParticleTopologies[fParticleCount] = fPipTopologies;}
+            else if (particle == "Pim") {fParticleTopologies[fParticleCount] = fPimTopologies;}
+            else {
+                std::cout<<"ERROR : Unknown particle type"<<std::endl;
+                exit(1);
+            }
+
+            fParticleCount++;
+
+        }
+        fSplitTopologies = true;
+        std::cout<<"Added topologies for " << fParticleCount << " particles"<< std::endl;
+    }
+
+    else {
+        std::cout<<"ERROR: Topologies already set"<<std::endl;
+        std::cout<<"       Exiting..."<<std::endl;
+        exit(1);
+    }
+}
+
+/**
+ * Get the variables for a particular topology
+ *
+ */
+
+void THSMVA::GetNamesTopo(Int_t Topology) {
+
+    if (!fSplitTopologies) {
+        std::cout<<"Topologies for particles not set..."<<std::endl;
+        std::cout<<"Trying to set topologies..."<<std::endl;
+        SetTopologies();
+    }
+
+    fParticleCount = 0;
+    for (auto const& v : fParticleTopologies) {
+        if (std::find(v.begin(), v.end(),Topology)!=v.end()) {
+            fSelectedParticles.push_back(fParticleCount);
+            fParticleCount++;
+        }
+    }
+    
+    std::cout<<"Number of particles in topology " <<Topology<<": "<<fParticleCount<<std::endl; 
+
+    for (auto const& i : fSelectedParticles) {
+        fSelectNames.push_back(fNames[i]);
+    }
+}
+
+
+
 
         
 
 
-/**
- * Checks if a tree contains any NaNs and replaces them with zeros.
- *
- */
 
-void THSMVA::CheckTree(){
-    // number of variables
-    nVars = variableNames.size();
-    // loop over variables and replace NaNs
-    for (UInt_t i=0; i<fTrainTree->SetEntries(); i++) {
-        fTrainTree->GetEntry(i);
-        for (UInt_t ivar=0; ivar<nVars; ivar++) {
-            if (std::isnan(treevars[ivar])) {
-                vars[ivar] = 0;
-            }
-            else {
-                vars[ivar] = treevars[ivar];
-            }
-        }
-    }
-
-}
-
-/**
- * Set variable names for topology 0
- *
- */
-
-void THSMVA::SetVariablesTopo_0(){
-    // Set branches in loop
-    particleNames = {"El", "P","Pip","Pim"};
-    variableNames = {};
-
-    for(auto const& pn: particleNames) {
-        for(auto const& pp: particleProperties) {
-            variableNames.push_back(pn+pp);
-        }
-    }
-    nVars = variableNames.size();
-}
-
-/**
- * Set variable names for topology 1
- *
- */
-
-void THSMVA::SetVariablesTopo_1(){
-    // Set branches in loop
-    particleNames = {"El", "P","Pip"};
-    variableNames = {"NPerm", "NDet", "Detector"};
-
-
-    for(auto const& pn: particleNames) {
-        for(auto const& pp: particleProperties) {
-            variableNames.push_back(pn+pp);
-        }
-    }
-    nVars = variableNames.size();
-}
-
-/**
- * Set variable names for topology 2
- *
- */
-
-void THSMVA::SetVariablesTopo_2(){
-    // Set branches in loop
-    particleNames = {"El", "P","Pim"};
-    variableNames = {"NPerm", "NDet", "Detector"};
-
-
-    for(auto const& pn: particleNames) {
-        for(auto const& pp: particleProperties) {
-            variableNames.push_back(pn+pp);
-        }
-    }
-    nVars = variableNames.size();
-}
-
-/**
- * Set variable names for topology 3
- *
- */
-
-void THSMVA::SetVariablesTopo_3(){
-    // Set branches in loop
-    particleNames = {"El","Pip","Pim"};
-    variableNames = {"NPerm", "NDet", "Detector"};
-
-
-    for(auto const& pn: particleNames) {
-        for(auto const& pp: particleProperties) {
-            variableNames.push_back(pn+pp);
-        }
-    }
-    nVars = variableNames.size();
-}
