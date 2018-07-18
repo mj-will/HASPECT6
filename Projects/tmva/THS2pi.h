@@ -7,6 +7,7 @@
 #include "THSCLAS12Trigger.h"
 #include "THSCLAS12DeltaTime.h"
 #include "THSMVAPrep.h"
+#include "THSMVATrain.h"
 #include <vector>
 
 class THS2pi : public THSFinalState{
@@ -32,6 +33,9 @@ class THS2pi : public THSFinalState{
   virtual void FileStart();
   virtual Bool_t  CheckParticle(THSParticle* part);
 
+  void PrepAddParticle(THSParticle* part);
+  void FillVars();
+
   void Kinematics();
   protected :
 
@@ -39,6 +43,7 @@ class THS2pi : public THSFinalState{
   THSCLAS12DeltaTime fCuts; //For particle cuts
 
   THSMVAPrep fMVAPrep;
+  THSMVATrain fMVATrain;
   
   //Initial state
   HSLorentzVector fBeam=HSLorentzVector(0,0,10.6,10.6);
@@ -65,12 +70,16 @@ class THS2pi : public THSFinalState{
   Double_t fMissMass=0;
   Double_t fMissMass2=0;
 
+  // vector for MVA
+  vector<THSParticle * > fParticles;
+
 
   //TMVA
   Bool_t fIsTMVA=kTRUE;
  public:
   virtual void TMVAOutTree(TTree* tree);
   void TMVAFill();
+  void RunTraining() {fMVATrain.DefaultTrain();};
  protected:
   
   Float_t fElTime=0;

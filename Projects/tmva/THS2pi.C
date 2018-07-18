@@ -27,6 +27,13 @@ THS2pi::THS2pi(){
   AddParticle(&fPip,kTRUE,0);
   AddParticle(&fPim,kTRUE,1);
 
+  PrepAddParticle(&fElectron);
+  PrepAddParticle(&fProton);
+  PrepAddParticle(&fPip);
+  PrepAddParticle(&fPim);
+
+  // TODO : PrepAddParcticle(&fElectron)...G
+
   //Set final state parents
   
   
@@ -74,7 +81,10 @@ void THS2pi::FileStart(){
   fCuts.SetGammaCut(2,2,0,2);//FT,FDTOF,CD,FDCAL
 
   //Initilaise THSMVA stuff
+  // add config stuff here
+  std::cout<<"Setting MVA trees..."<<std::endl;
   fMVAPrep.SetTree(fFinalTree);
+  fMVATrain.SetTrainTree(fFinalTree);
   
   
   if(THSFinalState::frGenParts) fTrigger.SetSim();//Should get this from RunInfo but not correct in EB at the moment
@@ -147,9 +157,6 @@ void THS2pi::Topo_2(){
   if(fElectron.Detector()<-1)fElectron.SetPath(1.97);
   Float_t stime=fTrigger.StartTime(&fElectron);
   fTrigger.SubtractStartTime(&fElectron,&fProton,&fPim);
-  if(!fCuts.ElCut(&fElectron)){fGoodEvent=kFALSE;return;}
-  if(!fCuts.ProtCut(&fProton)){fGoodEvent=kFALSE;return;}
-  if(!fCuts.PionMCut(&fPim)){fGoodEvent=kFALSE;return;}
 
   HSLorentzVector miss=fBeam+fTarget-fElectron.P4()-fProton.P4()-fPim.P4();
   fMissMass2=miss.M2();
@@ -178,7 +185,12 @@ void THS2pi::Kinematics(){
   //configure trigger for this event
   fTrigger.ReadParticles();
   //Do calculations if Good Event
-  if(fIsTMVA) TMVAFill();
+  //if(fIsTMVA) TMVAFill();
+  if (fIsTMVA){
+      FillVars();
+      fMVAPrep.RemoveNaNs();
+
+  }
 
 }
 //////////////////////////////////////////////////
@@ -213,53 +225,17 @@ void THS2pi::TMVAOutTree(TTree* tree){
   tree->Branch("Topo",&fTopoID,"Topo/I");
   tree->Branch("NPerm",&fNPerm,"NPerm/I");
   tree->Branch("NDet",&fNDet,"NDet/I");
-  // tree->Branch("Detector",&fDetector,"Detector/I");
+  //tree->Branch("Detector",&fDetector,"Detector/I");
   tree->Branch("Correct",&fCorrect,"Correct/I");
- 
-  tree->Branch("ElTime",&fElTime,"ElTime/F");
-  tree->Branch("ElEdep",&fElEdep,"ElEdep/F");
-  tree->Branch("ElDeltaE",&fElDeltaE,"ElDeltaE/F");
-  tree->Branch("ElPreE",&fElPreE,"ElPreE/F");
-  tree->Branch("ElP",&fElP,"ElP/F");
-  tree->Branch("ElTh",&fElTh,"ElTh/F");
-  tree->Branch("ElPhi",&fElPhi,"ElPhi/F");
-  tree->Branch("ElVz",&fElVz,"ElVz/F");
-  tree->Branch("ElTrChi2",&fElTrChi2,"ElTrChi2/F");
-  tree->Branch("ElDet",&fElDet,"ElDet/I");
 
-  tree->Branch("PTime",&fPTime,"PTime/F");
-  tree->Branch("PEdep",&fPEdep,"PEdep/F");
-  tree->Branch("PDeltaE",&fPDeltaE,"PDeltaE/F");
-  tree->Branch("PPreE",&fPPreE,"PPreE/F");
-  tree->Branch("PP",&fPP,"PP/F");
-  tree->Branch("PTh",&fPTh,"PTh/F");
-  tree->Branch("PPhi",&fPPhi,"PPhi/F");
-  tree->Branch("PVz",&fPVz,"PVz/F");
-  tree->Branch("PTrChi2",&fPTrChi2,"PTrChi2/F");
-  tree->Branch("PDet",&fPDet,"PDet/I");
- 
-  tree->Branch("PipTime",&fPipTime,"PipTime/F");
-  tree->Branch("PipEdep",&fPipEdep,"PipEdep/F");
-  tree->Branch("PipDeltaE",&fPipDeltaE,"PipDeltaE/F");
-  tree->Branch("PipPreE",&fPipPreE,"PipPreE/F");
-  tree->Branch("PipP",&fPipP,"PipP/F");
-  tree->Branch("PipTh",&fPipTh,"PipTh/F");
-  tree->Branch("PipPhi",&fPipPhi,"PipPhi/F");
-  tree->Branch("PipVz",&fPipVz,"PipVz/F");
-  tree->Branch("PipTrChi2",&fPipTrChi2,"PipTrChi2/F");
-  tree->Branch("PipDet",&fPipDet,"PipDet/I");
+  fMVAPrep.SetTree(tree);
+  fMVAPrep.SetBranches();
 
-  tree->Branch("PimTime",&fPimTime,"PimTime/F");
-  tree->Branch("PimEdep",&fPimEdep,"PimEdep/F");
-  tree->Branch("PimDeltaE",&fPimDeltaE,"PimDeltaE/F");
-  tree->Branch("PimPreE",&fPimPreE,"PimPreE/F");
-  tree->Branch("PimP",&fPimP,"PimP/F");
-  tree->Branch("PimTh",&fPimTh,"PimTh/F");
-  tree->Branch("PimPhi",&fPimPhi,"PimPhi/F");
-  tree->Branch("PimVz",&fPimVz,"PimVz/F");
-  tree->Branch("PimTrChi2",&fPimTrChi2,"PimTrChi2/F");
-  tree->Branch("PimDet",&fPimDet,"PimDet/I");
+  fMVATrain.SetTrainTree(tree);
 
+  tree->GetDirectory()->cd();
+  fMVAPrep.SetName("Test");
+  fMVAPrep.Write();
 
 }
 void THS2pi::TMVAFill(){
@@ -307,3 +283,28 @@ void THS2pi::TMVAFill(){
   fPimTrChi2=fPim.TrChi2();
   fPimDet=fCuts.Detector(fPip.Detector());
 }
+
+/**
+ * Add particles to vector
+ *
+ */
+
+void THS2pi::PrepAddParticle(THSParticle *part){
+    fParticles.push_back(part);
+}
+
+
+/**
+ * Fill variable vector
+ *
+ */
+
+void THS2pi::FillVars(){
+
+    fNParts = fParticles.size();
+
+    for (UInt_t i = 0; i<fNParts; i++){
+        fMVAPrep.AddVarsFromParticle(fParticles[i], i);
+    }
+}
+
