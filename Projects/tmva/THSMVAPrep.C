@@ -9,163 +9,117 @@
 #include "THSMVAPrep.h"
 #include "TROOT.h"
 
+
+ClassImp(THSMVAPrep);
+
+
 ////////////////////////////////////////////////////////////
 /// Here I put Doxygen readable comments explaing what each function does
 /// Constructor 
 
 THSMVAPrep::THSMVAPrep(){
-    // set output for TMVA
-    outputName = "THSMVAClassifcation.root";
-    outputFile = TFile::Open(outputName, "RECREATE");
-    // get variable names
-    //SetVariablesTopo_0();
-    //// set dataloder and factory
-    //Setup();
-    //// set signal anc background events and remove NaNs
-    //SetSignal();
-    //SetBackground();
-    //// train
-    //Train();
-    //if (test) Test(); 
+
+    SetNames();
 
 }
 
-/**
- * Set branches
- *
- */
 
-// TODO : add options for different splits
-// TODO : randomize split
+void THSMVAPrep::SetBranches() {
+    if (!fBaseTree) {
+        std::cout<<"ERROR : Base tree not found..."<<std::endl;
+        std::cout<<"      : exiting..."                <<std::endl;
+        exit(1);
+    }
 
-void THSMVAPrep::SetSignal(){
+    std::cout<<"Setting branches..."<<std::endl;
+    // Set general variables that are independant of topology
     
-    //if (!fTrainTree) SetTree(tree);
+    //fBaseTree->Branch("MissMass2",&fMissMass2,"MissMass2/D");
+    //fBaseTree->Branch("MissMass",&fMissMass,"MissMass/D");
+    //fBaseTree->Branch("Topo",&fTopoID,"Topo/I");
+    //fBaseTree->Branch("NPerm",&fNPerm,"NPerm/I");
+    //fBaseTree->Branch("NDet",&fNDet,"NDet/I");
+    //fBaseTree->Branch("Detector",&fDetector,"Detector/I");
+    //fBaseTree->Branch("Correct",&fCorrect,"Correct/I");
+    
+    fVariableCount = 0;
+    fParticleCount = 0;
 
-    std::cout<<"Preparing signals..."<<std::endl;
-
-    gROOT->cd();
-    fSignalTree = fTrainTree->CopyTree("Correct==1");
-
-    std::cout<<"Copied tree..."<<std::endl;
-
-    vars.reserve(nVars);
-
-    for (UInt_t ivar=0; ivar<nVars; ivar++) fSignalTree->SetBranchAddress( variableNames[ivar], &(treevars[ivar]) );
-    std::cout<<"Set branch addresses..."<<std::endl;
-    for (UInt_t i=0; i<fSignalTree->GetEntries(); i++) {
-        fSignalTree->GetEntry(i);
-        std::cout<<treevars[0]<<std::endl;
-        for (UInt_t ivar=0; ivar<nVars; ivar++) {
-            if (std::isnan(treevars[ivar]))
-                vars[ivar] = 0;
-            else
-                vars[ivar] = treevars[ivar];
+    // Now add branches for particles and variables
+    for (auto const& p : fNames ) { 
+        for (auto const& n : p) {
+            std::cout<<n<<std::endl;
+            if (fTypes[fVariableCount] == "F") {
+                std::cout<<fParticleCount << " / " <<fVariableCount<<std::endl;
+                fBaseTree->Branch(n, &(fTreeVarsF[fParticleCount][fVariableCount]), n  + "/F");
+            }
+            if (fTypes[fVariableCount] == "I") {
+                fBaseTree->Branch(n, &(fTreeVarsI[fParticleCount][fVariableCount]), n  + "/I");
+            }
+            fVariableCount++;
         }
+        fVariableCount = 0;
+        fParticleCount++;
         
-        std::cout<<vars[0]<<std::endl;
-        // add training and test events; here: first half is training, second is testing
-        // note that the weight can also be event-wise
-        if (i < 0.9 * fSignalTree->GetEntries()) dataloader->AddSignalTrainingEvent( vars, SignalWeight );
-        else                              dataloader->AddSignalTestEvent    ( vars, SignalWeight );
     }
+    fNVarsF = fTreeVarsF[0].size();
+    fNVarsI = fTreeVarsI[0].size();
+    std::cout<<"Number of variables (Float_t) :    "<<fNVarsF<<std::endl;
+    std::cout<<"Number of variables (Int_t)   :    "<<fNVarsI<<std::endl;
+
+//fBaseTree->Print();
 }
 
-void THSMVAPrep::SetBackground(){
-    std::cout<<"Preparing background..."<<std::endl;
-    gROOT->cd();
-    fBackgroundTree = fTrainTree->CopyTree("Correct==0");
+void THSMVAPrep::RemoveNaNs(){
 
-    std::cout<<"Copied tree..."<<std::endl;
+    //std::cout<<"Removing NaNs..."<<std::endl;
 
-    vars.reserve(nVars);
-    for (UInt_t ivar=0; ivar<nVars; ivar++) fBackgroundTree->SetBranchAddress( variableNames[ivar], &(treevars[ivar]) );
-    std::cout<<"Set branch adresses"<<std::endl;
-    for (UInt_t i=0; i<fBackgroundTree->GetEntries(); i++) {
-        fBackgroundTree->GetEntry(i);
-        for (UInt_t ivar=0; ivar<nVars; ivar++) {
-            if (std::isnan(treevars[ivar]))
-                vars[ivar] = 0;
-            else
-                vars[ivar] = treevars[ivar];
+    if (!fBaseTree) {
+        std::cout<<"ERROR: Base tree not set..."<<std::endl;
+        std::cout<<"Exiting.."<<std::endl;
+        exit(1);
+    }
+
+    for (UInt_t iPar=0; iPar<fParticleID.size(); iPar++) {
+        //std::cout<<"...floats..."<<std::endl;
+        for (UInt_t iVar=0; iVar<fNVarsF; iVar++) {
+            if (std::isnan(fTreeVarsF[iPar][iVar])){
+                fTreeVarsF[iPar][iVar] = 0;
+            }
         }
-        // add training and test events; here: first half is training, second is testing
-        // note that the weight can also be event-wise
-    if (i < 0.9 * fBackgroundTree->GetEntries()) dataloader->AddBackgroundTrainingEvent( vars, BackgroundWeight );
-        else                              dataloader->AddBackgroundTestEvent    ( vars, BackgroundWeight );
+        //std::cout<<"...ints..."<<std::endl;
+        for (UInt_t iVar=0; iVar<fNVarsI; iVar++) {
+            if (std::isnan(fTreeVarsI[iPar][iVar])){
+                fTreeVarsI[iPar][iVar] = 0;
+            }
+        }
+    } 
+
+    //fBaseTree->Fill();
+    
+}
+
+void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
+    fCountF = 0;
+    fCountI = 0;
+    //std::cout<<"Adding variables..."<<std::endl;
+    for (auto const& v : fVariableID) {
+        if (v == "Time") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaTime(); fCountF++;};
+        if (v == "Edep") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Edep(); fCountF++;};
+        if (v == "DeltaE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaE(); fCountF++;};
+        if (v == "PreE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->PreE(); fCountF++;};
+        if (v == "P") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->P(); fCountF++;};
+        if (v == "Th") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Theta(); fCountF++;};
+        if (v == "Phi") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Phi(); fCountF++;};
+        if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
+        if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
+        if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;};
     }
-}
-
-/**
- * Setup the factory and dataloader before training
- *
- */
-
-void THSMVAPrep::Setup(){
-
-    std::cout<<"Setting up factory..."<<std::endl;
-
-    factory = new TMVA::Factory( "THSMVAClassifcation", outputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification" );
-
-    dataloader = new TMVA::DataLoader("dataset");
-
-    // added variables to dataloader
-    // TODO : use mix of floats and ints?
-    for (auto const& vn: variableNames) {
-        dataloader->AddVariable( vn, vn, "units", 'F');
-    }
-}
-/*
- * Select methods and train them
- *
- */
-
-void THSMVAPrep::Train(){
-
-    // TODO : options for preparing training
-    dataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
-
-    // TODO : add options for methods
-    factory->BookMethod(dataloader, TMVA::Types::kBDT, "BDT","!H:!V:NTrees=1700:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
-
-    //factory->BookMethod(dataloader,TMVA::Types::kRXGB, "RXGB", "!V:NRounds=160:MaxDepth=3:Eta=1");
-
-    factory->TrainAllMethods();
-}
-
-/*
- * Test methods if selected
- *
- */
-
-void THSMVAPrep::Test(){
-
-    factory->TestAllMethods();
-    factory->EvaluateAllMethods();
-}
-
-/*
- * Close open files etc
- * TODO : relocate close and remove function
- *
- */
-
-void THSMVAPrep::EndPrep(){
-    outputFile->Close();
 }
 
 ///////////////////////////////////////////////////////////
 ///Destructor, here I need to delete any data members that have
 ///been constructed via the new operator and not been deleted elsewhere
 THSMVAPrep::~THSMVAPrep(){
-
-    delete factory;
-    delete dataloader;
-
-    delete fSignalTree;
-    delete fBackgroundTree;
-    delete fTrainTree;
-
-    // TODO : destructor
-
+    delete fBaseTree;
 }
