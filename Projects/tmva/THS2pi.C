@@ -62,8 +62,6 @@ THS2pi::THS2pi(){
              bind(&THS2pi::Topo_3, this),
              PID,INCLUSIVE);
 
-  
-  
   THSFinalState::InitFS();
 }
 
@@ -82,9 +80,34 @@ void THS2pi::FileStart(){
 
   //Initilaise THSMVA stuff
   // add config stuff here
-  std::cout<<"Setting MVA trees..."<<std::endl;
-  fMVAPrep.SetTree(fFinalTree);
-  fMVATrain.SetTrainTree(fFinalTree);
+  if (fIsTrain){
+
+      std::cout<<"Setting MVA trees..."<<std::endl;
+      fMVAPrep.SetNames();
+
+      //fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
+      //fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
+      //fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
+      //fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
+      //fMVATrain.PrintSplits();
+      //
+      Method method0;
+      method0.fMethodName = "BDT0";
+      method0.fMethodType = TMVA::Types::kBDT;
+      method0.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      fMVATrain.AddMethod(method0);
+      //
+      Method method1;
+      method1.fMethodName = "BDT1";
+      method1.fMethodType = TMVA::Types::kBDT;
+      method1.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      fMVATrain.AddMethod(method1);
+      std::cout<<"  Finished setting methods and splits"<<std::endl;
+      fMVAPrep.SetTree(fFinalTree);
+      fMVATrain.SetTrainTree(fFinalTree);
+  }
+  else{
+  }
   
   
   if(THSFinalState::frGenParts) fTrigger.SetSim();//Should get this from RunInfo but not correct in EB at the moment
@@ -187,9 +210,15 @@ void THS2pi::Kinematics(){
   //Do calculations if Good Event
   //if(fIsTMVA) TMVAFill();
   if (fIsTMVA){
-      FillVars();
+      PrepFillVars(); // for trains
       fMVAPrep.RemoveNaNs();
 
+      //fMVAApp.GetResponse();
+
+  }
+  else{
+      AppFillVars();
+      fMVAApp.ProcessEvent();
   }
 
 }
@@ -210,11 +239,14 @@ Bool_t THS2pi::CheckParticle(THSParticle* part){
 void THS2pi::FinalStateOutTree(TTree* tree){
   fIsTMVA=kFALSE;
   THSFinalState::fFinalTree=tree;
+  fMVAApp.SetOutputTree(tree);
   //tree->Branch("Final",&fFinal);//If you want to save the final THSParticles
+  tree->Branch("MissMass2",&fMissMass2,"MissMass2/D");
   tree->Branch("MissMass",&fMissMass,"MissMass/D");
   tree->Branch("Topo",&fTopoID,"Topo/I");
   tree->Branch("NPerm",&fNPerm,"NPerm/I");
   tree->Branch("NDet",&fNDet,"NDet/I");
+  tree->Branch("Correct",&fCorrect,"Correct/I");
 
 }
 void THS2pi::TMVAOutTree(TTree* tree){
@@ -232,56 +264,21 @@ void THS2pi::TMVAOutTree(TTree* tree){
   fMVAPrep.SetBranches();
 
   fMVATrain.SetTrainTree(tree);
-
-  tree->GetDirectory()->cd();
-  fMVAPrep.SetName("Test");
-  fMVAPrep.Write();
+  fMVAApp.SetAppTree(tree);
 
 }
-void THS2pi::TMVAFill(){
-  fElTime=fElectron.DeltaTime();
-  fElEdep=fElectron.Edep();
-  fElDeltaE=fElectron.DeltaE();
-  fElPreE=fElectron.PreE();
-  fElP=fElectron.P4p()->P();
-  fElTh=fElectron.P4p()->Theta();
-  fElPhi=fElectron.P4p()->Phi();
-  fElVz=fElectron.Vertex().Z();
-  fElTrChi2=fElectron.TrChi2();
-  fElDet=fCuts.Detector(fElectron.Detector());
- 
-  fPTime=fProton.DeltaTime();
-  fPEdep=fProton.Edep();
-  fPDeltaE=fProton.DeltaE();
-  fPPreE=fProton.PreE();
-  fPP=fProton.P4p()->P();
-  fPTh=fProton.P4p()->Theta();
-  fPPhi=fProton.P4p()->Phi();
-  fPVz=fProton.Vertex().Z();
-  fPTrChi2=fProton.TrChi2();
-  fPDet=fCuts.Detector(fProton.Detector());
 
-  fPipTime=fPip.DeltaTime();
-  fPipEdep=fPip.Edep();
-  fPipDeltaE=fPip.DeltaE();
-  fPipPreE=fPip.PreE();
-  fPipP=fPip.P4p()->P();
-  fPipTh=fPip.P4p()->Theta();
-  fPipPhi=fPip.P4p()->Phi();
-  fPipVz=fPip.Vertex().Z();
-  fPipTrChi2=fPip.TrChi2();
-  fPipDet=fCuts.Detector(fPip.Detector());
+void THS2pi::SetApplication(THSMVA* setup){
 
-  fPimTime=fPim.DeltaTime();
-  fPimEdep=fPim.Edep();
-  fPimDeltaE=fPim.DeltaE();
-  fPimPreE=fPim.PreE();
-  fPimP=fPim.P4p()->P();
-  fPimTh=fPim.P4p()->Theta();
-  fPimPhi=fPim.P4p()->Phi();
-  fPimVz=fPim.Vertex().Z();
-  fPimTrChi2=fPim.TrChi2();
-  fPimDet=fCuts.Detector(fPip.Detector());
+    fMVAApp.Init(setup);
+    fMVAApp.UpdateSplit("Topo0", &fTopoID);
+    fMVAApp.UpdateSplit("Topo1", &fTopoID);
+    fMVAApp.UpdateSplit("Topo2", &fTopoID);
+    fMVAApp.UpdateSplit("Topo3", &fTopoID);
+    fMVAApp.PrintSplits();
+    fMVAApp.AddReaders();
+    fMVAApp.SetReaders();
+    fMVAApp.SetOutput();
 }
 
 /**
@@ -299,7 +296,7 @@ void THS2pi::PrepAddParticle(THSParticle *part){
  *
  */
 
-void THS2pi::FillVars(){
+void THS2pi::PrepFillVars(){
 
     fNParts = fParticles.size();
 
@@ -308,3 +305,11 @@ void THS2pi::FillVars(){
     }
 }
 
+void THS2pi::AppFillVars(){
+
+    fNParts = fParticles.size();
+
+    for (UInt_t i = 0; i<fNParts; i++){
+        fMVAApp.AddVarsFromParticle(fParticles[i], i);
+    }
+}
