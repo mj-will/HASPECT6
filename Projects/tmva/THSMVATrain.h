@@ -10,74 +10,78 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/Types.h"
-//#include <TMVA/MethodRXGB.h>
-
-class Method {
-
-    public :
-
-        TMVA::Types::EMVA type;
-        TString name;
-        TString parameters;
-};
 
 class THSMVATrain : public THSMVA {
 
- public :
-  THSMVATrain();
-  virtual ~THSMVATrain();
-  
-  THSMVATrain(TString name) : THSMVA(name){};
- protected :
+    public :
+        THSMVATrain();
+        virtual ~THSMVATrain();
 
-  TTree* fTrainTree=nullptr;//!
-  TTree* fSignalTree=nullptr;//!
-  TTree* fBackgroundTree=nullptr;//!
+        THSMVATrain(TString name) : THSMVA(name){};
+    protected :
 
-  TFile* fTreeOutputFile=nullptr;//!
-  TFile* fOutputFile=nullptr;//!
+        THSMVA fMVA;
 
-  TString fTreeOutputName;
-  TString fOutputName;
+        TTree* fTrainTree=nullptr;//!
+        TTree* fSignalTree=nullptr;//!
+        TTree* fBackgroundTree=nullptr;//!
 
-  Bool_t fTest=false;
-  Bool_t fSelectTopologies=false;
-  
-  TMVA::Factory* fFactory=nullptr;//!
-  TMVA::DataLoader* fDataloader=nullptr;//!
+        TFile* fTreeOutputFile=nullptr;//!
+        TFile* fOutputFile=nullptr;//!
 
-  Double_t fSignalWeight = 1.0;
-  Double_t fBackgroundWeight = 1.0;
+        TDirectory* fOutputDir=nullptr;
 
-  std::vector<Method> fMethods;
+        TString fTreeOutputName;
+        TString fOutputName;
+        TString fDatasetName;
 
-  std::vector<std::vector<TString>> fMVAVariables;
-  std::vector<std::vector<Float_t>> fMVATreeVars;
+        Bool_t fTest=false;
+        Bool_t fSelectTopologies=false;
+        Bool_t fSplit=false;
+        Bool_t fPrintTree=false;
 
- public:
+        TMVA::Factory* fFactory=nullptr;//!
+        TMVA::DataLoader* fDataloader=nullptr;//!
 
-  void SetTrainTree(TTree* tree) {fTrainTree = tree;};
+        Double_t fSignalWeight = 1.0;
+        Double_t fBackgroundWeight = 1.0;
 
-  void SetMVATreeVars();
-  void SetMVAVariables();
-  void SetMVAVariables(Int_t Topology);
+        Int_t fTopo=0;
+        Int_t fDetector=0; 
 
-  void SetSignalTree(TString Filter = "");
-  void SetBackgroundTree(TString Filter = "");
+        Split fTmpSplit;
 
-  void Setup();
-  void Train();
-  void Test();
-  void EnableTest(){fTest=true;};
-  void DisableTest(){fTest=false;};
-  void AddMethod(Method method);
+        static std::vector<std::vector<TString>> fMVAVariables;
+        static std::vector<std::vector<Float_t>> fMVATreeVars;
 
-  void EndTraining();
+    public:
 
-  void DefaultTrain();
+        void SetTrainTree(TTree* tree) {fTrainTree = tree;};
 
-  ClassDef(THSMVATrain,1) //class THSParticle
+        void SetMVATreeVars();
+        void SetMVAVariables();
+        void SetMVAVariables(Int_t Topology);
+
+        void AddSplit(TString inputName, TString inputVariable,Int_t * p, Int_t value);
+        void AddSplit(TString inputName, std::vector<TString> inputVariables, std::vector<Int_t *> inputPointers, std::vector<Int_t> values);
+
+        void SetSignalTree(TString Filter = "");
+        void SetBackgroundTree(TString Filter = "");
+
+        void Setup(TString datasetName = "");
+        void Train();
+        void Test();
+        void EnableTest(){fTest=true;};
+        void DisableTest(){fTest=false;};
+        void AddMethod(Method method);
+
+        void EndTraining();
+
+        void DefaultTrain();
+
+        void WriteTHSMVA(TString name);
+
+        ClassDef(THSMVATrain,1) //class THSParticle
 
 };
 

@@ -13,6 +13,8 @@
 ClassImp(THSMVATrain);
 
 
+// TODO : Datasets when using multiple topologies etc.
+
 ////////////////////////////////////////////////////////////
 /// Here I put Doxygen readable comments explaing what each function does
 /// Constructor 
@@ -20,11 +22,21 @@ ClassImp(THSMVATrain);
 THSMVATrain::THSMVATrain(){
     TMVA::Tools::Instance();
     // set output for TMVA
-    fOutputName = "THSMVAClassifcation.root";
-    fOutputFile = TFile::Open(fOutputName, "RECREATE");
-
+    fOutputName = "THSMVAClassification.root";
+    fOutputFile = new TFile(fOutputName, "RECREATE");
+    // TODO : fix file saving
 }
 
+//std::vector<Method> THSMVATrain::fMethods;
+//std::vector<Split> THSMVATrain::fSplits;
+std::vector<std::vector<TString>> THSMVATrain::fMVAVariables;
+std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
+
+
+/*
+ * Default training function that
+ *
+ */
 
 void THSMVATrain::DefaultTrain(){
 
@@ -32,25 +44,55 @@ void THSMVATrain::DefaultTrain(){
         std::cout<<"ERROR : Training tree not specified"<<std::endl;
         exit(1);
     }
-
-    SetMVAVariables(2); 
     
-    Setup();
 
-    SetSignalTree();
-    SetBackgroundTree();
+    if (!fSplits.empty()){
+        for (UInt_t i=0; i<fSplits.size(); i++) {
 
-    Train();
-    EnableTest();
-    if (fTest) { Test(); }
-    
-    EndTraining();
+            //fOutputDir = fOutputFile -> mkdir(fSplits[i].GetSplitName());
+            //fOutputDir->cd();
+
+            if (fPrintTree) fTrainTree->Print();
+            // TODO : make set MVA more flexible
+            SetMVAVariables(fSplits[i].GetVariables()[0]); 
+            
+            fSplits[i].AddMVAVariables(fMVAVariables, fMVATreeVars);
+            //fSplits[i].SetPointer(fTopo);
+            fSplits[i].SetParticles(fSelectedParticles);
+
+            Setup(fSplits[i].GetSplitName());
+
+            SetSignalTree(fSplits[i].GetTreeSplit());
+            SetBackgroundTree(fSplits[i].GetTreeSplit());
+
+            EnableTest();
+            Train();
+            if (fTest) { Test(); }
+
+            
+        }
+        EndTraining();
+    }
+    else{
+
+       SetMVAVariables(); 
+       
+       Setup();
+
+       SetSignalTree();
+       SetBackgroundTree();
+
+       EnableTest();
+       Train();
+       if (fTest) { Test(); }
+       
+       EndTraining();
+    }
 }
 
 /**
  * Set the vectors that will be used to set the trees
  *
- * Assumes all particles have same number of variables
  */
 
 void THSMVATrain::SetMVATreeVars(){
@@ -59,8 +101,23 @@ void THSMVATrain::SetMVATreeVars(){
         std::cout<<"ERROR : Variables for MVA not set"<<std::endl;
         exit(1);
     }
+
+
+    // TODO : catch for fSelectedParticles
+
+    //if (fMVAVariables.size() == fTreeVarsF.size()) *fMVATreeVars = &fTreeVarsF;
+    //else{
+    //    for (UInt_t i=0; i<fSelectedParticles.size(); i++){
+    //        fMVATreeVars.push_back(fTreeVarsF[fSelectedParticles[i]]);
+    //    }
+    //}
     
-    fMVATreeVars.resize(fMVAVariables.size() , vector<Float_t>( fMVAVariables[0].size() , 0 ) );
+    
+    //fMVATreeVars.resize(fMVAVariables.size() , vector<Float_t>( fMVAVariables[0].size() , 0 ) );
+    fMVATreeVars.resize(fMVAVariables.size());
+    for (UInt_t i=0; i<fMVATreeVars.size(); i++){
+        fMVATreeVars[i].resize(fMVAVariables[i].size(), 0.0);
+    }
 
 }
 
@@ -70,23 +127,55 @@ void THSMVATrain::SetMVATreeVars(){
  *
  */
 
-// TODO : Think about having non trainable variables added in fNames
+// TODO : Think about having non trainable variables in fNames
 void THSMVATrain::SetMVAVariables(){
     fMVAVariables = fNames;
     SetMVATreeVars();
 
 }
 
+/**
+ * Set variables to use for training and testing with no filtering
+ *
+ */
+
 void THSMVATrain::SetMVAVariables(Int_t Topology){
     GetNamesTopo(Topology);
     fSelectTopologies = true;
     fMVAVariables = fSelectNames;
+    std::cout<<"Number of training particles "<<fMVAVariables.size()<<std::endl;
     SetMVATreeVars();
 }
+
+/**
+ * Add a split for training
+ *
+ */
+
+void THSMVATrain::AddSplit(TString inputName, TString inputVariable, Int_t * p, Int_t value){
+    fTmpSplit = Split(inputName, {inputVariable}, {value});
+    fTmpSplit.SetPointer({p});
+    fSplits.push_back(fTmpSplit);
+}
+
+/**
+ * Add a split for training
+ *
+ */
+
+void THSMVATrain::AddSplit(TString inputName, std::vector<TString> inputVariables, std::vector<Int_t *> p,std::vector<Int_t> values){
+    fTmpSplit = Split(inputName, inputVariables, values);
+    fTmpSplit.SetPointer(p);
+    fSplits.push_back(fTmpSplit);
+}
+
 
 // TODO : add options for different splits
 // TODO : randomize split
 
+/*
+ * Set signal tree with a possible cut
+ */
 
 void THSMVATrain::SetSignalTree(TString Filter){
 
@@ -108,17 +197,23 @@ void THSMVATrain::SetSignalTree(TString Filter){
     fSignalTree = fTrainTree->CopyTree("Correct==1" + Filter);
     std::cout<<"Copied signal tree..."<<std::endl;
 
+
+    fSignalTree->SetBranchStatus("*", kFALSE); // disable all
+
     fParticleCount = 0;
     fVariableCount = 0;
 
     // set branch addresses
     for (auto const& p : fMVAVariables){
         for (auto const& v : p){
-            fSignalTree->SetBranchAddress( v, &(fMVATreeVars[fParticleCount][fVariableCount]) );
+            //fSignalTree->SetBranchAddress( v, &(fMVATreeVars[fParticleCount][fVariableCount]) );
+            fSignalTree->SetBranchStatus( v, kTRUE) ;
             fVariableCount++;
         }
         fParticleCount++;
+        fVariableCount=0;
     }
+
             
     std::cout<<"Set signal branches..."<<std::endl;
 
@@ -127,6 +222,9 @@ void THSMVATrain::SetSignalTree(TString Filter){
     std::cout<<"Added signal tree to data loader..."<<std::endl;
 }
 
+/*
+ * Set background tree with a possible cut
+ */
 
 void THSMVATrain::SetBackgroundTree(TString Filter){
 
@@ -145,8 +243,10 @@ void THSMVATrain::SetBackgroundTree(TString Filter){
     }
 
     // copy selection of fTrainTree
-    fBackgroundTree = fTrainTree->CopyTree("Correct==1" + Filter);
+    fBackgroundTree = fTrainTree->CopyTree("Correct==0" + Filter);
     std::cout<<"Copied background tree..."<<std::endl;
+
+    fBackgroundTree->SetBranchStatus("*", kFALSE); // disable all
 
     fParticleCount = 0;
     fVariableCount = 0;
@@ -154,10 +254,12 @@ void THSMVATrain::SetBackgroundTree(TString Filter){
     // set branch addresses
     for (auto const& p : fMVAVariables){
         for (auto const& v : p){
-            fBackgroundTree->SetBranchAddress( v, &(fMVATreeVars[fParticleCount][fVariableCount]) );
+            //fBackgroundTree->SetBranchAddress( v, &(fMVATreeVars[fParticleCount][fVariableCount]) );
+            fBackgroundTree->SetBranchStatus( v, kTRUE) ;
             fVariableCount++;
         }
         fParticleCount++;
+        fVariableCount=0;
     }
             
     std::cout<<"Set background branches..."<<std::endl;
@@ -173,15 +275,16 @@ void THSMVATrain::SetBackgroundTree(TString Filter){
  *
  */
 
-void THSMVATrain::Setup(){
+void THSMVATrain::Setup(TString datasetName){
 
     std::cout<<"Setting up factory..."<<std::endl;
 
-    fFactory = new TMVA::Factory( "THSMVAClassifcation", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification" );
+    fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification" );
 
     std::cout<<"Setting up dataloader..."<<std::endl;
 
-    fDataloader = new TMVA::DataLoader("dataset");
+    fDatasetName = "dataset" + datasetName;
+    fDataloader = new TMVA::DataLoader(fDatasetName);
 
     // added variables to dataloader
     // TODO : use mix of floats and ints?
@@ -192,17 +295,23 @@ void THSMVATrain::Setup(){
     }
 }
 
+/*
+ * Add method to be used for training
+ *
+ */
 
 void THSMVATrain::AddMethod(Method method){
     fMethods.push_back(method);
 }
 
 /*
- * Select methods and train them
+ * Select methods and train
  *
  */
 
 void THSMVATrain::Train(){
+
+    fOutputFile->cd();
 
     // TODO : options for preparing training
     fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
@@ -212,18 +321,13 @@ void THSMVATrain::Train(){
         std::cout<<"Using default method..."<<std::endl;
         fFactory->BookMethod(fDataloader, TMVA::Types::kBDT, "BDT","!H:!V:NTrees=500:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
     }
-
-    // TODO : add options for methods
-    //fFactory->BookMethod(fDataloader, TMVA::Types::kBDT, "BDT","!H:!V:NTrees=1700:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
-
-        //fFactory->BookMethod(fDataloader,TMVA::Types::kRXGB, "RXGB", "!V:NRounds=160:MaxDepth=3:Eta=1");
-        //
     else{
         for (auto const& m : fMethods){
-            fFactory->BookMethod(fDataloader, m.type, m.name, m.parameters);
+            fFactory->BookMethod(fDataloader, m.GetType(), m.GetName(), m.GetParameters());
         }
 
     }
+
     fFactory->TrainAllMethods();
 }
 
@@ -233,6 +337,8 @@ void THSMVATrain::Train(){
  */
 
 void THSMVATrain::Test(){
+
+    fOutputFile->cd();
 
     fFactory->TestAllMethods();
     fFactory->EvaluateAllMethods();
@@ -245,7 +351,22 @@ void THSMVATrain::Test(){
  */
 
 void THSMVATrain::EndTraining(){
+    //fTrainTree->SetDirectory(fOutputFile);
     fOutputFile->Close();
+}
+
+/*
+ * Write a copy of THSMVA instance used for training
+ *
+ */
+
+void THSMVATrain::WriteTHSMVA(TString name){
+
+    fMVA.SetMethods(GetMethods());
+    fMVA.SetSplits(GetSplits());
+
+    fMVA.SetName(name);
+    fMVA.Write();
 }
 
 ///////////////////////////////////////////////////////////
