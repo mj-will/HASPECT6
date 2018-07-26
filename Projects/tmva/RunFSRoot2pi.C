@@ -3,6 +3,7 @@
 {
   //Create FinalState
   THS2pi* fs=new THS2pi();
+  fs->SetTrain(kTRUE);
   // fs->SetGenerated(); //just analyse generated branch
    fs->SetMaxParticles(10);
   //create datamanager
@@ -15,21 +16,35 @@
   Int_t counter=0;
   
   //create ouput tree
-  TFile* outfile=new TFile("test.root","recreate");
-  TTree* outtree=new TTree("TMVATree","output tree");
+  TFile* outfile=new TFile("THSMVA.root","recreate");
+  TTree* outtree=new TTree("THSMVATree","output tree");
   outtree->SetAutoSave(1E4);
   //  fs->FinalStateOutTree(outtree); //connect ouput tree to project branches
   fs->TMVAOutTree(outtree); //connect ouput tree to project branches
   
   gBenchmark->Start("timer");
-  
+   
   while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
+    if (counter == 20000){
+        break;
+    }
+    counter++;
   }
+    
+
   gBenchmark->Stop("timer");
   gBenchmark->Print("timer");
   
+
+  fs->RunTraining();
+  outtree->GetDirectory()->cd();
+  fs->WriteConfig("Test");
+
+  //fs->RunApp();
+
   outfile->cd();
   outtree->Write();
+
   delete outfile;
 }
