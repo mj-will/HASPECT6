@@ -19,10 +19,12 @@ ClassImp(THSMVAPrep);
 
 THSMVAPrep::THSMVAPrep(){
 
-    SetNames();
-
 }
 
+/*
+ * Set branches for variables necessary for MVA
+ *
+ */
 
 void THSMVAPrep::SetBranches() {
     if (!fBaseTree) {
@@ -32,28 +34,21 @@ void THSMVAPrep::SetBranches() {
     }
 
     std::cout<<"Setting branches..."<<std::endl;
-    // Set general variables that are independant of topology
-    
-    //fBaseTree->Branch("MissMass2",&fMissMass2,"MissMass2/D");
-    //fBaseTree->Branch("MissMass",&fMissMass,"MissMass/D");
-    //fBaseTree->Branch("Topo",&fTopoID,"Topo/I");
-    //fBaseTree->Branch("NPerm",&fNPerm,"NPerm/I");
-    //fBaseTree->Branch("NDet",&fNDet,"NDet/I");
-    //fBaseTree->Branch("Detector",&fDetector,"Detector/I");
-    //fBaseTree->Branch("Correct",&fCorrect,"Correct/I");
     
     fVariableCount = 0;
     fParticleCount = 0;
 
     // Now add branches for particles and variables
+    std::cout<<"Printing variables: "<<std::endl;
     for (auto const& p : fNames ) { 
         for (auto const& n : p) {
-            std::cout<<n<<std::endl;
+            std::cout<<"            "<<n<<"   ";
             if (fTypes[fVariableCount] == "F") {
                 std::cout<<fParticleCount << " / " <<fVariableCount<<std::endl;
                 fBaseTree->Branch(n, &(fTreeVarsF[fParticleCount][fVariableCount]), n  + "/F");
             }
             if (fTypes[fVariableCount] == "I") {
+                std::cout<<fParticleCount << " / " <<fVariableCount<<std::endl;
                 fBaseTree->Branch(n, &(fTreeVarsI[fParticleCount][fVariableCount]), n  + "/I");
             }
             fVariableCount++;
@@ -64,21 +59,25 @@ void THSMVAPrep::SetBranches() {
     }
     fNVarsF = fTreeVarsF[0].size();
     fNVarsI = fTreeVarsI[0].size();
-    std::cout<<"Number of variables (Float_t) :    "<<fNVarsF<<std::endl;
-    std::cout<<"Number of variables (Int_t)   :    "<<fNVarsI<<std::endl;
+    std::cout<<"Number of variables per particle (Float_t) :    "<<fNVarsF<<std::endl;
+    std::cout<<"Number of variables per particle (Int_t)   :    "<<fNVarsI<<std::endl;
 
-//fBaseTree->Print();
 }
+
+/**
+ * Remove NaN values from an entry
+ *
+ */
 
 void THSMVAPrep::RemoveNaNs(){
 
     //std::cout<<"Removing NaNs..."<<std::endl;
 
-    if (!fBaseTree) {
-        std::cout<<"ERROR: Base tree not set..."<<std::endl;
-        std::cout<<"Exiting.."<<std::endl;
-        exit(1);
-    }
+    //if (!fBaseTree) {
+    //    std::cout<<"ERROR: Base tree not set..."<<std::endl;
+    //    std::cout<<"Exiting.."<<std::endl;
+    //    exit(1);
+    //}
 
     for (UInt_t iPar=0; iPar<fParticleID.size(); iPar++) {
         //std::cout<<"...floats..."<<std::endl;
@@ -98,6 +97,11 @@ void THSMVAPrep::RemoveNaNs(){
     //fBaseTree->Fill();
     
 }
+
+/**
+ * Add variables from a THSParticles with predefined options
+ *
+ */
 
 void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
     fCountF = 0;
