@@ -259,7 +259,7 @@ inline void THSKinematics::BaryonDecayHelicity(){
   HSLorentzVector decMes=boost(fMes,decBoost);
   HSLorentzVector decGamma=boost(fGamma,decBoost);
   HSMomentum zV=-decMes.Vect().Unit();
-  HSMomentum yV=decMes.Vect().Cross(decGamma.Vect()).Unit();
+  HSMomentum yV=decGamma.Vect().Cross(decMes.Vect()).Unit();
   HSMomentum xV=yV.Cross(zV).Unit();
    
   HSLorentzVector decD1=boost(fBar_d1,decBoost);
@@ -277,7 +277,7 @@ inline void THSKinematics::BaryonDecayGJ(){
   HSLorentzVector decGamma=boost(fGamma,decBoost);
   HSLorentzVector decTar=boost(fTar,decBoost);
   HSMomentum zV=-decTar.Vect().Unit();
-  HSMomentum yV=decMes.Vect().Cross(decGamma.Vect()).Unit();
+  HSMomentum yV=decGamma.Vect().Cross(decMes.Vect()).Unit();
   HSMomentum xV=yV.Cross(zV).Unit();
 
   HSLorentzVector decD1=boost(fBar_d1,decBoost);
