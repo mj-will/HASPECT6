@@ -662,11 +662,13 @@ void THSFinalState::AutoIter(){
       //make sure this particle is in the true topology
       if(std::count(trueTopo->begin(),trueTopo->end(),fConfigs[jp]->PDG())==0) continue;
       //found a particle with this particle identification
+      //cout<<pid<<" "<<fConfigs[jp]->PDG()<<" "<<fCurrTopo->ParticleID(fConfigs[jp]->PDG())<<endl;
       if(fCurrTopo->ParticleID(fConfigs[jp]->PDG())==pid){
 	Nconfig_pid++;
+	cout<<"Check NConfit_pid "<< Nconfig_pid<<endl;
 	if(std::count(types.begin(),types.end(),fConfigs[jp]->PDG())==0){
 	  //Found a new PDG type
-	  //cout<<"new type "<<fConfigs[jp]->PDG()<<endl;
+	  cout<<"new type "<<fConfigs[jp]->PDG()<<endl;
 	  ntype++;
 	  types.push_back(fConfigs[jp]->PDG());
 	  vector<THSParticleConfig* > new_one;
@@ -684,13 +686,12 @@ void THSFinalState::AutoIter(){
     for(Int_t it=0;it<ntype;it++){
       Int_t typePDG=subConfigs[it][0]->PDG();
       Int_t NtruePDG=fCurrTopo->HowManyTrue(typePDG);//number of this pdg in curr topo
-      
       //Look for particles of this type which may have parents
       //And first select those
       Bool_t NotEnough=kFALSE;
       for(UInt_t ic=0;ic<subConfigs[it].size();){
        	THSParticleConfig* parent=nullptr;
-      	THSParticleConfig* child = subConfigs[it][0];
+      	THSParticleConfig* child = subConfigs[it][ic];
        	if((parent=child->Parent())){
 	  //get children from this parent with same PDG
       	  vector<THSParticle* > child_pdg=parent->Children(child->PDG());
@@ -772,7 +773,8 @@ void THSFinalState::AutoIter(){
       //Once all particle with parents have been selected, select the remainder
       vector<THSParticle* > evtparts;
       for(UInt_t isp=0;isp<subConfigs[it].size();isp++){
-	if(evtparts.size()<fCurrTopo->HowManyTrue(typePDG)){ evtparts.push_back(subConfigs[it][isp]->Particle());
+	if(evtparts.size()<fCurrTopo->HowManyTrue(typePDG)){
+	  evtparts.push_back(subConfigs[it][isp]->Particle());
 	  N_pid--; //number of this pid left in topo
 	  Nconfig_pid--; //number of configured particles left
 	  if(N_pid==0) break;
@@ -782,6 +784,7 @@ void THSFinalState::AutoIter(){
       }
       // if(NtruePDG==0) continue;
       if(evtparts.size()==0)continue;
+      //cout<<"n selct "<<evtparts.size()<<endl;
       THSParticleIter* diter_s=AddSelectToSelected(diter0,1,evtparts.size(),&evtparts);
       
       // Nconfig_pid-=evtparts.size();
@@ -823,7 +826,7 @@ void THSFinalState::CheckCombitorial(){
   for(UInt_t i=0;i<fConfigs.size();i++){
     THSParticle *part=fConfigs[i]->Particle();
     if(IsMissing(part))continue;
-    cout<<" PDG("<<part->PDG()<<")Th("<<part->P4p()->Theta()<<") ";
+    cout<<" PDG("<<part->PDG()<<")Th("<<part->P4p()->Theta()<<")E( "<<part->P4p()->E()<<")  ";
   }
   cout<<endl;
 }

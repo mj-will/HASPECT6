@@ -167,7 +167,7 @@ Bool_t THSDataManager::NextChainFile(){
   Init(fname,fTreeName);
   fCurFileName=gSystem->BaseName(fname);
   if(fOutDir!=TString("")){
-    fCurFileName.Append(fFileAppend);
+    // fCurFileName.Append(fFileAppend);
     InitOutput(fOutDir+"/"+fCurFileName);
   }
   // if(fEntryList) FilterFinalStateEvent();//If filtering via entrlist, redo for this file
@@ -251,8 +251,7 @@ Bool_t THSDataManager::InitChain(TChain* chain){
   Init(fCurFileName,chain->GetName());
   fCurFileName=gSystem->BaseName(fCurFileName);
   if(fOutDir!=TString("")){
-    fCurFileName.Append(fFileAppend);
-    InitOutput(fOutDir+"/"+fCurFileName);
+     InitOutput(fOutDir+"/"+fCurFileName);
   }
   return kTRUE;  
 }
@@ -279,6 +278,9 @@ void THSDataManager::InitOutput(TString filename){
   fWriteThis=kTRUE;
   //Make output directory if not existing
   if(!fWriteFile) gSystem->Exec(Form("mkdir -p %s",fOutDir.Data()));
+  if(!fCurFileName.Contains(".root")){
+      fCurFileName.Append(fFileAppend);
+  }
   fWriteFile=new TFile(filename,"recreate");
   //fWriteFile->SetCompressionSettings(401);//LZ4
   fWriteTree=new TTree("HSParticles","data tree");

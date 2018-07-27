@@ -58,7 +58,8 @@ void THSCLAS12Trigger::FindTimeOffSetFT(TTree* tree,TString option){
 ///Input arguemnts are the tree to be analysed and draw option (goff by default)
 void THSCLAS12Trigger::FindTimeRFTimePeak(TTree* tree,TString option){
   //Now look for a RF-FDe- time peak to align to
-  TH1F* his=new TH1F("peaks","peaks",800,100,180);
+    TH1F* his=new TH1F("peaks","peaks",800,100,180);
+  //TH1F* his=new TH1F("peaks","peaks",800,-80,0);
   tree->Draw("Particles.DeltaTime()-EventInfo.fRFTime>>peaks","Particles.PDG()==11",option);
   TSpectrum s20(20);
   Int_t nfound = s20.Search(his,0.4,"",0.50);

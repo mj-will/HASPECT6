@@ -46,6 +46,7 @@ ClassImp(THSParticle);
 // }
 THSParticle::THSParticle(int code) {
   SetPDGcode(code);
+
 }
 THSParticle::THSParticle(TString pdgname){
   SetPDGcode(TDatabasePDG::Instance()->GetParticle(pdgname)->PdgCode());

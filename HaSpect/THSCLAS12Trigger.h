@@ -47,7 +47,9 @@ class THSCLAS12Trigger{
   Float_t StartTime(Float_t ptime); //calculate event start time
   Float_t StartTime(THSParticle* part); //calculate event start time
   Float_t GetStartTime(){return fStartTime;}
-
+  void SetSTimePeak(Float_t tt){fSTimePeak=tt;};
+  void SetTimeShiftFT(Float_t tt){fTimeShiftFT=tt;};
+  
   void FindTimeOffSetFT(TTree* tree,TString option="goff");
   void FindTimeRFTimePeak(TTree* tree,TString option="goff");
   
