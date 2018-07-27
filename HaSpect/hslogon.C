@@ -26,10 +26,12 @@
 void HSfit();//Load hsfit classes
 void HSdata();//Load hsdata classes
 void HSselector(); //load hsselector classes
+void HSrootbeer(); //for rootbeer interface
 void HSFinal(TString pname); //load hsproject classes
 void startproof(Int_t Nw); //intialise proof for hsselector classes
 void LoadMacro(TString macro); //Load class via its source code
-TString HSin(); //return inout void HSMacPath(TString opt)files directory
+TString HSin(); //return in files directory
+TString HSinFile(); //return in file 
 TString HSout(); //return inout files directory
 TString HSfinal(); //return project classname
 void HSin(TString hsin){gSystem->Setenv("HSIN",hsin);} //set in files directory
@@ -86,7 +88,7 @@ void hslogon(){
    //get command line options first check if rootbeer
   for(Int_t i=1;i<gApplication->Argc();i++){
     TString opt=gApplication->Argv(i);
-    if((opt.Contains("--rootbeer"))) gROOT->ProcessLine(".L $ROOTBEER/RootBeerSetup.cxx");
+    if((opt.Contains("--rootbeer")))HSrootbeer(); 
   }
 
    //get command line options first check if farm job
@@ -128,6 +130,7 @@ void hslogon(){
     if(opt.Contains("--")&&opt.Contains(".cxx")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
     if(opt.Contains("--")&&opt.Contains(".cpp")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
     if(opt.Contains("--")&&opt.Contains(".C")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
+    if(opt.Contains("--")&&opt.Contains(".cc")){opt.Remove(0,2); cout<<"Loading "<<opt<<endl;LoadMacro(opt);} //Load additional THS classes
     
   }	
   
@@ -267,7 +270,20 @@ void HSdata(){
     LoadMacro("THSCLAS12FastMC.C");
   }
 }
+/////////////////////////////////////
+//Load rootbeer libraries
+void HSrootbeer(){
+  HSdata();
+  if(TString(gSystem->Getenv("ROOTBEER"))==TString("")){cout<<"No ROOTBEER defined exiting..."<<endl; exit(0);}
+  TString ROOTBEER=gSystem->Getenv("ROOTBEER");
+  gSystem->Load(TString(gSystem->Getenv("ROOTBEER_SLIB"))+"/libRootBeer");
+  gInterpreter->AddIncludePath(ROOTBEER+"/include");
+  gInterpreter->AddIncludePath(ROOTBEER+"/Experiments/");
+  gROOT->SetMacroPath(Form("%s:%s",gROOT->GetMacroPath(),(ROOTBEER+"/Experiments/").Data()));
+  LoadMacro("THSRootBeer.C");
 
+
+}
 //////////////////////////////////
 /// Start proof with Nw workers
 void startproof(Int_t Nw){
@@ -319,6 +335,12 @@ TString HSfinal(){
 TString HSin(){
   if(!gSystem->Getenv("HSIN")) cout<<"Warning no HSIN env variable defined but hsin() called..."<<endl;
   return TString(gSystem->Getenv("HSIN"))+"/";
+}
+//////////////////////////////////////////
+/// Checks for and returns HSIN variable don't add /
+TString HSinFile(){
+  if(!gSystem->Getenv("HSIN")) cout<<"Warning no HSIN env variable defined but hsin() called..."<<endl;
+  return TString(gSystem->Getenv("HSIN"));
 }
 
 //////////////////////////////////////////
