@@ -85,7 +85,7 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
      //Get the necessary items from REC::Cherenkov Bank
     fChBank=fHipo->GetBank("REC::Cherenkov");
     fChPindex=dynamic_cast<THipoItemS*>(fChBank->GetItem("pindex"));
-    fChEnergy=dynamic_cast<THipoItemS*>(fChBank->GetItem("nphe"));
+    fChEnergy=dynamic_cast<THipoItemF*>(fChBank->GetItem("nphe"));
     fChDetector=dynamic_cast<THipoItemB*>(fChBank->GetItem("detector"));
     //Get the necessary items from REC::FT Bank
     fFTBank=fHipo->GetBank("REC::ForwardTagger");
@@ -104,6 +104,7 @@ Bool_t THSHipoReader::Init(TString filename,TString name){
     fTrDet=dynamic_cast<THipoItemB*>(fTrBank->GetItem("detector"));
     fTrq=dynamic_cast<THipoItemB*>(fTrBank->GetItem("q"));
     fTrNDF=dynamic_cast<THipoItemS*>(fTrBank->GetItem("NDF"));
+    fTrChi2=dynamic_cast<THipoItemF*>(fTrBank->GetItem("chi2"));
  
     fTBTrBank=fHipo->GetBank("TimeBasedTrkg::TBTracks");
     fTBTrNDF=dynamic_cast<THipoItemS*>(fTBTrBank->GetItem("ndf"));
@@ -248,9 +249,10 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       //  cout<<"Done particle "<<endl;
       Int_t nscint=0;
       Double_t deltaE=0;
-      
+
+      Int_t PEntry=fPBank->GetEntry();
       //Scintillators
-      while(fSPindex->FindEntry(fPBank->GetEntry())){
+      while(fSPindex->FindEntry(PEntry)){
 	//Do something if find a particular detector
 	if(fSDet->Val()==12){//FD-TOF
 	  if(particle.Time()==0||(fSLayer->Val()==2)){ //use FD layer 2 if exists
@@ -282,7 +284,7 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
       particle.SetDeltaE(deltaE/nscint); //FD:sum of layers,CD:sum of CTOF/CND
  
       //Calorimeters
-      while(fCalPindex->FindEntry(fPBank->GetEntry())){
+      while(fCalPindex->FindEntry(PEntry)){
 	//Do something if find a particular detector
 	particle.SetEdep(fCalEnergy->Val()+particle.Edep());//sum Energy
 	if(fCalLayer->Val()==1)	{
@@ -296,39 +298,48 @@ Bool_t THSHipoReader::ReadEvent(Long64_t entry){
 	particle.SetDetector(particle.Detector()+100);
       }
       //Cerenkov
-      while(fChPindex->FindEntry(fPBank->GetEntry())){
+      while(fChPindex->FindEntry(PEntry)){
 	//Do something if find a particular detector
 	//particle.AddEdep(fChEnergy->Val());
 	particle.SetDetector(particle.Detector()+fChDetector->Val());
+	if(fChDetector->Val()==15) particle.SetNPhot(particle.NPhot()+fChEnergy->Val());
+	if(fChDetector->Val()==16) particle.SetNPhot(particle.NPhot()+1E4*fChEnergy->Val());
       }
       
       //Trackers	
-      while(fTrPindex->FindEntry(fPBank->GetEntry())){
-	Int_t dett=fTrDet->Val();
-	Int_t qq=fTrq->Val();
-	Int_t chargee=fCharge->Val();
-	if(dett==5){//CVT
-	  fCVTrBank->SetEntry(fTrIndex->Val());
-	  particle.SetTrChi2(fCVTrChi2->Val()/fCVTrNDF->Val());
-	}
-	else if(dett==6){//DC
-	  fTBTrBank->SetEntry(fTrIndex->Val());
-	  particle.SetTrChi2(fTBTrChi2->Val()/fTBTrNDF->Val());
-	}
+      while(fTrPindex->FindEntry(PEntry)){
+	// Int_t dett=fTrDet->Val();
+	// Int_t qq=fTrq->Val();
+	// Int_t chargee=fCharge->Val();
+	// if(dett==5){//CVT
+	//   fCVTrBank->SetEntry(fTrIndex->Val());
+	//   particle.SetTrChi2(fCVTrChi2->Val()/fCVTrNDF->Val());
+	// }
+	// else if(dett==6){//DC
+	//   fTBTrBank->SetEntry(fTrIndex->Val());
+	//   particle.SetTrChi2(fTBTrChi2->Val()/fTBTrNDF->Val());
+	// }
+	particle.SetTrChi2(fTrChi2->Val()/fTrNDF->Val());
 	
       }
-      // cout<<"Done cherenkoc "<<endl;
-	
-      while(fFTPindex->FindEntry(fPBank->GetEntry())){
-	//Do something if find a particular detector    fFTCALClust_t=fFTCALClustBank->GetItem("time");
-	fFTCALClustBank->SetEntry(fFTBank->GetEntry());
-	particle.SetTime(fFTCALClust_t->Val()); //This is currently HODO time
-	//	particle.SetTime(fFTTime->Val());
-	//particle.SetEdep(fFTEnergy->Val()); //This is currently HODO energy
-	particle.SetDeltaE(fFTEnergy->Val());
-	particle.SetPath(fFTPath->Val()/100); //Note as of 5.4.0 units will change, need to remove /100
-	//	particle.SetPath(sqrt(fFTX->Val()*fFTX->Val()+fFTY->Val()*fFTY->Val()+fFTZ->Val()*fFTZ->Val())/1000);
-	//	particle.SetPath(1.9);
+  	
+      while(fFTPindex->FindEntry(PEntry)){
+	if(fFTDet->Val()==10){//FTCAL
+	  particle.SetEdep(fFTEnergy->Val());
+	  particle.SetTime(fFTTime->Val());
+	  Double_t ftx=fFTX->Val();
+	  Double_t fty=fFTY->Val();
+	  Double_t ftz=fFTZ->Val();
+	  particle.SetPath(sqrt(ftx*ftx+fty*fty+ftz*ftz)/100);
+	  //	  particle.SetPath(fFTPath->Val()/100);
+	}
+	if(fFTDet->Val()==11){//FTHODO
+	  particle.SetDeltaE(fFTEnergy->Val());
+	}
+	// fFTCALClustBank->SetEntry(fFTBank->GetEntry());
+	// particle.SetTime(fFTCALClust_t->Val()); //This is currently HODO time
+	// particle.SetDeltaE(fFTEnergy->Val());
+	// particle.SetPath(fFTPath->Val()/100); //Note as of 5.4.0 units will change, need to remove /100
 	particle.SetDetector(-1000);
 	particle.SetPDGcode(fCharge->Val()*1E4);
 	

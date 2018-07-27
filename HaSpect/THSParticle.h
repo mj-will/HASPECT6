@@ -217,6 +217,7 @@ inline void THSParticle::Clear(){
   for(UInt_t ip=0;ip<5;ip++)
     fHypPList.at(ip)=0;
   fTrChi2=0;
+  fNPhot=0;
   fPDGCode=0;           //PDG number
   fTruthPDG=0;//! true PDG code
   fDetector=0; //detector code
@@ -236,6 +237,7 @@ inline void THSParticle::MinorClear(){
   for(UInt_t ip=0;ip<5;ip++)
     fHypPList.at(ip)=0;
   fTrChi2=0;
+  fNPhot=0;
   fDetector=0; //detector code
   fFiducialCut=1;
  }
