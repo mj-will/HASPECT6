@@ -68,7 +68,7 @@ class THSHipoReader: public THSDataManager{
   THipoItemB* fCalLayer=nullptr;
 
   THipoItemS* fChPindex=nullptr;
-  THipoItemS* fChEnergy=nullptr;
+  THipoItemF* fChEnergy=nullptr;
   THipoItemB* fChDetector=nullptr;
 
   THipoItemS* fTrPindex=nullptr;
@@ -76,6 +76,7 @@ class THSHipoReader: public THSDataManager{
   THipoItemS* fTrNDF=nullptr;
   THipoItemB* fTrDet=nullptr;
   THipoItemB* fTrq=nullptr;
+  THipoItemF* fTrChi2=nullptr;
 
   THipoItemS* fTBTrNDF=nullptr;
   THipoItemF* fTBTrChi2=nullptr;

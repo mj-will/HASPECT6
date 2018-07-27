@@ -278,9 +278,10 @@ void THSDataManager::InitOutput(TString filename){
   fWriteThis=kTRUE;
   //Make output directory if not existing
   if(!fWriteFile) gSystem->Exec(Form("mkdir -p %s",fOutDir.Data()));
-  if(!fCurFileName.Contains(".root")){
-      fCurFileName.Append(fFileAppend);
+  if(!filename.Contains(".root")){
+      filename.Append(".root");
   }
+  fCurFileName=filename;
   fWriteFile=new TFile(filename,"recreate");
   //fWriteFile->SetCompressionSettings(401);//LZ4
   fWriteTree=new TTree("HSParticles","data tree");
