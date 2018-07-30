@@ -1,9 +1,9 @@
-//Run with root --hsdata ConvertHSHipoTriggerChain.C --hsin=indir --hsout=outdir
+//Run with root --hsdata ConvertHSHipoTriggerChainMC.C --hsin=indir --hsout=outdir
 {
 
   THSHipoTrigger* reader=new THSHipoTrigger();
   reader->SetOutDir(HSout());
-  //  reader->SetWriteGenBranch("Generated"); //simulation only
+  reader->SetWriteGenBranch("Generated"); //simulation only
 
   TChain chain("hipo");
   chain.Add(HSin()+"/*.hipo");
@@ -11,7 +11,7 @@
 
   gBenchmark->Start("time");
   reader->SetTrigPeriod(1);                                                
-  //  reader->SetCurFactor(0.16283); //for 6GeV, for 10GeV you can remove this line 
+  // reader->SetCurFactor(0.16283); //for 6GeV, for 10GeV you can remove this line 
 
   reader->InitChain(&chain);
   reader->WriteParticles();

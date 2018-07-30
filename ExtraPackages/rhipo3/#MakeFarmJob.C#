@@ -116,7 +116,7 @@
   	continue;
       }
       if(outline.Contains("DISK_SPACE")){
- 	outline=TString("DISK_SPACE: ")+Form("%d GB",15*NFILES);//15GB per file
+ 	outline=TString("DISK_SPACE: ")+Form("%d GB",5*NFILES);//5GB per file
 	((TObjString*)script.GetListOfLines()->At(iline))->SetString(outline);
 	if(i==0)cout<<outline<<endl;
 	iline++;
