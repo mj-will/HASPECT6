@@ -56,7 +56,7 @@ class THSWeights : public TNamed{
   Bool_t GotEntry(){return fGotEntry;}
   Bool_t IsSorted(){return fIsSorted;}
   Long64_t GetCurrEntry(){return fCurrEntry;}
-  Long64_t Size(){return fWTree->GetEntries();}
+  Long64_t Size(){if(!fWTree) return 0;return fWTree->GetEntries();}
   void Add(THSWeights* wm);
   // void Multiply(THSWeights* other,TString species);
   void SetSpecies(TString name);

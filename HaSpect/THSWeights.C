@@ -313,6 +313,7 @@ void THSWeights::Save(){
 void THSWeights::LoadSaved(TString fname,TString wname){
   TDirectory* savedir=gDirectory;
   TFile* wfile=new TFile(fname);
+  if(!wfile) return;
   wfile->ls();
   THSWeights* file_wts=(THSWeights*)wfile->Get(wname);//read into memory
   fName=file_wts->GetName();

@@ -587,10 +587,10 @@ Bool_t RooHSEventsPDF::AddProtoData(RooDataSet* data){
   //Look for variables in data that were not in fEvTree
   while(RooAbsArg* arg=(RooAbsArg*)iter()){
     if(fEvTree->GetBranch(arg->GetName())) continue; //already exists
-    for(UInt_t ip=0;ip<fNvars;ip++)
+    for(Int_t ip=0;ip<fNvars;ip++)
       if(TString(arg->GetName())==TString(fProxSet[ip]->GetName()))
 	protoDataForVar.push_back(ip);
-    for(UInt_t ip=0;ip<fNcats;ip++)
+    for(Int_t ip=0;ip<fNcats;ip++)
       if(TString(arg->GetName())==TString(fCatSet[ip]->GetName()))
 	protoDataForCat.push_back(ip);
     Info("RooHSEventsPDF::AddProtoData","Added data branch %s",arg->GetName());
