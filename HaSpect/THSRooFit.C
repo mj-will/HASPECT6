@@ -333,7 +333,7 @@ void THSRooFit::SetDataWeight(){
   fData->Print();
   //if(ftoWS) fWS->import(*fData); //import if told to
   // else if(!(fDataBins))fWS->import(*fData); //or no databins to confuse it
-  delete fInWeights;fInWeights=nullptr;
+  // delete fInWeights;fInWeights=nullptr;
 }
 void THSRooFit::SetDataWeightFast(){
   //Ignore ID just merge with dataset which should have same entries
@@ -944,13 +944,10 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
   TDirectory *saveDir=gDirectory;
   //Loop over bins
   for(Int_t ib=0;ib<GetBins()->GetN();ib++){
-    // Fit1SavedBin(ib,Nfits);
     TChain *chainData=new TChain("BinnedTree");
     chainData->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
     cout<<"Data chain "<<GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
-    // TFile* binDFile=new TFile(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+"Data"+".root");
-    // TTree* chainData=(TTree*)binDFile->Get("BinnedTree");
-    
+     
     THSRooFit* rf=CreateSubFitBins(chainData,GetBins()->GetBinName(ib),kFALSE);
      //look for RooHSEventsPDFs to get MC events trees
     for(Int_t ip=0;ip<fPDFs.getSize();ip++){
@@ -958,7 +955,6 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
       RooHSEventsPDF* hspdf=0;
       if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
 	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
-	hspdf->ResetTree();
 	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
 	TChain *chainMC=new TChain("BinnedTree");
 	//pdf has ownership of chain when set
