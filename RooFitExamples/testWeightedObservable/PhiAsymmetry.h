@@ -8,12 +8,13 @@
 #define PHIASYMMETRY
 
 #include "RooAbsPdf.h"
+#include "RooHSEventsPDF.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
  
-class PhiAsymmetry : public RooAbsPdf {
+class PhiAsymmetry : public RooHSEventsPDF {
 public:
   PhiAsymmetry() {} ; 
   PhiAsymmetry(const char *name, const char *title,
@@ -35,6 +36,8 @@ protected:
   RooRealProxy B ;
   
   Double_t evaluate() const ;
+  Double_t evaluateMC(const vector<Float_t> *vars,const  vector<Int_t> *cats) const ;
+  void MakeSets();
 
 private:
 

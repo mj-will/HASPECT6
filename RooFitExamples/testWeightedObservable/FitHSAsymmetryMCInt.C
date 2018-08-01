@@ -3,24 +3,34 @@
 
 {
   THSRooFit* RF=new THSRooFit("AFit");
-  RF->SetOutDir("outAsymmetry/");
+  RF->SetOutDir("outAsymmetryMCInt/");
  ///////////////////////////////Load Variables
   RF->LoadVariable("Phi[-180,180]");//going to fit this
-  RF->LoadVariable("Pol[0,1]");//but fix polarisation event-by-event
-  RF->LoadVariable("PolState[Polp=1,Polm=-1]");//important this syntax loads the integer PolState as a RooCategory which is required for asymmetries, not RooRealVar
 
   RF->LoadBinVars("Mmiss",1,0,10);//for consistency same range as signal fit
   RF->LoadBinVars("Eg",4,3,4);//here use smae energy bins
 
+  ///////////////////////////Load MC
+  TChain chainMC("MyModel");
+  chainMC.Add("MC.root");
+  RF->SetIDBranchName("fgID");
+  //////////////////////////////Split data into bins and load them
+  RF->MakeBinnedTrees(&chainMC,"SigAsym"); //Note SigAsym-->PhiAsymmetry::SigAsym 
   ///////////////////////////Load Data
+  //Add data specific branches
+  RF->LoadVariable("Pol[0,1]");//but fix polarisation event-by-event
+  RF->LoadVariable("PolState[Polp=1,Polm=-1]");//important this syntax loads the integer PolState as a RooCategory which is required for asymmetries, not RooRealVar
   TChain chain("MyModel");
-  chain.AddFile("Data.root");
+  chain.Add("Data.root");
   RF->SetIDBranchName("fgID");
   //////////////////////////////Split data into bins and load them
   RF->MakeBinnedTrees(&chain,"Data");
+
+
+  
   RF->ConfigureSavedBins(RF->GetOutDir());
   //Add integrated weights file
-  RF->LoadWeights("outSignal/WeightsbinFit.root ","WeightMap");
+  RF->LoadWeights("outWeights/binFitTweights.root ","HSsWeights");
   RF->SetWeightName("Signal"); //Same as Signal species in FitHSSimpleBins
 
   /////////////////////////////Make asymmetry model A and B are fit parameters
@@ -29,7 +39,7 @@
  
 
   gBenchmark->Start("Binned");
-  RF->FitSavedBins(1,kFALSE);//argument gives number of parameter fits to perform
+  RF->FitSavedBins(1,kFALSE);//FALSE so can use fits to draw asymmetries
   gBenchmark->Stop("Binned");
   gBenchmark->Print("Binned");
 
