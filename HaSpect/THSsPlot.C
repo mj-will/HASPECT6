@@ -455,6 +455,10 @@ void THSsPlot::FitSavedBins(Int_t Nfits,Bool_t cleanup){
   fWeights=wts;
   // fWeights->Save();
 }
+void THSsPlot::FitBatchBin(Int_t Nfits, TString DataFileName){
+  THSRooFit::FitBatchBin(Nfits,DataFileName);
+  if(fWeights)fWeights->Save();
+}
 void THSsPlot::DefaultFitOptions(){
   // AddFitOption(RooFit::Extended());
   // if(fData)

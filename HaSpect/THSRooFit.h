@@ -185,8 +185,8 @@ public:
   void SavePlots(TString filename);
   virtual void FitMany(Int_t Nfits=1);
   virtual void FitSavedBins(Int_t Nfits,Bool_t cleanup=kTRUE);
-  virtual void StudySavedBins(Int_t Nfits,Bool_t cleanup=kTRUE);
-  virtual void FitBatchBin(Int_t Nfits);
+  // virtual void StudySavedBins(Int_t Nfits,Bool_t cleanup=kTRUE);
+  virtual void FitBatchBin(Int_t Nfits,TString DataFileName="Data");
   virtual void FitAndStudy(Int_t Nfits=1);
   virtual void FitSplitIntegral(Int_t Nfits);
   void RandomisePars();
@@ -215,6 +215,7 @@ public:
     if(pdf)fHSPDF_Ranges.push_back(pdf);
     else Warning("THSRooFit::AddHSPDF_Ranges","Pdf named %s is not a ROooHSEventsPDF",pdfname.Data());
   }
+  void RemovePDF(Int_t iPDF);
 
   //void StudyFit();
   void SetNStudyTrials(Int_t Nt){fNStudyTrials=Nt;}

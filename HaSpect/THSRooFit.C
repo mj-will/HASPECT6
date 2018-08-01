@@ -959,11 +959,17 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
 	TChain *chainMC=new TChain("BinnedTree");
 	//pdf has ownership of chain when set
 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
-	hspdf->SetEvTree(chainMC,fCut);
-	hspdf->AddProtoData(rf->GetDataSet());
-	RooHSEventsHistPDF* histspdf=0;
-	if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
-	  histspdf->CreateHistPdf();
+	if(!chainMC->GetEntries()||!hspdf->IsValid()){
+	  RemovePDF(ip);
+	  ip--;
+	}
+	else{
+	  hspdf->SetEvTree(chainMC,fCut);
+	  hspdf->AddProtoData(GetDataSet());
+	  RooHSEventsHistPDF* histspdf=0;
+	  if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
+	    histspdf->CreateHistPdf();
+	}
 	delete chainMC;
       }
     } 
@@ -978,50 +984,55 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
     //delete binDFile;
   }
 }
-void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
-  if(!fDataBins->GetN()) return;
-  Info("THSRooFit::StudySavedBins","Going to run %d fits from %s",Nfits,fBinDir.Data());
-  if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
-  TDirectory *saveDir=gDirectory;
-  //Loop over bins
-  for(Int_t ib=0;ib<GetBins()->GetN();ib++){
-    THSRooFit* rf=CreateSubFitBins(nullptr,GetBins()->GetBinName(ib),kFALSE);
-     //look for RooHSEventsPDFs to get MC events trees
-    for(Int_t ip=0;ip<fPDFs.getSize();ip++){
-      RooAbsPdf* pdf=rf->GetWorkSpace()->pdf(fPDFs[ip].GetName());
-      RooHSEventsPDF* hspdf=0;
-      if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
-	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
-	hspdf->ResetTree();
-	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
-	TChain *chainMC=new TChain("BinnedTree");
-	//pdf has ownership of chain when set
-	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
-	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
+// void THSRooFit::StudySavedBins(Int_t Nfits,Bool_t cleanup){
+//   if(!fDataBins->GetN()) return;
+//   Info("THSRooFit::StudySavedBins","Going to run %d fits from %s",Nfits,fBinDir.Data());
+//   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
+//   TDirectory *saveDir=gDirectory;
+//   //Loop over bins
+//   for(Int_t ib=0;ib<GetBins()->GetN();ib++){
+//     THSRooFit* rf=CreateSubFitBins(nullptr,GetBins()->GetBinName(ib),kFALSE);
+//      //look for RooHSEventsPDFs to get MC events trees
+//     for(Int_t ip=0;ip<fPDFs.getSize();ip++){
+//       RooAbsPdf* pdf=rf->GetWorkSpace()->pdf(fPDFs[ip].GetName());
+//       RooHSEventsPDF* hspdf=0;
+//       if((hspdf=dynamic_cast<RooHSEventsPDF*>(pdf))){    
+// 	Info("HSRooFit::FitSaved","Found RooHsAbsEventsPDF %s",hspdf->GetName());
+// 	hspdf->ResetTree();
+// 	cout<<"MC CHAIN "<<fPDFs[ip].GetName()<<endl;
+// 	TChain *chainMC=new TChain("BinnedTree");
+// 	//pdf has ownership of chain when set
+// 	chainMC->Add(GetBinDir()+GetBins()->GetBinName(ib)+TString("/Tree")+hspdf->GetName()+".root");
+// 	//	if(!hspdf->SetEvTree(chainMC)) {Error("THSRooFit::FitSavedBins","problem with chain for %s",hspdf->GetName());exit(0);}
 
-	hspdf->SetEvTree(chainMC,fCut);
-	//	hspdf->AddProtoData(rf->GetDataSet());
-	delete chainMC;
-      }
-    } 
-    //Configured the fir for this bin now do it
-    if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
-    //rf->StudyFit();
-    if(cleanup){
-      delete rf;rf=nullptr;
-    }
-  }
+// 	hspdf->SetEvTree(chainMC,fCut);
+// 	//	hspdf->AddProtoData(rf->GetDataSet());
+// 	delete chainMC;
+//       }
+//     } 
+//     //Configured the fir for this bin now do it
+//     if(fModel)rf->TotalPDF();//total PDF defined in parent so also for child
+//     //rf->StudyFit();
+//     if(cleanup){
+//       delete rf;rf=nullptr;
+//     }
+//   }
   
-}
-void THSRooFit::FitBatchBin(Int_t Nfits){
+// }
+void THSRooFit::FitBatchBin(Int_t Nfits, TString DataFileName){
   
   Info("THSRooFit::FitBatchBin","Goint to run fit from %s",fBinDir.Data());
   if(!fWS->set(TString(GetName())+"PDFs"))DefineSets();
   TDirectory *saveDir=gDirectory;
 
   TChain *chainData=new TChain("BinnedTree");
-  chainData->Add(GetBinDir()+TString("/Tree")+"Data"+".root");
-  cout<<"Data chain "<<GetBinDir()+TString("/Tree")+"Data"+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
+  chainData->Add(GetBinDir()+TString("/Tree")+DataFileName+".root");
+  cout<<"Data chain "<<GetBinDir()+TString("/Tree")+DataFileName+".root"<<" "<<chainData->GetEntries()<<" "<<chainData->GetName()<<endl;
+
+  if(!chainData->GetEntries()){
+	delete chainData;
+	return;
+  }
   LoadDataSet(chainData);
   //look for RooHSEventsPDFs to get MC events trees
   for(Int_t ip=0;ip<fPDFs.getSize();ip++){
@@ -1033,13 +1044,18 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
       TChain *chainMC=new TChain("BinnedTree");
       //pdf has ownership of chain when set
       chainMC->Add(GetBinDir()+TString("/Tree")+hspdf->GetName()+".root");
-      hspdf->SetEvTree(chainMC,fCut);
-      hspdf->AddProtoData(GetDataSet());
-      RooHSEventsHistPDF* histspdf=0;
-      if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
-	histspdf->CreateHistPdf();
-      delete chainMC;
-      
+      if(!chainMC->GetEntries()||!hspdf->IsValid()){
+	RemovePDF(ip);
+	ip--;
+      }
+      else{
+	hspdf->SetEvTree(chainMC,fCut);
+	hspdf->AddProtoData(GetDataSet());
+	RooHSEventsHistPDF* histspdf=0;
+	if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
+	  histspdf->CreateHistPdf();
+     }
+      delete chainMC;    
     }
   }
   SetDataWeight();//if defined weights use them for this dataset
@@ -1047,6 +1063,15 @@ void THSRooFit::FitBatchBin(Int_t Nfits){
   FitAndStudy(Nfits);
   delete chainData;
   
+}
+void THSRooFit::RemovePDF(Int_t iPDF){
+    RooRealVar* yield0=(RooRealVar*)&fYields[iPDF];
+    GetPDFsp()->remove(GetPDFs()[iPDF]);
+    GetYieldsp()->remove(*(GetWorkSpace()->var(yield0->GetName())));
+    GetWorkSpace()->removeSet("Yields");
+    GetWorkSpace()->removeSet("PDFs");
+    GetWorkSpace()->defineSet("Yields",GetYields());
+    GetWorkSpace()->defineSet("PDFs",GetPDFs());	
 }
 void THSRooFit::FitAndStudy(Int_t Nfits){
    //Create new fit and load the new bin data tree

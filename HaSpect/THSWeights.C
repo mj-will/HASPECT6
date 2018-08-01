@@ -316,6 +316,7 @@ void THSWeights::LoadSaved(TString fname,TString wname){
   if(!wfile) return;
   wfile->ls();
   THSWeights* file_wts=(THSWeights*)wfile->Get(wname);//read into memory
+  if(!file_wts) return;
   fName=file_wts->GetName();
   fTitle=file_wts->GetTitle();
   cout<<fName<<" "<<fTitle<<endl;

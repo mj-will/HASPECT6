@@ -45,7 +45,7 @@ RooHSEventsPDF::RooHSEventsPDF(const RooHSEventsPDF& other, const char* name) : 
     fCheckInt=other.fCheckInt;
     fUseWeightsGen=other.fUseWeightsGen;
     fCut=other.fCut;
-
+    fIsValid=other.fIsValid;
     fUseEvWeights=other.fUseEvWeights;
     fEvWeights=other.fEvWeights;
     fWgtSpecies=other.fWgtSpecies;
@@ -464,7 +464,8 @@ void  RooHSEventsPDF::LoadWeights(TString species,TString wfile,TString wname){
   fInWeights=nullptr;
   fInWeights=new THSWeights();
   fInWeights->LoadSaved(wfile,wname);
-  
+  if(fInWeights->GetSpeciesID(species)==-1)fIsValid=kFALSE;
+
   fInWeights->PrintWeight();
   fWgtSpecies = species;
   fUseEvWeights=kTRUE;

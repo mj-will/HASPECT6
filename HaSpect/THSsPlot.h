@@ -49,6 +49,7 @@ public:
   void DeleteWeights(){if(fWeights)delete fWeights;fWeights=nullptr;};
   virtual void FitAndStudy(Int_t Nfits);
   virtual void FitSavedBins(Int_t Nfits,Bool_t cleanup=kTRUE);
+  virtual void FitBatchBin(Int_t Nfits, TString DataFileName);
   virtual void DefaultFitOptions();
   void SetSaveWeights(Bool_t save=kTRUE){fSaveWeights=save;}
   

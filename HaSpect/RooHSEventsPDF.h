@@ -57,7 +57,8 @@ class RooHSEventsPDF : public RooAbsPdf {
   Bool_t fForceNumInt=kFALSE;
   Bool_t fUseWeightsGen=kTRUE;
   Bool_t fUseEvWeights=kFALSE;
- 
+  Bool_t fIsValid=kTRUE;
+
   TString fWgtSpecies;
   TString fCut; //cut for applying to event tree
  
@@ -125,6 +126,8 @@ class RooHSEventsPDF : public RooAbsPdf {
   void SetNRanges(Int_t nr){fNRanges=nr;}
   void SetNextRange(Int_t ir);
   RooHSEventsPDF* GetParent(){return fParent;}
+  Bool_t IsValid(){return fIsValid;}
+
   ClassDef(RooHSEventsPDF,1) // Yor description goes here...
 };
  

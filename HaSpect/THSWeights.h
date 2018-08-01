@@ -65,7 +65,7 @@ class THSWeights : public TNamed{
   StrIntMap_t* GetSpeciesp(){return &fSpecies;}
   TString GetSpeciesName(UInt_t isp);
   void SetSpecies(StrIntMap_t species){fSpecies=species;};
-  Int_t GetSpeciesID(TString name){if(fSpecies.count(name))return fSpecies[name]; else {cout<<"THSWeights:: GetSpeciesID species not found "<<endl;return -1;}}
+  Int_t GetSpeciesID(TString name){if(fSpecies.count(name))return fSpecies[name]; else {cout<<"THSWeights:: GetSpeciesID species not found in "<<GetName()<<" species= "<<name<<endl;return -1;}}
   TString GetIDName(){return fIDName;}
   void SetIDName(TString name){fIDName=name;}
 
