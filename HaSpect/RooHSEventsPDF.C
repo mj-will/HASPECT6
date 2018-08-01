@@ -432,6 +432,7 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
   delete elist;elist=nullptr;
   
   //Read weights into fEvWeights
+  cout<<"IN WEIGHTS "<<fInWeights<<endl;
   if(fInWeights){
     fEvWeights.clear();
     if(fEvTree->GetBranch(fInWeights->GetIDName())){ //the weight ID branch is in fEvTree
@@ -446,7 +447,7 @@ Bool_t RooHSEventsPDF::SetEvTree(TTree* tree,TString cut,Long64_t ngen){
         fEvWeights.push_back(fInWeights->GetWeight(fWgtSpecies));
       }
     }
-    delete fInWeights;fInWeights=nullptr;
+    //delete fInWeights;fInWeights=nullptr;
   }
   if(dynamic_cast<TChain*>(fEvTree)){
     TTree* coptree=fEvTree->CloneTree(0);//convert chain to tree
