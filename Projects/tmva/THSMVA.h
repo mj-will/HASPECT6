@@ -82,24 +82,24 @@ class THSMVA : public TNamed {
         Bool_t fPrintVariables=true;
         // vectors for setting up variables
         std::vector<TString> fVariableID = {"Time", "Edep","DeltaE", "PreE", "P", "Th", "Phi", "Vz", "TrChi2"};
-        std::vector<TString> fTypes = {"F", "F", "F", "F", "F", "F", "F", "F", "F"};
+        std::vector<TString> fTypes = {"F", "F", "F", "F", "F", "F", "F", "F", "F", "F"};
         std::vector<TString> fParticleID = {"El", "P", "Pip", "Pim"};
         // vectors for selecting particles for splits 
+        // vectors for default particles for topologies (0-3)
         std::vector<Int_t> fElTopologies = {0, 1, 2, 3};
         std::vector<Int_t> fPTopologies = {0, 1, 2};
         std::vector<Int_t> fPipTopologies = {0, 1, 3};
         std::vector<Int_t> fPimTopologies = {0, 2, 3};
-        std::vector<Int_t> fSelectedParticles;
-        
+        std::vector<Int_t> fSelectedParticles; // vec that will contain particles to use if spliting
+        // vectors for traning and application setup 
         std::vector<Method> fMethods;
         std::vector<Split> fSplits;
-        
-        static std::vector<std::vector<TString>> fNames;
-        std::vector<std::vector<TString>> fSelectNames;
-        static std::vector<std::vector<Float_t>> fTreeVarsF;
-        std::vector<std::vector<Int_t>> fTreeVarsI;
-        std::vector<std::vector<Int_t>> fTopologies;
-        std::vector<std::vector<Int_t>> fParticleTopologies;
+        // vectors of variables  
+        static std::vector<std::vector<TString>> fNames;        // names for branches for tree
+        std::vector<std::vector<TString>> fSelectNames;         // vec of reduced set of names
+        static std::vector<std::vector<Float_t>> fTreeVarsF;    // Float_t type variables for tree
+        std::vector<std::vector<Int_t>> fTreeVarsI;             // Int_t type variables for tree
+        std::vector<std::vector<Int_t>> fParticleTopologies;    // topologies for each each particle
 
     public:
         ClassDef(THSMVA,1); //class THSParticle
@@ -108,10 +108,15 @@ class THSMVA : public TNamed {
         void SetVariables(std::vector<TString> tmpVariables) {fVariableID = tmpVariables;};
         void SetTypes(std::vector<TString> tmpTypes) {fTypes = tmpTypes;};
         void SetParticles(std::vector<TString> tmpParticles) {fParticleID = tmpParticles;};
+
         void SetSplits(std::vector<Split> splits) {fSplits = splits;};
         void SetMethods(std::vector<Method> methods) {fMethods = methods;};
-        void SetNames();
-        void SetTopologies();
+
+        void SetNames();    // set names from variables and particles
+        void SetNames(std::vector<std::vector<TString>> names) {fNames = names;};
+
+        void SetTopologies();   // set topologies for each particle given particles
+        void SetTopologies(std::vector<std::vector<Int_t>> topologies) {fParticleTopologies = topologies;};
         
         //functions to return variables
         std::vector<Split> GetSplits() const {return fSplits;};

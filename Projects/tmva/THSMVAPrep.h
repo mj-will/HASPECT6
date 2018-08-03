@@ -18,7 +18,7 @@ class THSMVAPrep : public THSMVA {
     protected :
 
         TTree* fBaseTree=nullptr;//!
-
+        Int_t fTmpInt=0;
         Int_t fCountF = 0;
         Int_t fCountI = 0;
         UInt_t fNVarsF = 0;

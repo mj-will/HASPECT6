@@ -6,6 +6,7 @@
 #include "THSParticle.h"
 #include "THSCLAS12Trigger.h"
 #include "THSCLAS12DeltaTime.h"
+#include <TEventList.h>
 //#include "THSMVA.h"
 #include "THSMVAPrep.h"
 #include "THSMVATrain.h"
@@ -80,10 +81,17 @@ class THS2pi : public THSFinalState{
   // vector for MVA
   vector<THSParticle * > fParticles;
 
+  Int_t fSignalCount=0;
+  Int_t fBackgroundCount=0;
+  Int_t fSplitCount=0;
+
 
   //TMVA
   Bool_t fIsTMVA=kTRUE;
   Bool_t fIsTrain=kFALSE;
+
+  TEventList * fEventList=nullptr;//!
+  std::vector<Split> fSplits;
  public:
   virtual void TMVAOutTree(TTree* tree);
   void TMVAFill();
@@ -95,6 +103,7 @@ class THS2pi : public THSFinalState{
 
   virtual void FinalStateOutTree(TTree* tree);
 
+  Int_t CheckSignalCount(TTree* tree, Int_t N);
  
 
 };

@@ -22,9 +22,8 @@ ClassImp(THSMVATrain);
 THSMVATrain::THSMVATrain(){
     TMVA::Tools::Instance();
     // set output for TMVA
-    fOutputName = "THSMVAClassification.root";
-    fOutputFile = new TFile(fOutputName, "RECREATE");
-    // TODO : fix file saving
+    //fOutputName = "THSMVAClassification.root";
+    //fOutputFile = new TFile(fOutputName, "RECREATE");
 }
 
 //std::vector<Method> THSMVATrain::fMethods;
@@ -34,7 +33,7 @@ std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
 
 
 /*
- * Default training function that
+ * Default training function
  *
  */
 
@@ -59,7 +58,7 @@ void THSMVATrain::DefaultTrain(){
             fSplits[i].AddMVAVariables(fMVAVariables, fMVATreeVars);
             //fSplits[i].SetPointer(fTopo);
             fSplits[i].SetParticles(fSelectedParticles);
-
+            SetOutputFile("THSMVAClassification"+ fSplits[i].GetSplitName() + ".root");
             Setup(fSplits[i].GetSplitName());
 
             SetSignalTree(fSplits[i].GetTreeSplit());
@@ -71,12 +70,14 @@ void THSMVATrain::DefaultTrain(){
 
             
         }
-        EndTraining();
+        //EndTraining();
     }
     else{
 
        SetMVAVariables(); 
        
+       SetOutputFile("THSMVAClassification.root");
+
        Setup();
 
        SetSignalTree();
@@ -86,7 +87,7 @@ void THSMVATrain::DefaultTrain(){
        Train();
        if (fTest) { Test(); }
        
-       EndTraining();
+       //EndTraining();
     }
 }
 
@@ -314,7 +315,8 @@ void THSMVATrain::Train(){
     fOutputFile->cd();
 
     // TODO : options for preparing training
-    fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
+    //fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
+    fDataloader->PrepareTrainingAndTestTree((TCut("")),10000,10000,-1,-1,"SplitMode=Random:NormMode=NumEvents:!V" );
 
     if (fMethods.empty()){
         std::cout<<"No methods provided..."<<std::endl;
@@ -338,10 +340,9 @@ void THSMVATrain::Train(){
 
 void THSMVATrain::Test(){
 
-    fOutputFile->cd();
-
     fFactory->TestAllMethods();
     fFactory->EvaluateAllMethods();
+    fOutputFile->Close(); // must close file in same function as evaluation
 }
 
 /*
@@ -381,8 +382,5 @@ THSMVATrain::~THSMVATrain(){
     delete fBackgroundTree;
 
     delete fOutputFile;
-    delete fTreeOutputFile;
-
-    // TODO : destructor
 
 }

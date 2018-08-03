@@ -106,7 +106,7 @@ void THSMVAPrep::RemoveNaNs(){
 void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
     fCountF = 0;
     fCountI = 0;
-    //std::cout<<"Adding variables..."<<std::endl;
+
     for (auto const& v : fVariableID) {
         if (v == "Time") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaTime(); fCountF++;};
         if (v == "Edep") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Edep(); fCountF++;};
@@ -117,7 +117,9 @@ void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) 
         if (v == "Phi") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Phi(); fCountF++;};
         if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
         if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
-        if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;};
+        // convert to float for training
+        if (v == "Det") {fTreeVarsF[tmpPCount][fCountF] = Float_t(tmpParticle->Detector()); fCountF++;
+        }
     }
 }
 

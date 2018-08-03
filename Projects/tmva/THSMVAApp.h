@@ -9,6 +9,8 @@
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
 #include "TStopwatch.h"
+#include "TH2F.h"
+#include "TH2D.h"
 #include <THSParticle.h>
 
 
@@ -34,8 +36,11 @@ class THSMVAApp : public THSMVA {
   TString fOutputName;
   TString fMethodName;
   TString fWeightFile;
+
+  TString fHistName;
   TString fHistNameSig;
   TString fHistNameBkg;
+  TString fCutString;
 
   TStopwatch fSW;
 
@@ -49,10 +54,15 @@ class THSMVAApp : public THSMVA {
   std::vector<std::vector<Float_t>> fAppVars;
   std::vector<std::vector<TString>> fAppVariableNames;
 
+  TCanvas *fCanvas;
+
   TCut fCutSignal;
   TCut fCutBackground;
+  TCut fTopoCut;
   TH1F *fHist1DSig=nullptr;//!
   TH1F *fHist1DBkg=nullptr;//!
+  TH1F *fHist1D=nullptr;//!
+  TH2F *fHist2D=nullptr;//!
 
  public:
   void SetAppTree(TTree* tree){fAppTree = tree;};

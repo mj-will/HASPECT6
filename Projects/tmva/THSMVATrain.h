@@ -26,12 +26,10 @@ class THSMVATrain : public THSMVA {
         TTree* fSignalTree=nullptr;//!
         TTree* fBackgroundTree=nullptr;//!
 
-        TFile* fTreeOutputFile=nullptr;//!
         TFile* fOutputFile=nullptr;//!
 
         TDirectory* fOutputDir=nullptr;
 
-        TString fTreeOutputName;
         TString fOutputName;
         TString fDatasetName;
 
@@ -67,6 +65,8 @@ class THSMVATrain : public THSMVA {
 
         void SetSignalTree(TString Filter = "");
         void SetBackgroundTree(TString Filter = "");
+
+        void SetOutputFile(TString fileName){fOutputFile = new TFile(fileName, "RECREATE");};
 
         void Setup(TString datasetName = "");
         void Train();

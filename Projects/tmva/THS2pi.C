@@ -85,11 +85,12 @@ void THS2pi::FileStart(){
       std::cout<<"Setting MVA trees..."<<std::endl;
       fMVAPrep.SetNames();
 
-      //fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
-      //fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
-      //fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
-      //fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
-      //fMVATrain.PrintSplits();
+      fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
+      fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
+      fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
+      fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
+      fMVATrain.PrintSplits();
+      fSplits = fMVATrain.GetSplits(); 
       //
       Method method0;
       method0.fMethodName = "BDT0";
@@ -102,6 +103,13 @@ void THS2pi::FileStart(){
       method1.fMethodType = TMVA::Types::kBDT;
       method1.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
       fMVATrain.AddMethod(method1);
+      Method method2;
+      method2.fMethodName = "MLP";
+      method2.fMethodType = TMVA::Types::kMLP;
+      method2.fMethodParameters = "H:!V:NeuronType=ReLU:EstimatorType=CE:learningRate=0.001:VarTransform=None:NCycles=20:HiddenLayers=64:TestRate=5:BatchSize=128:BPMode=batch";
+      
+      //fMVATrain.AddMethod(method2);
+
       std::cout<<"  Finished setting methods and splits"<<std::endl;
       fMVAPrep.SetTree(fFinalTree);
       fMVATrain.SetTrainTree(fFinalTree);
@@ -212,16 +220,55 @@ void THS2pi::Kinematics(){
   if (fIsTMVA){
       PrepFillVars(); // for trains
       fMVAPrep.RemoveNaNs();
+      // TODO : figure out how to get correct flag
+      //std::cout<<fGotCorrectOne<<std::endl;
+      //if (fGotCorrectOne==1){fSignalCount++;};
+      //if (fCorrect==0){fBackgroundCount++;};
 
       //fMVAApp.GetResponse();
 
   }
   else{
+  
       AppFillVars();
       fMVAApp.ProcessEvent();
   }
 
 }
+
+Int_t THS2pi::CheckSignalCount(TTree* tree, Int_t N){
+    //tree->Print();
+    if (!fSplits.empty()){
+        fSplitCount = 0;
+        for (UInt_t i=0; i<fSplits.size(); i++){
+            tree->Draw(">>eventlist","Correct==1&"+fSplits[i].GetTreeSplit(),"goff"); 
+            fEventList = (TEventList*)gDirectory->Get("eventlist");
+            if (fEventList){
+                fSignalCount = fEventList->GetN();
+            }
+            else fSignalCount = 0;
+            std::cout<<"\r"<<"    Signal count for split "<<i<<": "<<fSignalCount;
+            // check if criteria met for this split
+            if (fSignalCount >= N){ fSplitCount++;};
+        }
+        // only return true if all splits have met criteria
+        if (fSplitCount == fSplits.size()) return kTRUE;
+        else return kFALSE;
+    }
+    else{
+        tree->Draw(">>eventlist","Correct==1","goff"); 
+        fEventList = (TEventList*)gDirectory->Get("eventlist");
+        //std::cout<<"Getting number od entries"<<std::endl;
+        if (fEventList){
+            fSignalCount = fEventList->GetN();
+        }
+        else fSignalCount = 0;
+        std::cout<<"\r"<<"    Signal count: "<<fSignalCount;
+        if (fSignalCount >= N)return kTRUE;
+        else return kFALSE;
+    }
+}
+
 //////////////////////////////////////////////////
 /// Define conditions for track to be considered
 /// good in event. Adding conditions on junk tracks
