@@ -1,0 +1,7 @@
+#Processing Run 48525 for polarization tables
+#The run table thinks this was a POLpara run
+#Corresponding AMO file is :/home/clasg8/rootbeer2.1/dat/pol/amo_tesc_48492.dat
+#Coherent Edge positions for TESC events follow:
+#Event	Coh Edge	PolPlane(PARA=0,PERP=1,AMO=2,CHANGING=3)
+#WARNING: table and EPICS differ on the Plane
+Using	99999999	 0.0	0

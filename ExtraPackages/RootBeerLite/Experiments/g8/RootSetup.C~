@@ -1,0 +1,13 @@
+ {
+  TString G13=gSystem->Getenv("G13");
+  TString ROOTBEER_SLIB=gSystem->Getenv("ROOTBEER_SLIB");
+  TString DECAYUTILS=gSystem->Getenv("DECAYUTILS");
+  LoadMacro("THSRootBeer.C");
+
+  gSystem->Load(ROOTBEER_SLIB+"/libeloss.so");
+  //Linear polarisation
+  LoadMacro(G13+"LinearPol.C");
+  LoadMacro(DECAYUTILS+"/DecayTrackFunctions.cc");
+  LoadMacro(DECAYUTILS+"/DecayTrackCorrections.cc");
+  LoadMacro(DECAYUTILS+"/DecayFiducialCuts.cc");
+ }		

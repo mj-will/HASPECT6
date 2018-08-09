@@ -690,6 +690,7 @@ void THSFinalState::AutoIter(){
       //And first select those
       Bool_t NotEnough=kFALSE;
       for(UInt_t ic=0;ic<subConfigs[it].size();){
+	cout<<"Subconfig "<<it<<" "<<ic<<endl;
        	THSParticleConfig* parent=nullptr;
       	THSParticleConfig* child = subConfigs[it][ic];
        	if((parent=child->Parent())){
@@ -700,7 +701,7 @@ void THSFinalState::AutoIter(){
  	  //Now look to see if there are identical particle of this parent type
 	  //We do not want to double count these
 	  vector<THSParticleConfig* > all_parents=HowManyParticles(parent->PDG());
-	  //cout<<"Parents "<<all_parents.size()<<" "<<child->PDG()<<" "<<child_pdg.size()<<endl;
+	  cout<<"Parents "<<all_parents.size()<<" "<<child->PDG()<<" "<<child_pdg.size()<<endl;
 	  Int_t NUsedParents=1;
 	  for(UInt_t io=0;io<all_parents.size();io++){
 	    if(all_parents[io]==parent)continue; //don't count this one again
@@ -740,6 +741,7 @@ void THSFinalState::AutoIter(){
 	    //Don't incerement isp in case we removed one, this will move on to the next one
 	  }
 	  
+	  cout<<"Number "<<Nconfig_pid<< " "<<N_pid<<" "<<NUsedParents<<" "<<NtheseChild/NUsedParents<<" "<<NotEnough<<endl;
 	  THSParticleIter* diter_s=AddSelectToSelected(diter0,NUsedParents,NtheseChild/NUsedParents,&child_pdg);
 	    
 	  // Nconfig_pid-=NtheseChild;
@@ -766,7 +768,7 @@ void THSFinalState::AutoIter(){
       	ic++;
 	//continue;
       }
-      
+      cout<<"and then "<<NotEnough<<" "<<Nconfig_pid<<" "<<N_pid<<" "<<typePDG<<endl;
       if(NotEnough) break;
       if(Nconfig_pid==0) break; //selected everything already
       if(N_pid==0) break; //selected everything already
@@ -777,7 +779,7 @@ void THSFinalState::AutoIter(){
 	  evtparts.push_back(subConfigs[it][isp]->Particle());
 	  N_pid--; //number of this pid left in topo
 	  Nconfig_pid--; //number of configured particles left
-	  if(N_pid==0) break;
+	  //if(N_pid==0) break;
 	  if(Nconfig_pid==0) break;
 	  NtruePDG--;  //number of this pdg left in curr topo
 	}
@@ -790,7 +792,7 @@ void THSFinalState::AutoIter(){
       // Nconfig_pid-=evtparts.size();
       // N_pid-=evtparts.size();
       if(Nconfig_pid==0) break; //selected everything already
-      if(N_pid==0) break; //selected everything already
+      // if(N_pid==0) break; //selected everything already
       //pass the remainder on for selection
       THSParticleIter* diter_r=AddSelectToRemainder(diter_s,1,Nconfig_pid);
       diter0=diter_r;
