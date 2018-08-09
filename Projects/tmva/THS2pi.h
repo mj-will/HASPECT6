@@ -84,6 +84,7 @@ class THS2pi : public THSFinalState{
   Int_t fSignalCount=0;
   Int_t fBackgroundCount=0;
   Int_t fSplitCount=0;
+  Int_t fTotalEvents=0;
 
 
   //TMVA
@@ -101,9 +102,12 @@ class THS2pi : public THSFinalState{
   void WriteConfig(TString name) {fMVATrain.WriteTHSMVA(name);};
   void SetTrain(Bool_t b) {fIsTrain = b;};
 
+  void SetNEvents(Int_t N);
+  void SetNEvents(Int_t Ntrain, Int_t Ntest);
+
   virtual void FinalStateOutTree(TTree* tree);
 
-  Int_t CheckSignalCount(TTree* tree, Int_t N);
+  Int_t CheckSignalCount(TTree* tree);
  
 
 };

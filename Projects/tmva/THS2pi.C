@@ -31,12 +31,13 @@ THS2pi::THS2pi(){
   PrepAddParticle(&fProton);
   PrepAddParticle(&fPip);
   PrepAddParticle(&fPim);
-
-  // TODO : PrepAddParcticle(&fElectron)...G
+    
+  // for non 2pi
+  //fMVAPrep.SetParticles({"El", "P"});
+  //fMVAPrep.SetVariables({"E", "P"});
+  //fMVAPrep.SetTypes({"F", "F"})
 
   //Set final state parents
-  
-  
   
   TString PID("NONE"); //set this to which particles you want to id via pdg code alone, or set it in individual AddTopology
   TString INCLUSIVE("ALL");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
@@ -84,13 +85,13 @@ void THS2pi::FileStart(){
 
       std::cout<<"Setting MVA trees..."<<std::endl;
       fMVAPrep.SetNames();
-
-      fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
-      fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
-      fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
-      fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
-      fMVATrain.PrintSplits();
-      fSplits = fMVATrain.GetSplits(); 
+      // add splits: name, exact variable names, pointers, values
+      //fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
+      //fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
+      //fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
+      //fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
+      //fMVATrain.PrintSplits();
+      //fSplits = fMVATrain.GetSplits(); 
       //
       Method method0;
       method0.fMethodName = "BDT0";
@@ -106,9 +107,16 @@ void THS2pi::FileStart(){
       Method method2;
       method2.fMethodName = "MLP";
       method2.fMethodType = TMVA::Types::kMLP;
-      method2.fMethodParameters = "H:!V:NeuronType=ReLU:EstimatorType=CE:learningRate=0.001:VarTransform=None:NCycles=20:HiddenLayers=64:TestRate=5:BatchSize=128:BPMode=batch";
+      method2.fMethodParameters = "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator";
+          //"H:!V:NeuronType=ReLU:EstimatorType=CE:learningRate=0.01:VarTransform=I:NCycles=20:HiddenLayers=64:TestRate=5:BatchSize=128:BPMode=batch";
       
       //fMVATrain.AddMethod(method2);
+
+      Method method3;
+      method3.fMethodName = "DNN";
+      method3.fMethodType = TMVA::Types::kDNN;
+      method3.fMethodParameters = "!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:WeightInitialization=XAVIERUNIFORM:Layout=RELU|64,LINEAR:TrainingStrategy=LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=300,BatchSize=128,TestRepetitions=15,WeightDecay=0.0,Regularization=NONE,DropConfig=0.0+0.1,DropRepetitions=1,Multithreading=True";
+      fMVATrain.AddMethod(method3);
 
       std::cout<<"  Finished setting methods and splits"<<std::endl;
       fMVAPrep.SetTree(fFinalTree);
@@ -236,7 +244,7 @@ void THS2pi::Kinematics(){
 
 }
 
-Int_t THS2pi::CheckSignalCount(TTree* tree, Int_t N){
+Int_t THS2pi::CheckSignalCount(TTree* tree){
     //tree->Print();
     if (!fSplits.empty()){
         fSplitCount = 0;
@@ -247,10 +255,11 @@ Int_t THS2pi::CheckSignalCount(TTree* tree, Int_t N){
                 fSignalCount = fEventList->GetN();
             }
             else fSignalCount = 0;
-            std::cout<<"\r"<<"    Signal count for split "<<i<<": "<<fSignalCount;
+            std::cout<<"    Signal count for split "<<i<<": "<<fSignalCount;
             // check if criteria met for this split
-            if (fSignalCount >= N){ fSplitCount++;};
+            if (fSignalCount >= fTotalEvents){ fSplitCount++;};
         }
+        std::cout<<" "<<std::endl;
         // only return true if all splits have met criteria
         if (fSplitCount == fSplits.size()) return kTRUE;
         else return kFALSE;
@@ -263,8 +272,8 @@ Int_t THS2pi::CheckSignalCount(TTree* tree, Int_t N){
             fSignalCount = fEventList->GetN();
         }
         else fSignalCount = 0;
-        std::cout<<"\r"<<"    Signal count: "<<fSignalCount;
-        if (fSignalCount >= N)return kTRUE;
+        std::cout<<"    Signal count: "<<fSignalCount<<std::endl;
+        if (fSignalCount >= fTotalEvents)return kTRUE;
         else return kFALSE;
     }
 }
@@ -352,6 +361,11 @@ void THS2pi::PrepFillVars(){
     }
 }
 
+/**
+ * Fill the variables for application
+ *
+ */
+
 void THS2pi::AppFillVars(){
 
     fNParts = fParticles.size();
@@ -359,4 +373,24 @@ void THS2pi::AppFillVars(){
     for (UInt_t i = 0; i<fNParts; i++){
         fMVAApp.AddVarsFromParticle(fParticles[i], i);
     }
+}
+
+/**
+ * Set the number of training and testing events
+ *
+ */
+
+void THS2pi::SetNEvents(Int_t N){
+    // set number of events
+    fMVATrain.SetNTrain(N);
+    fMVATrain.SetNTest(N);
+    // set total signal events for counter
+    fTotalEvents = 2*N;
+}
+
+void THS2pi::SetNEvents(Int_t NTrain, Int_t NTest){
+    // set number of events
+    fMVATrain.SetNTrain(NTrain);
+    fMVATrain.SetNTest(NTest);
+    fTotalEvents = NTrain + NTest;
 }

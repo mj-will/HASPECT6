@@ -46,6 +46,8 @@ class THSMVATrain : public THSMVA {
 
         Int_t fTopo=0;
         Int_t fDetector=0; 
+        Int_t fNTrain=0;
+        Int_t fNTest=0;
 
         Split fTmpSplit;
 
@@ -55,6 +57,9 @@ class THSMVATrain : public THSMVA {
     public:
 
         void SetTrainTree(TTree* tree) {fTrainTree = tree;};
+
+        void SetNTrain(Int_t N) {fNTrain = N;};
+        void SetNTest(Int_t N) {fNTest = N;};
 
         void SetMVATreeVars();
         void SetMVAVariables();

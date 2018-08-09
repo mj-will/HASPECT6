@@ -81,8 +81,8 @@ class THSMVA : public TNamed {
         Bool_t fSplitTopologies = false;
         Bool_t fPrintVariables=true;
         // vectors for setting up variables
-        std::vector<TString> fVariableID = {"Time", "Edep","DeltaE", "PreE", "P", "Th", "Phi", "Vz", "TrChi2"};
-        std::vector<TString> fTypes = {"F", "F", "F", "F", "F", "F", "F", "F", "F", "F"};
+        std::vector<TString> fVariableID = {"Time", "Edep","DeltaE", "PreE", "P", "Th", "Phi", "Vz", "TrChi2", "Det"};
+        std::vector<TString> fTypes = {"F", "F", "F", "F", "F", "F", "F", "F", "F", "I"};
         std::vector<TString> fParticleID = {"El", "P", "Pip", "Pim"};
         // vectors for selecting particles for splits 
         // vectors for default particles for topologies (0-3)
@@ -96,7 +96,7 @@ class THSMVA : public TNamed {
         std::vector<Split> fSplits;
         // vectors of variables  
         static std::vector<std::vector<TString>> fNames;        // names for branches for tree
-        std::vector<std::vector<TString>> fSelectNames;         // vec of reduced set of names
+        static std::vector<std::vector<TString>> fSelectNames;  // vec of reduced set of names
         static std::vector<std::vector<Float_t>> fTreeVarsF;    // Float_t type variables for tree
         std::vector<std::vector<Int_t>> fTreeVarsI;             // Int_t type variables for tree
         std::vector<std::vector<Int_t>> fParticleTopologies;    // topologies for each each particle

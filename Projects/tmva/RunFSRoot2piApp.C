@@ -16,14 +16,14 @@
   Int_t counter=0;
   
   //create ouput tree
-  TFile* outfile=new TFile("THSOutput.root","recreate");
+  TFile* outfile=new TFile("TestApp.root","recreate");
   TTree* outtree=new TTree("OutputTree","output tree");
   outtree->SetAutoSave(1E4);
   fs->FinalStateOutTree(outtree); //connect ouput tree to project branches
   //fs->TMVAOutTree(outtree); //connect ouput tree to project branches
 
-  TFile* setupFile = new TFile("THSMVA.root","LOAD");
-  THSMVA* setup; setupFile->GetObject("Test;1", setup);
+  TFile* setupFile = new TFile("TestTrain.root","LOAD");
+  THSMVA* setup; setupFile->GetObject("Setup;1", setup);
 
   fs->SetApplication(setup);
 
@@ -31,7 +31,7 @@
    
   while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
-    if (counter == 10000){
+    if (counter == 5000){
         break;
     }
     counter++;

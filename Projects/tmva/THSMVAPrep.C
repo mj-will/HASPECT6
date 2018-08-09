@@ -118,7 +118,7 @@ void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) 
         if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
         if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
         // convert to float for training
-        if (v == "Det") {fTreeVarsF[tmpPCount][fCountF] = Float_t(tmpParticle->Detector()); fCountF++;
+        if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;
         }
     }
 }

@@ -23,6 +23,7 @@ THSMVA::THSMVA(){
 
 // Initialize static variables
 std::vector<std::vector<TString>> THSMVA::fNames;
+std::vector<std::vector<TString>> THSMVA::fSelectNames;
 std::vector<std::vector<Float_t>> THSMVA::fTreeVarsF;
 
 // TODO : AddParticles, AddVariables, SetParticles, SetVariables
@@ -49,6 +50,7 @@ void THSMVA::SetNames() {
     std::cout<<"Setting up variables..."<<std::endl;
 
     fNames.resize(fParticleID.size());
+    fSelectNames.resize(fParticleID.size());
     fTreeVarsF.resize(fParticleID.size());
     fTreeVarsI.resize(fParticleID.size());
 
@@ -61,7 +63,10 @@ void THSMVA::SetNames() {
         for (auto const& v : fVariableID) {
             fNames[fParticleCount].push_back(p+v);
             //std::cout<<"Added name..."<<std::endl;
-            if (fTypes[fVariableCount] == "F") fTreeVarsF[fParticleCount].push_back(0);
+            if (fTypes[fVariableCount] == "F"){
+                fTreeVarsF[fParticleCount].push_back(0);
+                fSelectNames[fParticleCount].push_back(p+v);
+            }
             if (fTypes[fVariableCount] == "I") fTreeVarsI[fParticleCount].push_back(0);
             fVariableCount++;
         }
@@ -135,9 +140,17 @@ void THSMVA::GetNamesTopo(Int_t Topology) {
     }
     
     std::cout<<"Number of particles in topology " <<Topology<<": "<<fSelectedParticles.size()<<std::endl; 
-
-    for (auto const& i : fSelectedParticles) {
-        fSelectNames.push_back(fNames[i]);
+    // resize vector before filling it
+    fSelectNames.resize(fSelectedParticles.size());
+    fParticleCount = 0;
+    for (auto const& p : fSelectedParticles) {
+        for (UInt_t i=0; i<fNames[p].size();i++){
+            // only add floats
+            if (fTypes[i] == "F"){
+                fSelectNames[fParticleCount].push_back(fNames[p][i]);
+            }
+        }
+        fParticleCount++;
     }
 }
 

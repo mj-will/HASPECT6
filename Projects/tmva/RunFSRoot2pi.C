@@ -16,30 +16,32 @@
   Int_t counter=0;
   
   //create ouput tree
-  TFile* outfile=new TFile("THSMVA.root","recreate");
+  TFile* outfile=new TFile("TestTrain.root","recreate");
   TTree* outtree=new TTree("THSMVATree","output tree");
   outtree->SetAutoSave(1E4);
   //  fs->FinalStateOutTree(outtree); //connect ouput tree to project branches
   fs->TMVAOutTree(outtree); //connect ouput tree to project branches
   
   gBenchmark->Start("timer");
+
+  fs->SetNEvents(50000,1000);
    
   while(dm->ReadEvent()){//loop over events
     fs->ProcessEvent();
-    if (counter == 20000){
-        break;
+    if (counter%1000 == 0){
+        if (fs->CheckSignalCount(outtree)) break;
     }
     counter++;
+    //if (counter >= 50000) break;
   }
     
 
   gBenchmark->Stop("timer");
   gBenchmark->Print("timer");
-  
-
+ 
   fs->RunTraining();
   outtree->GetDirectory()->cd();
-  fs->WriteConfig("Test");
+  fs->WriteConfig("Setup");
 
   //fs->RunApp();
 

@@ -130,7 +130,7 @@ void THSMVATrain::SetMVATreeVars(){
 
 // TODO : Think about having non trainable variables in fNames
 void THSMVATrain::SetMVAVariables(){
-    fMVAVariables = fNames;
+    fMVAVariables = fSelectNames;
     SetMVATreeVars();
 
 }
@@ -316,7 +316,7 @@ void THSMVATrain::Train(){
 
     // TODO : options for preparing training
     //fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
-    fDataloader->PrepareTrainingAndTestTree((TCut("")),10000,10000,-1,-1,"SplitMode=Random:NormMode=NumEvents:!V" );
+    fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
 
     if (fMethods.empty()){
         std::cout<<"No methods provided..."<<std::endl;

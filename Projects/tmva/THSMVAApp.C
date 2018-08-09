@@ -167,8 +167,8 @@ void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader){
     //        std::cout<<v<<std::endl;
     //        std::cout<<&(fAppVars[fParticleCount][fVariableCount])<<std::endl;
     //        fVariableCount++;
-            tmpReader->AddVariable( fNames[iPar][iVar], &fAppVars[iPar][iVar]);
-            std::cout<<fNames[iPar][iVar]<<std::endl;
+            tmpReader->AddVariable( fAppVariableNames[iPar][iVar], &fAppVars[iPar][iVar]);
+            std::cout<<fAppVariableNames[iPar][iVar]<<std::endl;
             std::cout<<&(fAppVars[iPar][iVar])<<std::endl;
         }
     }
@@ -206,11 +206,11 @@ void THSMVAApp::SetReaders(){
     std::cout<<"Setting variables and methods for readers..."<<std::endl;
     fSplitCount = 0;
 
-    if (fAppVariableNames.empty()) {fAppVariableNames = fNames;};
+    if (fAppVariableNames.empty()) {fAppVariableNames = fSelectNames;};
     if (fAppVars.empty()){
-        fAppVars.resize(fNames.size());
+        fAppVars.resize(fAppVariableNames.size());
         for (UInt_t i=0; i<fAppVars.size(); i++){
-            fAppVars[i].resize(fNames[i].size());
+            fAppVars[i].resize(fAppVariableNames[i].size());
         }
     }
 
