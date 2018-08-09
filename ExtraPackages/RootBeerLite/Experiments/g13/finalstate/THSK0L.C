@@ -37,8 +37,14 @@ THSK0L::THSK0L(){
   ConfigParent(&fK0,&fPip);
   ConfigParent(&fK0,&fPimK);
   
-  
-  
+  // set particles for MVA analysis  
+  SetDefaultVariables({"P", "Th", "Phi", "Time", "Edep", "DeltaE", "Vz"});
+  PrepAddParticle("Beam", &fBeam, {"P", "Time"});
+  PrepAddParticle("Proton", &fProton);
+  PrepAddParticle("Pip", &fPip);
+  PrepAddParticle("PimL", &fPimL);
+  PrepAddParticle("PimK", &fPimK);
+
   TString PID("NONE"); //set this to which particles you want to id via pdg code alone, or set it in individual AddTopology
   TString INCLUSIVE("ALL");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
 
@@ -64,6 +70,41 @@ void THSK0L::FileStart(){
   fTrigger.SetEventInfo(fEventInfo);
   fTrigger.SetRunInfo(fRunInfo);
   //fTrigger.SetSim(); //Check if this file is simulated or real
+
+  //////////////
+  // TMVA stuff
+  // ///////////
+
+  if (fIsTrain){
+
+      std::cout<<"Setting MVA trees..."<<std::endl;
+      //
+      Method method0;
+      method0.fMethodName = "BDT0";
+      method0.fMethodType = TMVA::Types::kBDT;
+      method0.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      fMVATrain.AddMethod(method0);
+      std::cout<<"  Finished setting methods and splits"<<std::endl;
+
+      fMVAPrep.SetTree(fFinalTree);
+      fMVATrain.SetTrainTree(fFinalTree);
+  }
+}
+
+void THSK0L::SetApplication(THSMVA* setup){
+
+    fIsApp = kTRUE;
+
+    fMVAApp.Init(setup);
+    // update pointers for splits
+    fMVAApp.UpdateSplit("Topo0", &fTopoID);
+    fMVAApp.UpdateSplit("Topo1", &fTopoID);
+    fMVAApp.UpdateSplit("Topo2", &fTopoID);
+    fMVAApp.UpdateSplit("Topo3", &fTopoID);
+    fMVAApp.PrintSplits();
+    fMVAApp.AddReaders();
+    fMVAApp.SetReaders();
+    fMVAApp.SetOutput();
 }
 
 //Define topology Iterator functions
@@ -115,57 +156,68 @@ void THSK0L::Kinematics(){
   fReaction.Add(&fK0,&fLambda);
   fKine.SetMesonBaryon(fK0.P4(),fLambda.P4());
 
-  fMK0=fK0.MassDiff();
-  fML=fLambda.MassDiff();
+  if (fIsTrain){
+      PrepFillVars(); // for training
+      fMVAPrep.RemoveNaNs();
 
- //Linear Polarisation
-  fPol=fBeam.Vertex().R();
-  if(fBeam.Vertex().X()) fPolState=1;
-  else if(fBeam.Vertex().Y()) fPolState=-1;
-  else fPolState=0;
+  }
+  if (fIsApp){
 
-   //Spectator
-  HSLorentzVector spec=fBeam.P4()+fTarget-fK0.P4()-fLambda.P4();
-  fMissMassFix=spec.M();
-  fSpecP= spec.P();
-  fSpecTh= TMath::Cos(spec.Theta());
-  //target neutron momentum = -spectator
-  HSLorentzVector tarN=fKine.ParticleXYZM(-spec.X(),-spec.Y(),-spec.Z(),0.939565378);
- //CM
-  f_W=fReaction.P4p()->M();
-  fEgamma=fBeam.P4p()->E();
-  fKine.SetGammaTarget(fBeam.P4(),tarN);
-  fKine.PhotoCMDecay();
-  fCMCosTh=fKine.CosTheta();
-  fCMPhi=fKine.Phi();
-  fK0Phi=fK0.P4p()->Phi();
-  fKine.PolPhotoCMDecay();
-  fPolCosTh=fKine.CosTheta();
-  fPolPhi=fKine.Phi();
-  //Lmabda Deczy
-  fKine.SetBaryonDecay(fProton.P4(),fPimL.P4());
-  fKine.LambdaDecay();
-  fCosx=fKine.Cosx();
-  fCosy=fKine.Cosy();
-  fCosz=fKine.Cosz();
-  if(!frGenParts) return;
-  tarN=fKine.ParticleXYZM(-spec.X(),-spec.Y(),-spec.Z(),0.939565378);;
-  fKine.SetGammaTarget(fBeam.P4(),tarN);
-  HSLorentzVector pK0=fPimK.TruthP4()+fPip.TruthP4();
-  HSLorentzVector pL=fPimL.TruthP4()+fProton.TruthP4();
-  fKine.SetMesonBaryon(pK0,pL);
-  fKine.PhotoCMDecay();
-  genfCMCosTh=fKine.CosTheta();
-  genfCMPhi=fKine.Phi();
-  fKine.PolPhotoCMDecay();
-  genfPolCosTh=fKine.CosTheta();
-  genfPolPhi=fKine.Phi();
-   //Lmabda Deczy
-  fKine.SetBaryonDecay(fProton.TruthP4(),fPimL.TruthP4());
-  fKine.LambdaDecay();
-  genfCosx=fKine.Cosx();
-  genfCosy=fKine.Cosy();
-  genfCosz=fKine.Cosz();
+      fMK0=fK0.MassDiff();
+      fML=fLambda.MassDiff();
+
+     //Linear Polarisation
+      fPol=fBeam.Vertex().R();
+      if(fBeam.Vertex().X()) fPolState=1;
+      else if(fBeam.Vertex().Y()) fPolState=-1;
+      else fPolState=0;
+
+       //Spectator
+      HSLorentzVector spec=fBeam.P4()+fTarget-fK0.P4()-fLambda.P4();
+      fMissMassFix=spec.M();
+      fSpecP= spec.P();
+      fSpecTh= TMath::Cos(spec.Theta());
+      //target neutron momentum = -spectator
+      HSLorentzVector tarN=fKine.ParticleXYZM(-spec.X(),-spec.Y(),-spec.Z(),0.939565378);
+     //CM
+      f_W=fReaction.P4p()->M();
+      fEgamma=fBeam.P4p()->E();
+      fKine.SetGammaTarget(fBeam.P4(),tarN);
+      fKine.PhotoCMDecay();
+      fCMCosTh=fKine.CosTheta();
+      fCMPhi=fKine.Phi();
+      fK0Phi=fK0.P4p()->Phi();
+      fKine.PolPhotoCMDecay();
+      fPolCosTh=fKine.CosTheta();
+      fPolPhi=fKine.Phi();
+      //Lmabda Deczy
+      fKine.SetBaryonDecay(fProton.P4(),fPimL.P4());
+      fKine.LambdaDecay();
+      fCosx=fKine.Cosx();
+      fCosy=fKine.Cosy();
+      fCosz=fKine.Cosz();
+      if(!frGenParts) return;
+      tarN=fKine.ParticleXYZM(-spec.X(),-spec.Y(),-spec.Z(),0.939565378);;
+      fKine.SetGammaTarget(fBeam.P4(),tarN);
+      HSLorentzVector pK0=fPimK.TruthP4()+fPip.TruthP4();
+      HSLorentzVector pL=fPimL.TruthP4()+fProton.TruthP4();
+      fKine.SetMesonBaryon(pK0,pL);
+      fKine.PhotoCMDecay();
+      genfCMCosTh=fKine.CosTheta();
+      genfCMPhi=fKine.Phi();
+      fKine.PolPhotoCMDecay();
+      genfPolCosTh=fKine.CosTheta();
+      genfPolPhi=fKine.Phi();
+       //Lmabda Deczy
+      fKine.SetBaryonDecay(fProton.TruthP4(),fPimL.TruthP4());
+      fKine.LambdaDecay();
+      genfCosx=fKine.Cosx();
+      genfCosy=fKine.Cosy();
+      genfCosz=fKine.Cosz();
+  
+      AppFillVars();
+      fMVAApp.ProcessEvent();
+  }
 
 }
 //////////////////////////////////////////////////
@@ -216,4 +268,147 @@ void THSK0L::FinalStateOutTree(TTree* tree){
     tree->Branch("genPolCosTh",&genfPolCosTh,"genPolCosTh/D");
     //tree->Branch("PolPhi",&fPolPhi,"PolPhi/D");
   }
+}
+
+void THSK0L::TMVAOutTree(TTree* tree){
+  THSFinalState::fFinalTree=tree;
+  tree->Branch("Topo",&fTopoID,"Topo/I");
+  tree->Branch("NPerm",&fNPerm,"NPerm/I");
+  tree->Branch("NDet",&fNDet,"NDet/I");
+  tree->Branch("MissMass",&fMissMass,"MissMass/D");
+  tree->Branch("MissMassFix",&fMissMassFix,"MissMassFix/D");
+  //tree->Branch("Detector",&fDetector,"Detector/I");
+  tree->Branch("Correct",&fCorrect,"Correct/I");
+
+  fMVAPrep.SetTree(tree);
+  fMVAPrep.SetBranches();
+
+  fMVATrain.SetTrainTree(tree);
+  fMVAApp.SetAppTree(tree);
+
+}
+
+/**
+ * Check number of signals generated
+ *
+ */
+
+Int_t THSK0L::CheckSignalCount(TTree* tree){
+    //tree->Print();
+    if (!fSplits.empty()){
+        fSplitCount = 0;
+        for (UInt_t i=0; i<fSplits.size(); i++){
+            tree->Draw(">>eventlist","Correct==1&"+fSplits[i].GetTreeSplit(),"goff"); 
+            fEventList = (TEventList*)gDirectory->Get("eventlist");
+            if (fEventList){
+                fSignalCount = fEventList->GetN();
+            }
+            else fSignalCount = 0;
+            std::cout<<"    Signal count for split "<<i<<": "<<fSignalCount;
+            // check if criteria met for this split
+            if (fSignalCount >= fTotalEvents){ fSplitCount++;};
+        }
+        std::cout<<" "<<std::endl;
+        // only return true if all splits have met criteria
+        if (fSplitCount == fSplits.size()) return kTRUE;
+        else return kFALSE;
+    }
+    else{
+        tree->Draw(">>eventlist","Correct==1","goff"); 
+        fEventList = (TEventList*)gDirectory->Get("eventlist");
+        //std::cout<<"Getting number od entries"<<std::endl;
+        if (fEventList){
+            fSignalCount = fEventList->GetN();
+        }
+        else fSignalCount = 0;
+        std::cout<<"    Signal count: "<<fSignalCount<<std::endl;
+        if (fSignalCount >= fTotalEvents)return kTRUE;
+        else return kFALSE;
+    }
+}
+
+
+/**
+ * Set default variables
+ *
+ */
+
+void THSK0L::SetDefaultVariables(std::vector<TString> variables){
+    fDefaultVariables = variables;
+}
+
+/**
+ * Add particles to vector
+ *
+ */
+void THSK0L::PrepAddParticle(THSParticle *part){
+    fParticles.push_back(part);
+}
+
+void THSK0L::PrepAddParticle(TString name, THSParticle *part, std::vector<TString> variables, std::vector<TString> types){
+    std::cout<<"Adding "<<name<<std::endl;
+    // fiall vector of pointers
+    fParticles.push_back(part);
+    if (types.empty()){
+            std::cout<<"    Adding all variables as Float_t"<<std::endl;
+            if (variables.empty()){
+                if (fDefaultVariables.empty()) {std::cout<<"ERROR: no default variables set"; exit(1);};
+                types.resize(fDefaultVariables.size(), "F");
+            }
+            else{
+                types.resize(variables.size(), "F");
+            }
+    }
+    // add particle and its variables
+    if (variables.empty()) fMVAPrep.AddParticle(name, fDefaultVariables, types);
+    else{fMVAPrep.AddParticle(name, variables, types);}
+}
+
+
+/**
+ * Fill variable vector
+ *
+ */
+
+void THSK0L::PrepFillVars(){
+
+    fNParts = fParticles.size();
+
+    for (UInt_t i = 0; i<fNParts; i++){
+        fMVAPrep.AddVarsFromParticle(fParticles[i], i);
+    }
+}
+
+/**
+ * Fill the variables for application
+ *
+ */
+
+void THSK0L::AppFillVars(){
+
+    fNParts = fParticles.size();
+
+    for (UInt_t i = 0; i<fNParts; i++){
+        fMVAApp.AddVarsFromParticle(fParticles[i], i);
+    }
+}
+
+/**
+ * Set the number of training and testing events
+ *
+ */
+
+void THSK0L::SetNEvents(Int_t N){
+    // set number of events
+    fMVATrain.SetNTrain(N);
+    fMVATrain.SetNTest(N);
+    // set total signal events for counter
+    fTotalEvents = 2*N;
+}
+
+void THSK0L::SetNEvents(Int_t NTrain, Int_t NTest){
+    // set number of events
+    fMVATrain.SetNTrain(NTrain);
+    fMVATrain.SetNTest(NTest);
+    fTotalEvents = NTrain + NTest;
 }

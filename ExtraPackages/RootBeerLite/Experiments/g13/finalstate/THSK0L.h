@@ -6,6 +6,11 @@
 #include "THSParticle.h"
 #include "THSCLASg13Trigger.h"
 
+#include "THSMVAPrep.h"
+#include "THSMVATrain.h"
+#include "THSMVAApp.h"
+
+#include <TEventList.h>
 #include <vector>
 
 class THSK0L : public THSFinalState{
@@ -30,6 +35,11 @@ class THSK0L : public THSFinalState{
   void Kinematics();
   protected :
 
+  // THSMVA classes
+  THSMVAPrep fMVAPrep;
+  THSMVATrain fMVATrain;
+  THSMVAApp fMVAApp;
+
 THSCLASg13Trigger fTrigger;	 
   //Initial state
  HSLorentzVector fTarget=HSLorentzVector(0,0,0,1.8756);
@@ -46,6 +56,22 @@ THSCLASg13Trigger fTrigger;
   THSParticle fLambda=THSParticle("Lambda0");
   THSParticle fK0=THSParticle("K0");
   THSParticle fReaction=THSParticle();
+
+  // MVA variables
+  // vector for MVA
+  vector<THSParticle * > fParticles;
+  vector<TString> fDefaultVariables;
+
+  Int_t fSignalCount=0;
+  Int_t fBackgroundCount=0;
+  Int_t fSplitCount=0;
+  Int_t fTotalEvents=0;
+
+  Bool_t fIsTrain=kFALSE;
+  Bool_t fIsApp=kFALSE;
+
+  TEventList * fEventList=nullptr;//!
+  std::vector<Split> fSplits;
 
   //Observables
   Double_t f_t;
@@ -98,10 +124,32 @@ THSCLASg13Trigger fTrigger;
   Double_t fKVertex=0;
   Double_t fPiTheta=0;
 
-   public :
-  virtual void FinalStateOutTree(TTree* tree);
+  public :
+    virtual void FinalStateOutTree(TTree* tree);
 
- 
+    // mva functions
+    // output tree
+    void TMVAOutTree(TTree* tree);
+    // counter
+    Int_t CheckSignalCount(TTree* tree);
+    // add particles for mva
+    void SetDefaultVariables(std::vector<TString> variables);
+    void PrepAddParticle(THSParticle *part);
+    void PrepAddParticle(TString name, THSParticle *part, std::vector<TString> variables = {}, std::vector<TString> types = {});
+    // functions to call for each event
+    void PrepFillVars();
+    void AppFillVars();
+    // setting number of events
+    void SetNEvents(Int_t N);
+    void SetNEvents(Int_t NTrain, Int_t NTest);
+    // training
+    void SetTrain(Bool_t b) {fIsTrain = b;};
+    void RunTraining() {fMVATrain.DefaultTrain();};
+    void WriteConfig(TString name) {fMVATrain.WriteTHSMVA(name);};
+    // application
+    void SetApplication(THSMVA* setup);
+    void RunApp() {fMVAApp.DefaultApp();}
+    void EndApplication(TFile* file) {fMVAApp.SetOutputFile(file);fMVAApp.Plots();};
 
 };
 
