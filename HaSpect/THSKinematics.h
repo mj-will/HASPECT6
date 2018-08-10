@@ -112,9 +112,6 @@ class THSKinematics{
     fBar_d2=HSLorentzVector(d2.X(),d2.Y(),d2.Z(),d2.T());
   }
 
-  HSLorentzVector ParticleXYZM(Double_t X,Double_t Y,Double_t Z,Double_t M){HSLorentzVector p4;p4.SetXYZT(X,Y,Z,sqrt(M*M+X*X+Y*Y+Z*Z)); return p4;}
-
-
   HSLorentzVector Gamma(){return fGamma;}
   Double_t W(){ return fCM.M();}
   Double_t Q2() {return -fGamma.M2();}
