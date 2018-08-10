@@ -43,6 +43,7 @@ html/
 ehthumbs.db
 Thumbs.db
 .nfs*
+*~
 
 # Data #
 ########
