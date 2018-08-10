@@ -20,7 +20,7 @@
   RF->MakeBinnedTrees(&chain,"Data");
   RF->ConfigureSavedBins(RF->GetOutDir());
   //Add integrated weights file
-  RF->LoadWeights("outWeights/binFitTweights.root ","HSsWeights");
+  RF->LoadWeights("outSignal/binFitTweights.root ","HSsWeights");
   RF->SetWeightName("Signal"); //Same as Signal species in FitHSSimpleBins
 
   /////////////////////////////Make asymmetry model A and B are fit parameters

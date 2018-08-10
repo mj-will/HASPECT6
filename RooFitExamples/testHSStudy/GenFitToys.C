@@ -69,6 +69,8 @@
   HS::gRF->SetFitMethod(0); //use standard roofit
   HS::gRF->FitAndStudy(1);
 
+  datafile->Close();
+  delete datafile;
   delete ds;
   delete HS::gRF;HS::gRF=nullptr;
 }

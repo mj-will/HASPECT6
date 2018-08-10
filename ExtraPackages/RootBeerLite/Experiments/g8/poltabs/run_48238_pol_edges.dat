@@ -1,0 +1,7 @@
+#Processing Run 48238 for polarization tables
+#The run table thinks this was a AMOL2 run
+#Corresponding AMO file is :/home/clasg8/rootbeer2.1/dat/pol/amo_tesc_48238.dat
+#Coherent Edge positions for TESC events follow:
+#Event	Coh Edge	PolPlane(PARA=0,PERP=1,AMO=2,CHANGING=3)
+#WARNING: table and EPICS differ on the radiator
+Using	99999999	 0.0	0
