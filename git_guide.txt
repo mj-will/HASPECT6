@@ -14,15 +14,11 @@ To download Haspect and help improving it you need to set everything up first
 
 To keep your code up-to-date with the current master branch of Derek (do this regularly!). In your haspect directory type:
 
-1. git remote add upstream https://github.com/dglazier/HASPECT6.git
+0. git remote add upstream https://github.com/dglazier/HASPECT6.git
    (This step only has to be done once)
 
-2. git fetch upstream
-
-3. git checkout master
-
-4. git merge upstream/master
-
+1. git pull upstream master
+   (updates your local master with changes from upstream)
 
 To make changes to the code:
 
@@ -59,6 +55,18 @@ To make changes to the code:
 12. Wait for Derek to merge your code
 
 
+Updating development branches with new changes on master:
+
+0. git pull upstream master
+   (assuming this step has been made)
+
+1. git checkout my-branch-with-changes
+   (ensure all changes have been commited at this point)
+
+2. git rebase master
+   (similar to a merge, this puts any changes you've made ahead of changes from master)
+
+
 General tips:
 -Create a new branch for your work on the code and give it a meaningful name
 -Use git status regularly to check the current status of your repository
@@ -66,3 +74,4 @@ General tips:
 -Files specified in .gitignore will not be looked after by git (e.g. .root files)
 -If you want to try out everything first you can use https://github.com/s6pepaul/testrepo
  Feel free to add and change files as you like and create pull requests
+-To throw away changes to a file or folder and get back how it should be on master, use git checkout master -- filename
