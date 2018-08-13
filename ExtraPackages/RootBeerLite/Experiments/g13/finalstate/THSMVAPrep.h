@@ -16,11 +16,14 @@ class THSMVAPrep : public THSMVA {
   
         THSMVAPrep(TString name) : THSMVA(name){};
     protected :
-
+        // TTree to fill
         TTree* fBaseTree=nullptr;//!
+
         Int_t fTmpInt=0;
         Int_t fCountF = 0;
         Int_t fCountI = 0;
+        Int_t fN = 0;
+
         UInt_t fNVarsF = 0;
         UInt_t fNVarsI = 0;
 
