@@ -19,38 +19,36 @@ class THSMVATrain : public THSMVA {
 
         THSMVATrain(TString name) : THSMVA(name){};
     protected :
-
+        // THSMVA instance
         THSMVA fMVA;
-
+        // TTrees
         TTree* fTrainTree=nullptr;//!
         TTree* fSignalTree=nullptr;//!
         TTree* fBackgroundTree=nullptr;//!
-
+        // Output file for factory 
         TFile* fOutputFile=nullptr;//!
-
-        TDirectory* fOutputDir=nullptr;
-
+        // Names of for outputs
         TString fOutputName;
         TString fDatasetName;
-
+        // bools
         Bool_t fTest=false;
         Bool_t fSelectTopologies=false;
         Bool_t fSplit=false;
         Bool_t fPrintTree=false;
-
+        
         TMVA::Factory* fFactory=nullptr;//!
         TMVA::DataLoader* fDataloader=nullptr;//!
-
+        // signal weights
         Double_t fSignalWeight = 1.0;
         Double_t fBackgroundWeight = 1.0;
-
+        // 
         Int_t fTopo=0;
         Int_t fDetector=0; 
         Int_t fNTrain=0;
         Int_t fNTest=0;
 
         Split fTmpSplit;
-
+        // vectors for setting TTree branches
         static std::vector<std::vector<TString>> fMVAVariables;
         static std::vector<std::vector<Float_t>> fMVATreeVars;
 

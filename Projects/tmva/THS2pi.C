@@ -94,29 +94,29 @@ void THS2pi::FileStart(){
       //fSplits = fMVATrain.GetSplits(); 
       //
       Method method0;
-      method0.fMethodName = "BDT0";
-      method0.fMethodType = TMVA::Types::kBDT;
-      method0.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      method0.SetName("BDT0");
+      method0.SetType(TMVA::Types::kBDT);
+      method0.SetParameters("!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
       fMVATrain.AddMethod(method0);
       //
-      Method method1;
-      method1.fMethodName = "BDT1";
-      method1.fMethodType = TMVA::Types::kBDT;
-      method1.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
-      fMVATrain.AddMethod(method1);
-      Method method2;
-      method2.fMethodName = "MLP";
-      method2.fMethodType = TMVA::Types::kMLP;
-      method2.fMethodParameters = "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator";
+      //Method method1;
+      //method1.fMethodName = "BDT1";
+      //method1.fMethodType = TMVA::Types::kBDT;
+      //method1.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      //fMVATrain.AddMethod(method1);
+      //Method method2;
+      //method2.fMethodName = "MLP";
+      //method2.fMethodType = TMVA::Types::kMLP;
+      //method2.fMethodParameters = "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator";
           //"H:!V:NeuronType=ReLU:EstimatorType=CE:learningRate=0.01:VarTransform=I:NCycles=20:HiddenLayers=64:TestRate=5:BatchSize=128:BPMode=batch";
       
       //fMVATrain.AddMethod(method2);
 
-      Method method3;
-      method3.fMethodName = "DNN";
-      method3.fMethodType = TMVA::Types::kDNN;
-      method3.fMethodParameters = "!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:WeightInitialization=XAVIERUNIFORM:Layout=RELU|64,LINEAR:TrainingStrategy=LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=300,BatchSize=128,TestRepetitions=15,WeightDecay=0.0,Regularization=NONE,DropConfig=0.0+0.1,DropRepetitions=1,Multithreading=True";
-      fMVATrain.AddMethod(method3);
+      //Method method3;
+      //method3.fMethodName = "DNN";
+      //method3.fMethodType = TMVA::Types::kDNN;
+      //method3.fMethodParameters = "!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:WeightInitialization=XAVIERUNIFORM:Layout=RELU|64,LINEAR:TrainingStrategy=LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=300,BatchSize=128,TestRepetitions=15,WeightDecay=0.0,Regularization=NONE,DropConfig=0.0+0.1,DropRepetitions=1,Multithreading=True";
+      //fMVATrain.AddMethod(method3);
 
       std::cout<<"  Finished setting methods and splits"<<std::endl;
       fMVAPrep.SetTree(fFinalTree);

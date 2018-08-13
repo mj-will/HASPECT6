@@ -75,23 +75,37 @@ void THSMVAApp::UpdateSplit(TString name, std::vector<Int_t *> pointers){
 
 void THSMVAApp::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
 
-    //if (fAppVars.empty()){fAppVars=fTreeVarsF;};
-
     fVariableCount = 0;
-    //std::cout<<"Adding variables..."<<std::endl;
-    //
+
     //need original Variables ID (Time, P, Phi, Th...) form THSMVA
-    for (auto const& v : fVariableID) {
-        if (v == "Time") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaTime(); fVariableCount++;};
-        if (v == "Edep") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Edep(); fVariableCount++;};
-        if (v == "DeltaE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaE(); fVariableCount++;};
-        if (v == "PreE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->PreE(); fVariableCount++;};
-        if (v == "P") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->P(); fVariableCount++;};
-        if (v == "Th") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Theta(); fVariableCount++;};
-        if (v == "Phi") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Phi(); fVariableCount++;};
-        if (v == "Vz") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Vertex().Z(); fVariableCount++;};
-        if (v == "TrChi2") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->TrChi2(); fVariableCount++;};
-        if (v == "Det") {fAppVars[tmpPCount][fVariableCount] = Float_t(tmpParticle->Detector()); fVariableCount++;}
+    if (!fVarNames.empty()){
+        for (auto const& v : fVarNames[tmpPCount]) {
+            if (v == "Time") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaTime(); fVariableCount++;};
+            if (v == "Edep") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Edep(); fVariableCount++;};
+            if (v == "DeltaE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaE(); fVariableCount++;};
+            if (v == "PreE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->PreE(); fVariableCount++;};
+            if (v == "P") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->P(); fVariableCount++;};
+            if (v == "Th") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Theta(); fVariableCount++;};
+            if (v == "Phi") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Phi(); fVariableCount++;};
+            if (v == "Vz") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Vertex().Z(); fVariableCount++;};
+            if (v == "TrChi2") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->TrChi2(); fVariableCount++;};
+            if (v == "Det") {fAppVars[tmpPCount][fVariableCount] = Float_t(tmpParticle->Detector()); fVariableCount++;}
+        }
+    }
+    else{
+        for (auto const& v : fVariableID) {
+            if (v == "Time") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaTime(); fVariableCount++;};
+            if (v == "Edep") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Edep(); fVariableCount++;};
+            if (v == "DeltaE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaE(); fVariableCount++;};
+            if (v == "PreE") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->PreE(); fVariableCount++;};
+            if (v == "P") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->P(); fVariableCount++;};
+            if (v == "Th") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Theta(); fVariableCount++;};
+            if (v == "Phi") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->P4p()->Phi(); fVariableCount++;};
+            if (v == "Vz") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Vertex().Z(); fVariableCount++;};
+            if (v == "TrChi2") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->TrChi2(); fVariableCount++;};
+            if (v == "Det") {fAppVars[tmpPCount][fVariableCount] = Float_t(tmpParticle->Detector()); fVariableCount++;}
+        }
+        
     }
 }
 /**
@@ -124,8 +138,6 @@ void THSMVAApp::SetInputBranches(){
 }
 
 
-// TODO : set ouput branches
-
 /**
  * Add readers 
  *
@@ -149,8 +161,6 @@ void THSMVAApp::AddReaders(){
  *
  */
 
-// TODO : multi reader setup
-
 void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader){
 
     fParticleCount = 0;
@@ -161,12 +171,6 @@ void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader){
     std::cout<<"    Setting reader variables..."<<std::endl;
     for (UInt_t iPar=0; iPar<fAppVars.size(); iPar++) {
         for (UInt_t iVar=0; iVar<fAppVars[iPar].size(); iVar++) {
-    //for (auto const& p : fNames){
-    //    for (auto const& v : p){
-    //        tmpReader->AddVariable( v,&(fAppVars[fParticleCount][fVariableCount]) );
-    //        std::cout<<v<<std::endl;
-    //        std::cout<<&(fAppVars[fParticleCount][fVariableCount])<<std::endl;
-    //        fVariableCount++;
             tmpReader->AddVariable( fAppVariableNames[iPar][iVar], &fAppVars[iPar][iVar]);
             std::cout<<fAppVariableNames[iPar][iVar]<<std::endl;
             std::cout<<&(fAppVars[iPar][iVar])<<std::endl;
@@ -280,18 +284,20 @@ void THSMVAApp::SetReaderMethods(TMVA::Reader* tmpReader, Split tmpSplit){
 
 void THSMVAApp::SetOutput(){
     
-    //fParticleCount = 0;
-    //fVariableCount = 0;
-    //    
+    fParticleCount = 0;
+    fVariableCount = 0;
+        
     // set branch addresses
-    //for (auto const& p : fMVAVariables){
-    //    for (auto const& v : p){
-    //        fOutputTree->Branch( v, &(fMVATreeVars[fParticleCount][fVariableCount]), v+"/F" );
-    //        fVariableCount++;
-    //    }
-    //    fParticleCount++;
-    //    fVariableCount=0;
-    //}
+    if (fCheckVariables){
+        for (auto const& p : fAppVariableNames){
+            for (auto const& v : p){
+                fOutputTree->Branch( v, &(fAppVars[fParticleCount][fVariableCount]), v+"/F" );
+                fVariableCount++;
+            }
+            fParticleCount++;
+            fVariableCount=0;
+        }
+    }
 
     if (!fMethods.empty()){
         fMethodResults.resize(fMethods.size());
@@ -308,7 +314,6 @@ void THSMVAApp::SetOutput(){
         fOutputTree->Branch("ReaderIdx", &fReaderIdx, "ReaderIdx/I");
     }
 
-    //fOutputTree->Print();
 }
 
 /**
@@ -372,18 +377,6 @@ void THSMVAApp::ProcessTree(){
  
         fAppTree->GetEntry(ievt);
 
-        if (ievt == 1000) {
-          break;
-        }
-
-        // TODO : better fix than this
-        //
-        //fMVATreeVars = fTreeVarsF;
-
-        //break; //
-        //
-        // Return the MVA outputs 
-        // loop over methods  
         fReaderIdx = CheckSplits();
 
         if (!fMethods.empty()) {
@@ -418,7 +411,6 @@ void THSMVAApp::ProcessTree(){
 void THSMVAApp::ProcessEvent(){
 
     // will have as many outputs as results
-    // TODO : move this check
     if (fMethodResults.empty()){
         std::cout<<"ERROR : output vector not set"<<std::endl;
         exit(1);
@@ -433,7 +425,7 @@ void THSMVAApp::ProcessEvent(){
             //std::cout<<fNames[iPar][iVar]<<std::endl;
             //if (iVar == 4) std::cout<<fAppVars[iPar][iVar]<<" "<<&fAppVars[iPar][iVar]<<" ";
             //std::cout<<iPar<<"  "<<iVar<<std::endl;
-            if (std::isnan(fAppVars[iPar][iVar])){
+            if (!std::isfinite(fAppVars[iPar][iVar])){
                 fAppVars[iPar][iVar] = 0;
             }
         }
@@ -448,10 +440,10 @@ void THSMVAApp::ProcessEvent(){
         //std::cout<<" classifier output"<<std::endl;
        for (UInt_t i = 0; i<fMethods.size(); i++) {
           fMethodName = fMethods[i].GetName() + " method"; // get method name
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(4).GetExternalLink()<<" ";
+          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(6).GetExternalLink()<<" ";
           //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(13).GetExternalLink()<<" ";
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(22).GetExternalLink()<<" ";
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(31).GetExternalLink()<<std::endl;
+          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(20).GetExternalLink()<<" ";
+          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(27).GetExternalLink()<<std::endl;
           fMethodResults[i] = fReaders[fReaderIdx]->EvaluateMVA( (fMethodName) );
           //std::cout<<i<<" "<<fMethodResults[i]<<std::endl;
        }
@@ -464,95 +456,16 @@ void THSMVAApp::ProcessEvent(){
 
 }
 
+/**
+ * Finalise application and write results
+ *
+ */
+
+
 void THSMVAApp::EndApp(){
     fOutputFile->cd();
     fOutputTree->Write();
     fOutputFile->Close();
-
-}
-
-/**
- * Make plots from outputs
- *
- */
-
-void THSMVAApp::Plots(){
-    gDirectory->pwd();
-    fDirectory = fOutputFile->mkdir("plots");
-    fCutSignal = "Correct==1";
-    fCutBackground = "Correct==0";
-
-    gROOT->SetBatch(kTRUE);
-
-    for (auto const& m : fMethods){
-       
-        // draw hists for signal / background check
-        fHistNameSig = m.GetName() + "-Signal";
-        fOutputTree->Draw(m.GetName()+">>"+fHistNameSig, fCutSignal, "goff");
-        fHist1DSig = (TH1F*)gDirectory->Get(fHistNameSig);
-
-        fHistNameBkg = m.GetName() + "-Background";
-        fOutputTree->Draw(m.GetName()+">>"+fHistNameBkg, fCutBackground, "goff");
-        fHist1DBkg = (TH1F*)gDirectory->Get(fHistNameBkg);
-
-        fDirectory->cd();
-        fHist1DSig->Write();
-        fHist1DBkg->Write();
-
-        for (UInt_t i=0; i<4; i++){
-            fHistName = m.GetName() + "T" + std::to_string(i);
-            fCutString = "Topo==" + std::to_string(i);
-            fTopoCut = fCutString; 
-            fOutputTree->Draw(m.GetName() + ">>" + fHistName, fTopoCut,"goff");
-            fHist1D = (TH1F*)gDirectory->Get(fHistName);
-            fDirectory->cd();
-            fHist1D->Write();
-            // same for background
-            fHistName = m.GetName() + "Bkg-T" + std::to_string(i);
-            fCutString = "Correct==0&Topo==" + std::to_string(i);
-            fTopoCut = fCutString; 
-            fOutputTree->Draw(m.GetName() + ">>" + fHistName, fTopoCut,"goff");
-            fHist1D = (TH1F*)gDirectory->Get(fHistName);
-            fDirectory->cd();
-            fHist1D->Write();
-            // same for signal
-            fHistName = m.GetName() + "Sig-T" + std::to_string(i);
-            fCutString = "Correct==1&Topo==" + std::to_string(i);
-            fTopoCut = fCutString; 
-            fOutputTree->Draw(m.GetName() + ">>" + fHistName, fTopoCut,"goff");
-            fHist1D = (TH1F*)gDirectory->Get(fHistName);
-            fDirectory->cd();
-            fHist1D->Write();
-        }
-
-        // draw 2D hist for miss mass
-        fHistName = m.GetName() + ":MissMass";
-        fHist2D = new TH2F(fHistName, "",50, -10, 10, 50, -1, 1);
-        fOutputTree->Draw(fHistName+">>" + fHistName,"Correct==0", "goff");
-        fDirectory->cd();
-        fHist2D->Write();
-        fHistName = m.GetName() + ":MissMass";
-        fHist2D = new TH2F(fHistName, "",50, -10, 10, 50, -1, 1);
-        fOutputTree->Draw(fHistName+">>" + fHistName,"Correct==1", "goff");
-        fDirectory->cd();
-        fHist2D->Write();
-        fHistName = m.GetName() + ":MissMass2";
-        fHist2D = new TH2F(fHistName, "",50, -1, 1, 50, -1, 1);
-        fOutputTree->Draw(fHistName+">>" + fHistName,"Correct==0", "goff");
-        fDirectory->cd();
-        fHist2D->Write();
-        fHistName = m.GetName() + ":MissMass2";
-        fHist2D = new TH2F(fHistName, "",50, -1, 1, 50, -1, 1);
-        fOutputTree->Draw(fHistName+">>" + fHistName,"Correct==1", "goff");
-        fDirectory->cd();
-        fHist2D->Write();
-        // draw 2D hist for missMass2
-        //fHistName = m.GetName() + ":MissMass2";
-        //fOutputTree->Draw(fHistName+">>"+fHistName,"", "goff");
-        //fHist2D = (TH2F*)gDirectory->Get(fHistName);
-        //fDirectory->cd();
-        //fHist2D->Write();
-    }
 
 }
 
@@ -562,9 +475,8 @@ void THSMVAApp::Plots(){
 THSMVAApp::~THSMVAApp(){
 
     delete fAppTree;
-    delete fDirectory;
+    delete fOutputFile;
+    delete fOutputTree;
     delete fReader;
-    delete fHist1DSig;
-    delete fHist1DBkg;
 
 }

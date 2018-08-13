@@ -55,13 +55,7 @@ void THSMVAPrep::SetBranches() {
         }
         fVariableCount = 0;
         fParticleCount++;
-        
     }
-    fNVarsF = fTreeVarsF[0].size();
-    fNVarsI = fTreeVarsI[0].size();
-    std::cout<<"Number of variables per particle (Float_t) :    "<<fNVarsF<<std::endl;
-    std::cout<<"Number of variables per particle (Int_t)   :    "<<fNVarsI<<std::endl;
-
 }
 
 /**
@@ -72,53 +66,66 @@ void THSMVAPrep::SetBranches() {
 void THSMVAPrep::RemoveNaNs(){
 
     //std::cout<<"Removing NaNs..."<<std::endl;
+    //std::cout<<fParticleID.size()<<std::endl;
 
-    //if (!fBaseTree) {
-    //    std::cout<<"ERROR: Base tree not set..."<<std::endl;
-    //    std::cout<<"Exiting.."<<std::endl;
-    //    exit(1);
-    //}
 
     for (UInt_t iPar=0; iPar<fParticleID.size(); iPar++) {
         //std::cout<<"...floats..."<<std::endl;
-        for (UInt_t iVar=0; iVar<fNVarsF; iVar++) {
-            if (std::isnan(fTreeVarsF[iPar][iVar])){
+        //std::cout<<fTreeVarsF[iPar].size()<<std::endl;
+        for (UInt_t iVar=0; iVar<fTreeVarsF[iPar].size(); iVar++) {
+            if (!std::isfinite(fTreeVarsF[iPar][iVar])){
                 fTreeVarsF[iPar][iVar] = 0;
             }
         }
         //std::cout<<"...ints..."<<std::endl;
-        for (UInt_t iVar=0; iVar<fNVarsI; iVar++) {
-            if (std::isnan(fTreeVarsI[iPar][iVar])){
+        for (UInt_t iVar=0; iVar<fTreeVarsI[iPar].size(); iVar++) {
+            if (!std::isfinite(fTreeVarsI[iPar][iVar])){
                 fTreeVarsI[iPar][iVar] = 0;
             }
         }
     } 
-
-    //fBaseTree->Fill();
-    
+    fN++;
 }
 
 /**
- * Add variables from a THSParticles with predefined options
+ * Add variables from a THSParticle with predefined options
  *
  */
 
 void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
     fCountF = 0;
     fCountI = 0;
-
-    for (auto const& v : fVariableID) {
-        if (v == "Time") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaTime(); fCountF++;};
-        if (v == "Edep") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Edep(); fCountF++;};
-        if (v == "DeltaE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaE(); fCountF++;};
-        if (v == "PreE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->PreE(); fCountF++;};
-        if (v == "P") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->P(); fCountF++;};
-        if (v == "Th") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Theta(); fCountF++;};
-        if (v == "Phi") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Phi(); fCountF++;};
-        if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
-        if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
-        // convert to float for training
-        if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;
+    // add values depnding on method used to add variables
+    if (!fVarNames.empty()){
+        for (auto const& v : fVarNames[tmpPCount]) {
+            if (v == "Time") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaTime(); fCountF++;};
+            if (v == "Edep") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Edep(); fCountF++;};
+            if (v == "DeltaE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaE(); fCountF++;};
+            if (v == "PreE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->PreE(); fCountF++;};
+            if (v == "P") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->P(); fCountF++;};
+            if (v == "Th") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Theta(); fCountF++;};
+            if (v == "Phi") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Phi(); fCountF++;};
+            if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
+            if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
+            // convert to float for training
+            if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;
+            }
+        }
+    }
+    else{
+        for (auto const& v : fVariableID) {
+            if (v == "Time") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaTime(); fCountF++;};
+            if (v == "Edep") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Edep(); fCountF++;};
+            if (v == "DeltaE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->DeltaE(); fCountF++;};
+            if (v == "PreE") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->PreE(); fCountF++;};
+            if (v == "P") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->P(); fCountF++;};
+            if (v == "Th") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Theta(); fCountF++;};
+            if (v == "Phi") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->P4p()->Phi(); fCountF++;};
+            if (v == "Vz") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->Vertex().Z(); fCountF++;};
+            if (v == "TrChi2") {fTreeVarsF[tmpPCount][fCountF] = tmpParticle->TrChi2(); fCountF++;};
+            // convert to float for training
+            if (v == "Det") {fTreeVarsI[tmpPCount][fCountI] = tmpParticle->Detector(); fCountI++;
+            }
         }
     }
 }

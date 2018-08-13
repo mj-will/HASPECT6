@@ -98,7 +98,7 @@ class THS2pi : public THSFinalState{
   void TMVAFill();
   void RunTraining() {fMVATrain.DefaultTrain();};
   void RunApp() {fMVAApp.DefaultApp();}
-  void EndApplication(TFile* file) {fMVAApp.SetOutputFile(file);fMVAApp.Plots();};
+  void EndApplication(TFile* file) {fMVAApp.SetOutputFile(file);};
   void WriteConfig(TString name) {fMVATrain.WriteTHSMVA(name);};
   void SetTrain(Bool_t b) {fIsTrain = b;};
 

@@ -8,12 +8,10 @@
 */
 #include "THSMVATrain.h"
 #include "TROOT.h"
-
+//#include<TMVA/MethodRXGB.h>
 
 ClassImp(THSMVATrain);
 
-
-// TODO : Datasets when using multiple topologies etc.
 
 ////////////////////////////////////////////////////////////
 /// Here I put Doxygen readable comments explaing what each function does
@@ -21,13 +19,11 @@ ClassImp(THSMVATrain);
 
 THSMVATrain::THSMVATrain(){
     TMVA::Tools::Instance();
-    // set output for TMVA
-    //fOutputName = "THSMVAClassification.root";
-    //fOutputFile = new TFile(fOutputName, "RECREATE");
+    //TMVA::PyMethodBase::PyInitialize();
+    //ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
 }
 
-//std::vector<Method> THSMVATrain::fMethods;
-//std::vector<Split> THSMVATrain::fSplits;
+// initialize static variables
 std::vector<std::vector<TString>> THSMVATrain::fMVAVariables;
 std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
 
@@ -48,11 +44,7 @@ void THSMVATrain::DefaultTrain(){
     if (!fSplits.empty()){
         for (UInt_t i=0; i<fSplits.size(); i++) {
 
-            //fOutputDir = fOutputFile -> mkdir(fSplits[i].GetSplitName());
-            //fOutputDir->cd();
-
             if (fPrintTree) fTrainTree->Print();
-            // TODO : make set MVA more flexible
             SetMVAVariables(fSplits[i].GetVariables()[0]); 
             
             fSplits[i].AddMVAVariables(fMVAVariables, fMVATreeVars);
@@ -67,10 +59,8 @@ void THSMVATrain::DefaultTrain(){
             EnableTest();
             Train();
             if (fTest) { Test(); }
-
             
         }
-        //EndTraining();
     }
     else{
 
@@ -87,7 +77,6 @@ void THSMVATrain::DefaultTrain(){
        Train();
        if (fTest) { Test(); }
        
-       //EndTraining();
     }
 }
 
@@ -102,18 +91,6 @@ void THSMVATrain::SetMVATreeVars(){
         std::cout<<"ERROR : Variables for MVA not set"<<std::endl;
         exit(1);
     }
-
-
-    // TODO : catch for fSelectedParticles
-
-    //if (fMVAVariables.size() == fTreeVarsF.size()) *fMVATreeVars = &fTreeVarsF;
-    //else{
-    //    for (UInt_t i=0; i<fSelectedParticles.size(); i++){
-    //        fMVATreeVars.push_back(fTreeVarsF[fSelectedParticles[i]]);
-    //    }
-    //}
-    
-    
     //fMVATreeVars.resize(fMVAVariables.size() , vector<Float_t>( fMVAVariables[0].size() , 0 ) );
     fMVATreeVars.resize(fMVAVariables.size());
     for (UInt_t i=0; i<fMVATreeVars.size(); i++){
@@ -128,7 +105,6 @@ void THSMVATrain::SetMVATreeVars(){
  *
  */
 
-// TODO : Think about having non trainable variables in fNames
 void THSMVATrain::SetMVAVariables(){
     fMVAVariables = fSelectNames;
     SetMVATreeVars();
@@ -169,10 +145,6 @@ void THSMVATrain::AddSplit(TString inputName, std::vector<TString> inputVariable
     fTmpSplit.SetPointer(p);
     fSplits.push_back(fTmpSplit);
 }
-
-
-// TODO : add options for different splits
-// TODO : randomize split
 
 /*
  * Set signal tree with a possible cut
@@ -280,7 +252,7 @@ void THSMVATrain::Setup(TString datasetName){
 
     std::cout<<"Setting up factory..."<<std::endl;
 
-    fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=I:AnalysisType=Classification" );
+    fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification" );
 
     std::cout<<"Setting up dataloader..."<<std::endl;
 
@@ -288,7 +260,6 @@ void THSMVATrain::Setup(TString datasetName){
     fDataloader = new TMVA::DataLoader(fDatasetName);
 
     // added variables to dataloader
-    // TODO : use mix of floats and ints?
     for (auto const& p : fMVAVariables){
         for (auto const& vn: p){
             fDataloader->AddVariable( vn, vn, "units", 'F');
@@ -314,7 +285,6 @@ void THSMVATrain::Train(){
 
     fOutputFile->cd();
 
-    // TODO : options for preparing training
     //fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
     fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
 
@@ -347,7 +317,6 @@ void THSMVATrain::Test(){
 
 /*
  * Close open files etc
- * TODO : relocate close and remove function
  *
  */
 

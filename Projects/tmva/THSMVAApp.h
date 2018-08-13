@@ -15,82 +15,68 @@
 
 
 class THSMVAApp : public THSMVA {
+        
+    public :
+        THSMVAApp();
+        virtual ~THSMVAApp();
+    
+    protected :
+        // output file
+        TFile* fOutputFile=nullptr;//!
+        // output trees
+        TTree* fOutputTree=nullptr;//!
+        TTree* fAppTree=nullptr;//!
+        // vectors to loop over and fill
+        std::vector<TMVA::Reader *> fReaders;
+        std::vector<Float_t> fMethodResults;  
+        // TMVAReader
+        TMVA::Reader * fReader=nullptr;//!
 
- public :
-  THSMVAApp();
-  virtual ~THSMVAApp();
-  
- protected :
-  TFile* fOutputFile=nullptr;//!
+        TString fOutputName;
+        TString fMethodName;
+        TString fWeightFile;
 
-  TTree* fOutputTree=nullptr;//!
-  TTree* fAppTree=nullptr;//!
+        TStopwatch fSW;
 
-  TDirectory* fDirectory=nullptr;//!
+        Float_t fProb=0.0;
 
-  std::vector<TMVA::Reader *> fReaders;
-  std::vector<Float_t> fMethodResults;
+        UInt_t fSplitCount=0;
+        Int_t fEventCount=0;
+        Int_t fReaderIdx=0;
+        Int_t fIdx=0;
+        // add branches for variables used for MVA
+        Bool_t fCheckVariables = kFALSE;
+        // variables for output TTree
+        std::vector<std::vector<Float_t>> fAppVars;
+        std::vector<std::vector<TString>> fAppVariableNames;
 
-  TMVA::Reader * fReader=nullptr;//!
+    public:
+        void SetAppTree(TTree* tree){fAppTree = tree;};
+        void SetInputTree(TTree* tree){fAppTree = tree;};
 
-  TString fOutputName;
-  TString fMethodName;
-  TString fWeightFile;
+        void SetOutputTree(TTree* tree){fOutputTree = tree;};
+        void SetOutputFile(TFile* file){fOutputFile = file;};
 
-  TString fHistName;
-  TString fHistNameSig;
-  TString fHistNameBkg;
-  TString fCutString;
+        void AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount);
+        void SetInputBranches();
+        void AddReaders();
+        void SetReaderVariables(TMVA::Reader* tmpReader);
+        void SetReaderVariables(TMVA::Reader* tmpReader, Split tmpSplit);
+        void SetReaders();
+        void SetReaderMethods(TMVA::Reader* tmpReader);
+        void SetReaderMethods(TMVA::Reader* tmpReader, Split tmpSplit);
+        void SetOutput();
+        void ProcessTree();
+        void ProcessEvent();
+        Int_t CheckSplits();
+        void EndApp();
 
-  TStopwatch fSW;
+        void DefaultApp();
+        void Init(THSMVA * setup);
+        void UpdateSplit(TString name, Int_t * pointer);
+        void UpdateSplit(TString name, std::vector<Int_t *> pointers);
 
-  Float_t fProb=0.0;
-
-  Int_t fSplitCount=0;
-  Int_t fEventCount=0;
-  Int_t fReaderIdx=0;
-  Int_t fIdx=0;
-
-  std::vector<std::vector<Float_t>> fAppVars;
-  std::vector<std::vector<TString>> fAppVariableNames;
-
-  TCanvas *fCanvas;
-
-  TCut fCutSignal;
-  TCut fCutBackground;
-  TCut fTopoCut;
-  TH1F *fHist1DSig=nullptr;//!
-  TH1F *fHist1DBkg=nullptr;//!
-  TH1F *fHist1D=nullptr;//!
-  TH2F *fHist2D=nullptr;//!
-
- public:
-  void SetAppTree(TTree* tree){fAppTree = tree;};
-  void SetInputTree(TTree* tree){fAppTree = tree;};
-
-  void SetOutputTree(TTree* tree){fOutputTree = tree;};
-  void SetOutputFile(TFile* file){fOutputFile = file;};
-
-  void AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount);
-  void SetInputBranches();
-  void AddReaders();
-  void SetReaderVariables(TMVA::Reader* tmpReader);
-  void SetReaderVariables(TMVA::Reader* tmpReader, Split tmpSplit);
-  void SetReaders();
-  void SetReaderMethods(TMVA::Reader* tmpReader);
-  void SetReaderMethods(TMVA::Reader* tmpReader, Split tmpSplit);
-  void SetOutput();
-  void ProcessTree();
-  void ProcessEvent();
-  Int_t CheckSplits();
-  void EndApp();
-
-  void DefaultApp();
-  void Init(THSMVA * setup);
-  void UpdateSplit(TString name, Int_t * pointer);
-  void UpdateSplit(TString name, std::vector<Int_t *> pointers);
-
-  void Plots();
+        Float_t GetMethodResult(Int_t i){return fMethodResults[i];}
   
 };
 

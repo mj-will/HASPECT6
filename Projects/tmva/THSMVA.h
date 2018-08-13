@@ -13,12 +13,19 @@ using namespace std;
 
 class Method {
 
-    public :
+    protected:
 
         TMVA::Types::EMVA fMethodType; // method type for factory
         TString fMethodName;           // name for saving dataset
         TString fMethodParameters;     // string of parameters for factory
         // return functions
+    public:
+
+        void SetName(TString name) {fMethodName = name;};
+        void SetType(TMVA::Types::EMVA type) {fMethodType = type;};
+        void SetParameters(TString params) {fMethodParameters = params;};
+        
+
         TMVA::Types::EMVA GetType() const {return fMethodType;};
         TString GetName() const {return fMethodName;};
         TString GetParameters() const {return fMethodParameters;};
@@ -77,6 +84,7 @@ class THSMVA : public TNamed {
         Int_t fParticleCount = 0;
         Int_t fVariableCount = 0;
         Int_t fCounter = 0;
+        UInt_t fParticlesAdded = 0;
         // bools 
         Bool_t fSplitTopologies = false;
         Bool_t fPrintVariables=true;
@@ -96,6 +104,7 @@ class THSMVA : public TNamed {
         std::vector<Split> fSplits;
         // vectors of variables  
         static std::vector<std::vector<TString>> fNames;        // names for branches for tree
+        static std::vector<std::vector<TString>> fVarNames;     // names for branches for tree
         static std::vector<std::vector<TString>> fSelectNames;  // vec of reduced set of names
         static std::vector<std::vector<Float_t>> fTreeVarsF;    // Float_t type variables for tree
         std::vector<std::vector<Int_t>> fTreeVarsI;             // Int_t type variables for tree
@@ -108,6 +117,8 @@ class THSMVA : public TNamed {
         void SetVariables(std::vector<TString> tmpVariables) {fVariableID = tmpVariables;};
         void SetTypes(std::vector<TString> tmpTypes) {fTypes = tmpTypes;};
         void SetParticles(std::vector<TString> tmpParticles) {fParticleID = tmpParticles;};
+
+        void AddParticle(TString name, std::vector<TString> variables, std::vector<TString> types);
 
         void SetSplits(std::vector<Split> splits) {fSplits = splits;};
         void SetMethods(std::vector<Method> methods) {fMethods = methods;};
