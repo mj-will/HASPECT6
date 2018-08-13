@@ -5,6 +5,7 @@
   TString INDIR;
   TString OUTDIR;
   TString RUNNO;
+  TString FILETAG;
   TString FARMFILE;
   Int_t NFILES=0;
   Int_t TperFILE=300; // time to analysis a file
@@ -21,6 +22,9 @@
     }
     if(cmd.Contains("--outdir=")){
       OUTDIR=cmd(9,cmd.Sizeof());
+    }
+    if(cmd.Contains("--tag=")){
+      FILETAG=cmd(6,cmd.Sizeof());
     }
     if(cmd.Contains("--run=")){
       RUNNO=cmd(6,cmd.Sizeof());
@@ -67,6 +71,7 @@
   while( (fileName=(gSystem->GetDirEntry(dir)))){
     if(fileName==TString(""))break;
     if(!fileName.Contains(".hipo"))continue;
+    if(!fileName.Contains(FILETAG))continue;
     if(!fileName.Contains(RUNNO)&&RUNNO!=TString("GEMC"))continue;
     DataFiles.push_back(INDIR+fileName);
   }
@@ -79,7 +84,7 @@
       NJOBS++; //extra job for remainder
   }
   else{ //run all files in 1 job
-    NJOBS=1;
+    NJOBS=1;  
     NFILES=DataFiles.size();
   }
   cout<<"Going to run "<<NJOBS<<" jobs "<<endl;
