@@ -141,7 +141,7 @@ THSCLASg13Trigger fTrigger;
     void AppFillVars();
     // setting number of events
     void SetNEvents(Int_t N);
-    void SetNEvents(Int_t NTrain, Int_t NTest);
+    void SetNEvents(Int_t Ntot, Int_t NTrain, Int_t NTest);
     // training
     void SetTrain(Bool_t b) {fIsTrain = b;};
     void RunTraining() {fMVATrain.DefaultTrain();};
@@ -149,7 +149,7 @@ THSCLASg13Trigger fTrigger;
     // application
     void SetApplication(THSMVA* setup);
     void RunApp() {fMVAApp.DefaultApp();}
-    void EndApplication(TFile* file) {fMVAApp.SetOutputFile(file);fMVAApp.Plots();};
+    void EndApplication(TFile* file) {fMVAApp.SetOutputFile(file);};
 
 };
 

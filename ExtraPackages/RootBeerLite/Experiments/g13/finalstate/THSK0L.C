@@ -39,6 +39,8 @@ THSK0L::THSK0L(){
   
   // set particles for MVA analysis  
   SetDefaultVariables({"P", "Th", "Phi", "Time", "Edep", "DeltaE", "Vz"});
+  // default variabbles will be used unless specified
+  // NOTE: MVA expects floats, to add other variables pass a vector of TStrings with the appropriate labels e.g. {"F", "I", "F"}
   PrepAddParticle("Beam", &fBeam, {"P", "Time"});
   PrepAddParticle("Proton", &fProton);
   PrepAddParticle("Pip", &fPip);
@@ -46,7 +48,7 @@ THSK0L::THSK0L(){
   PrepAddParticle("PimK", &fPimK);
 
   TString PID("NONE"); //set this to which particles you want to id via pdg code alone, or set it in individual AddTopology
-  TString INCLUSIVE("ALL");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
+  TString INCLUSIVE("");//set this to which particles you want reaction to be inclusive of, or set it in individual AddTopology "ALL"=> completely inclusive
 
   //include topology for analysis and get index
   AddTopology("proton:pi+:pi-:pi-:Beam",
@@ -78,18 +80,35 @@ void THSK0L::FileStart(){
   if (fIsTrain){
 
       std::cout<<"Setting MVA trees..."<<std::endl;
-      //
+      // add all the methods to train
       Method method0;
-      method0.fMethodName = "BDT0";
-      method0.fMethodType = TMVA::Types::kBDT;
-      method0.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
+      method0.SetName("BDT0");
+      method0.SetType(TMVA::Types::kBDT);
+      method0.SetParameters("!H:!V:NTrees=2400:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
       fMVATrain.AddMethod(method0);
-      std::cout<<"  Finished setting methods and splits"<<std::endl;
+      Method method1;
+      method1.SetName("BDT1");
+      method1.SetType(TMVA::Types::kBDT);
+      method1.SetParameters("!H:!V:NTrees=2400:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
+      fMVATrain.AddMethod(method1);
+      Method method2;
+      method2.SetName("BDT2");
+      method2.SetType(TMVA::Types::kBDT);
+      method2.SetParameters("!H:!V:NTrees=2400:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
+      fMVATrain.AddMethod(method2);
+      Method method3;
 
+      std::cout<<"  Finished setting methods and splits"<<std::endl;
+      // set the trees
       fMVAPrep.SetTree(fFinalTree);
       fMVATrain.SetTrainTree(fFinalTree);
   }
 }
+
+/**
+ * Setup the application stage based on an instance of THSMVA used for training
+ *
+ */
 
 void THSK0L::SetApplication(THSMVA* setup){
 
@@ -97,11 +116,12 @@ void THSK0L::SetApplication(THSMVA* setup){
 
     fMVAApp.Init(setup);
     // update pointers for splits
-    fMVAApp.UpdateSplit("Topo0", &fTopoID);
-    fMVAApp.UpdateSplit("Topo1", &fTopoID);
-    fMVAApp.UpdateSplit("Topo2", &fTopoID);
-    fMVAApp.UpdateSplit("Topo3", &fTopoID);
-    fMVAApp.PrintSplits();
+    // names must be the same as those used previously
+    //fMVAApp.UpdateSplit("Topo0", &fTopoID);
+    //fMVAApp.UpdateSplit("Topo1", &fTopoID);
+    //fMVAApp.UpdateSplit("Topo2", &fTopoID);
+    //fMVAApp.UpdateSplit("Topo3", &fTopoID);
+    //fMVAApp.PrintSplits();
     fMVAApp.AddReaders();
     fMVAApp.SetReaders();
     fMVAApp.SetOutput();
@@ -157,11 +177,16 @@ void THSK0L::Kinematics(){
   fKine.SetMesonBaryon(fK0.P4(),fLambda.P4());
 
   if (fIsTrain){
+      // add the variables from a THSPartilce
       PrepFillVars(); // for training
-      fMVAPrep.RemoveNaNs();
+      fMVAPrep.RemoveNaNs();//filter out NaNs and +/-infs
 
   }
   if (fIsApp){
+      // add variables
+      AppFillVars();
+      // get MVA response for this event
+      fMVAApp.ProcessEvent();
 
       fMK0=fK0.MassDiff();
       fML=fLambda.MassDiff();
@@ -215,8 +240,7 @@ void THSK0L::Kinematics(){
       genfCosy=fKine.Cosy();
       genfCosz=fKine.Cosz();
   
-      AppFillVars();
-      fMVAApp.ProcessEvent();
+      
   }
 
 }
@@ -231,6 +255,8 @@ Bool_t THSK0L::CheckParticle(THSParticle* part){
 
 void THSK0L::FinalStateOutTree(TTree* tree){
   THSFinalState::fFinalTree=tree;
+  // set output tree for MVA application
+  fMVAApp.SetOutputTree(tree);
   //tree->Branch("Final",&fFinal);//If you want to save the final THSParticles
   tree->Branch("Correct",&fCorrect,"Correct/I");
   tree->Branch("Topo",&fTopoID,"Topo/I");
@@ -270,6 +296,11 @@ void THSK0L::FinalStateOutTree(TTree* tree){
   }
 }
 
+/**
+ * Output tree for training
+ *
+ */
+
 void THSK0L::TMVAOutTree(TTree* tree){
   THSFinalState::fFinalTree=tree;
   tree->Branch("Topo",&fTopoID,"Topo/I");
@@ -277,16 +308,21 @@ void THSK0L::TMVAOutTree(TTree* tree){
   tree->Branch("NDet",&fNDet,"NDet/I");
   tree->Branch("MissMass",&fMissMass,"MissMass/D");
   tree->Branch("MissMassFix",&fMissMassFix,"MissMassFix/D");
-  //tree->Branch("Detector",&fDetector,"Detector/I");
+  //tree->Branch("Detector",&fDetector,Detector/I");
   tree->Branch("Correct",&fCorrect,"Correct/I");
-
+  //set the tree for MVA analysis
   fMVAPrep.SetTree(tree);
   fMVAPrep.SetBranches();
-
   fMVATrain.SetTrainTree(tree);
   fMVAApp.SetAppTree(tree);
 
 }
+
+///////////////////////////////
+// Utility functions 
+// (Shouldn't need to changing)
+// ////////////////////////////
+
 
 /**
  * Check number of signals generated
@@ -321,7 +357,7 @@ Int_t THSK0L::CheckSignalCount(TTree* tree){
             fSignalCount = fEventList->GetN();
         }
         else fSignalCount = 0;
-        std::cout<<"    Signal count: "<<fSignalCount<<std::endl;
+        std::cout<<"\r" <<"    Signal count: "<<fSignalCount;
         if (fSignalCount >= fTotalEvents)return kTRUE;
         else return kFALSE;
     }
@@ -347,7 +383,7 @@ void THSK0L::PrepAddParticle(THSParticle *part){
 
 void THSK0L::PrepAddParticle(TString name, THSParticle *part, std::vector<TString> variables, std::vector<TString> types){
     std::cout<<"Adding "<<name<<std::endl;
-    // fiall vector of pointers
+    // fill vector of pointers
     fParticles.push_back(part);
     if (types.empty()){
             std::cout<<"    Adding all variables as Float_t"<<std::endl;
@@ -406,9 +442,11 @@ void THSK0L::SetNEvents(Int_t N){
     fTotalEvents = 2*N;
 }
 
-void THSK0L::SetNEvents(Int_t NTrain, Int_t NTest){
+void THSK0L::SetNEvents(Int_t NTot, Int_t NTrain, Int_t NTest){
     // set number of events
     fMVATrain.SetNTrain(NTrain);
     fMVATrain.SetNTest(NTest);
-    fTotalEvents = NTrain + NTest;
+    // set total number of events
+    if (NTot == -1) {fTotalEvents = std::numeric_limits<Int_t>::max();}
+    else{ fTotalEvents = NTot;}
 }

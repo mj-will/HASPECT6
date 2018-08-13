@@ -13,12 +13,19 @@ using namespace std;
 
 class Method {
 
-    public :
+    protected:
 
         TMVA::Types::EMVA fMethodType; // method type for factory
         TString fMethodName;           // name for saving dataset
         TString fMethodParameters;     // string of parameters for factory
         // return functions
+    public:
+
+        void SetName(TString name) {fMethodName = name;};
+        void SetType(TMVA::Types::EMVA type) {fMethodType = type;};
+        void SetParameters(TString params) {fMethodParameters = params;};
+        
+
         TMVA::Types::EMVA GetType() const {return fMethodType;};
         TString GetName() const {return fMethodName;};
         TString GetParameters() const {return fMethodParameters;};
@@ -77,7 +84,7 @@ class THSMVA : public TNamed {
         Int_t fParticleCount = 0;
         Int_t fVariableCount = 0;
         Int_t fCounter = 0;
-        Int_t fParticlesAdded = 0;
+        UInt_t fParticlesAdded = 0;
         // bools 
         Bool_t fSplitTopologies = false;
         Bool_t fPrintVariables=true;
