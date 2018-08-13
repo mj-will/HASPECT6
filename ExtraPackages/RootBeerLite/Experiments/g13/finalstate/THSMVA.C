@@ -82,7 +82,7 @@ void THSMVA::AddParticle(TString name, std::vector<TString> variables, std::vect
 void THSMVA::SetNames() {
 
     if (fNames.size()) {
-        std::cout<<"\033[1;35m warning: \033[0: Names already set"<<std::endl;
+        std::cout<<"\033[1;35m warning: \033[0m : Names already set"<<std::endl;
         for (auto const& v : fNames){
             std::cout<<"    ";
             for (auto const& n : v){
