@@ -40,7 +40,7 @@ class THSMVAApp : public THSMVA {
 
         Float_t fProb=0.0;
 
-        Int_t fSplitCount=0;
+        UInt_t fSplitCount=0;
         Int_t fEventCount=0;
         Int_t fReaderIdx=0;
         Int_t fIdx=0;
