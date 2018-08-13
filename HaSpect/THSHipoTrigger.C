@@ -80,10 +80,9 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
       fRunInfo->SetNRun(fRecEvNRun->Val());
       fRunInfo->SetType(fRecEvTYPE->Val());
       fRunInfo->SetTotalCharge(fTotCharge);
-      fRunInfo->SetMeanCurrent(fTotCharge/fNScalerReads/0.033);
-      fRunTree->Fill();
+      //fRunInfo->SetMeanCurrent(fTotCharge/fNScalerReads/0.033);
     }
-    cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
+    //    cout<<"THSHipoTrigger::ReadEvent total charge for this file "<<fTotCharge<<endl;
     //cout<<"  at average of current of "<<fTotCharge/fNScalerReads/0.033<<"nA per read. "<<endl; 
 
     if(fChainFiles){
@@ -99,7 +98,6 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fEntry++;
  
   fWriteThis=kFALSE; //don't write scaler events on their own, accumulate and write at end or with other events
-  RawScaler();
   
 
   //Now check Event Builder Banks, -2 =>we have all ready got event
@@ -115,7 +113,9 @@ Bool_t THSHipoTrigger::ReadEvent(Long64_t entry){
   fEventInfo->SetRFTime(fRecEvRFTime->Val());
   fEventInfo->SetBeamHel(fRecEvHelic->Val());
   fEventInfo->SetNEvent(fRecEvNEVENT->Val());
-  
+  fTotCharge+=fRecEvBCG->Val()-fCharge;
+  fCharge=fRecEvBCG->Val();
+
  
   return kTRUE;
 
