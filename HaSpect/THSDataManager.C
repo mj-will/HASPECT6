@@ -310,7 +310,7 @@ void THSDataManager::CloseOutput(){
   if(!fWriteFile) return;
   fWriteFile->cd();
   if(fWriteTree)fWriteTree->Write();
-  if(fRunTree)fRunTree->Write();
+  if(fRunTree){fRunTree->Fill();fRunTree->Write();}
   fWriteFile->Close();
   delete fWriteFile;
   fWriteFile=nullptr;
