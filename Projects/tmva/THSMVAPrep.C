@@ -1,21 +1,28 @@
-/**
-	\class THSMVAPrep
-	For creating TMVA training tree in THSFinalState
-	Given a THSParticle it will create default branches
-	from datamembers of the THSParticle class
-	For each combitorial event it will then fill the tree
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVAPrep                                                            *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     For creating TMVA training tree in THSFinalState                           *
+*     Given a THSParticle it will create default branches                        *
+*     from datamembers of the THSParticle class                                  *
+*     For each combitorial event it will then fill the tree                      *
+*                                                                                *
+**********************************************************************************/
 
-*/
 #include "THSMVAPrep.h"
 #include "TROOT.h"
-
 
 ClassImp(THSMVAPrep);
 
 
-////////////////////////////////////////////////////////////
-/// Here I put Doxygen readable comments explaing what each function does
+//////////////////////////
 /// Constructor 
+//////////////////////////
 
 THSMVAPrep::THSMVAPrep(){
 
@@ -66,18 +73,13 @@ void THSMVAPrep::SetBranches() {
 void THSMVAPrep::RemoveNaNs(){
 
     //std::cout<<"Removing NaNs..."<<std::endl;
-    //std::cout<<fParticleID.size()<<std::endl;
-
 
     for (UInt_t iPar=0; iPar<fParticleID.size(); iPar++) {
-        //std::cout<<"...floats..."<<std::endl;
-        //std::cout<<fTreeVarsF[iPar].size()<<std::endl;
         for (UInt_t iVar=0; iVar<fTreeVarsF[iPar].size(); iVar++) {
             if (!std::isfinite(fTreeVarsF[iPar][iVar])){
                 fTreeVarsF[iPar][iVar] = 0;
             }
         }
-        //std::cout<<"...ints..."<<std::endl;
         for (UInt_t iVar=0; iVar<fTreeVarsI[iPar].size(); iVar++) {
             if (!std::isfinite(fTreeVarsI[iPar][iVar])){
                 fTreeVarsI[iPar][iVar] = 0;
@@ -131,8 +133,9 @@ void THSMVAPrep::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) 
 }
 
 ///////////////////////////////////////////////////////////
-///Destructor, here I need to delete any data members that have
-///been constructed via the new operator and not been deleted elsewhere
+///Destructor
+///////////////////////////////////////////////////////////
+
 THSMVAPrep::~THSMVAPrep(){
     delete fBaseTree;
 }

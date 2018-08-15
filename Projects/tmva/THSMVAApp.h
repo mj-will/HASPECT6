@@ -1,3 +1,16 @@
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVAApp                                                             *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     Apply the trained MVA methods on and event by event basis                  *
+*                                                                                *
+**********************************************************************************/
+
 #ifndef THSMVAAPP_h
 #define THSMVAAPP_h
 
@@ -58,18 +71,18 @@ class THSMVAApp : public THSMVA {
         void SetOutputFile(TFile* file){fOutputFile = file;};
 
         void AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount);
-        void SetInputBranches();
         void AddReaders();
+
         void SetReaderVariables(TMVA::Reader* tmpReader);
         void SetReaderVariables(TMVA::Reader* tmpReader, Split tmpSplit);
         void SetReaders();
         void SetReaderMethods(TMVA::Reader* tmpReader);
         void SetReaderMethods(TMVA::Reader* tmpReader, Split tmpSplit);
         void SetOutput();
-        void ProcessTree();
+
         void ProcessEvent();
+
         Int_t CheckSplits();
-        void EndApp();
 
         void DefaultApp();
         void Init(THSMVA * setup);

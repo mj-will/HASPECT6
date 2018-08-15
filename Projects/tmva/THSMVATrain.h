@@ -1,3 +1,16 @@
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVATrain                                                           *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     Train MVA methods on the events generated in THSMVAPrep                    *
+*                                                                                *
+**********************************************************************************/
+
 #ifndef THSMVATRAIN_h
 #define THSMVATRAIN_h
 
@@ -10,6 +23,9 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/DataSetInfo.h"
+#include "TMVA/PyMethodBase.h"
+#include "TMVA/RMethodBase.h"
+#include "TRInterface.h"
 
 class THSMVATrain : public THSMVA {
 

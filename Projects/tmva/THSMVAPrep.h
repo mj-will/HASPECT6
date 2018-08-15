@@ -1,3 +1,19 @@
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVAPrep                                                            *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     For creating TMVA training tree in THSFinalState                           *
+*     Given a THSParticle it will create default branches                        *
+*     from datamembers of the THSParticle class                                  *
+*     For each combitorial event it will then fill the tree                      *
+*                                                                                *
+**********************************************************************************/
+
 #ifndef THSMVAPREP_h
 #define THSMVAPREP_h
 
