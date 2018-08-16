@@ -23,6 +23,8 @@ THSMVAApp::THSMVAApp(){
     // set output for TMVA
     //fOutputName = "THSMVAApp.root";
     //fOutputFile = TFile::Open(fOutputName, "RECREATE");
+    //TMVA::PyMethodBase::PyInitialize();
+    //ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
     fOutputTree = new TTree("OutputTree", "OutputTree");
 }
 
@@ -172,7 +174,7 @@ void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader, Split tmpSplit){
         std::cout<<"    particle: "<<fIdx<<std::endl;
         for (auto const& v : p){
             tmpReader->AddVariable( v,&(fAppVars[fIdx][fVariableCount]) );
-            std::cout<<v<<std::endl;
+            std::cout<<"        "<<v<<std::endl;
             fVariableCount++;
         }
         fParticleCount++;

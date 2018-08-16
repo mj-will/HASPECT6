@@ -23,9 +23,9 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/PyMethodBase.h"
-#include "TMVA/RMethodBase.h"
-#include "TRInterface.h"
+//#include "TMVA/PyMethodBase.h"
+//#include "TMVA/RMethodBase.h"
+//#include "TRInterface.h"
 
 class THSMVATrain : public THSMVA {
 

@@ -28,8 +28,8 @@ std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
 THSMVATrain::THSMVATrain(){
     // initialize TMVA
     TMVA::Tools::Instance();
-    TMVA::PyMethodBase::PyInitialize();
-    ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
+    //TMVA::PyMethodBase::PyInitialize();
+    //ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
 }
 
 
