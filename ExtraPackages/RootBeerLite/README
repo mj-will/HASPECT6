@@ -1,7 +1,7 @@
 To install
 
 cd here
-
+setenv ROOTBEER $PWD
 source scripts/rootbeer.cshrc 
 
 make

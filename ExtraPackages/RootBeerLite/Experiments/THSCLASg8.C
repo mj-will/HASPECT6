@@ -32,7 +32,7 @@ Bool_t THSCLASg8::Init(TString filename,TString name){
   fRunInfo->SetNRun(fRun_number);
   cout<<"Analysing run "<<fRun_number<<endl;
   sprintf(edgeTable,"%s/poltabs/run_%d_pol_edges.dat",G8.Data(),fRun_number);
-  LoadPolarisations();
+  if(fpolTableN[0]==0&&fpolTableN[1]==0)LoadPolarisations();
   LoadEdgeTable(edgeTable);
 
   return kTRUE;
@@ -47,7 +47,7 @@ Bool_t THSCLASg8::ReadEvent(Long64_t entry){
   if(EVNT_NH>0){
     Double_t vl = 29.9792458;
     Double_t  starttime=SCPB[EVNT[0].SCstat-1].Time-(SCPB[EVNT[0].SCstat-1].Path)/vl/EVNT[0].Betta;//OR THIS COULD BE FROM THE HEVT STT
-    fEventInfo->SetCJStartTime(starttime);
+    if(!fIsSim)fEventInfo->SetCJStartTime(starttime);
     //make particles for this event
     MakeDetected();
     //get tagged photons for this event
@@ -85,35 +85,39 @@ void THSCLASg8::MakeParticle(Int_t ip){
 
   if(EVNT[ip].SCstat-1 >=0 ){
     hsp.SetTime(SCPB[EVNT[ip].SCstat-1].Time);//-0.667
-    hsp.SetPath(SCPB[EVNT[ip].SCstat-1].Path);
+    hsp.SetPath(SCPB[EVNT[ip].SCstat-1].Path/100);
     hsp.SetDeltaE(SCPB[EVNT[ip].SCstat-1].Edep);
   }
   if(EVNT[ip].ECstat-1 >=0 ){
     hsp.SetEdep(ECPB[EVNT[ip].ECstat-1].Etot);
+    hsp.SetPreE(ECPB[EVNT[ip].ECstat-1].Ein);
     if(EVNT[ip].SCstat-1 < 0){
       hsp.SetTime(ECPB[EVNT[ip].ECstat-1].Time);//-0.667
-      hsp.SetPath(ECPB[EVNT[ip].ECstat-1].Path);
-    }
+      hsp.SetPath(ECPB[EVNT[ip].ECstat-1].Path/100);
+    }	
   }
   
-//DeltaT for different particle hypothesis
   Int_t sector = floor(double(DCPB[EVNT[ip].DCstat-1].ScTr) / 100.);  //from daria;s Particle.h
-  //  TLorentzVector P4hyp=hsp->P4();
-    // reference run number, PDG ID, sector of particle, four-vector
- //  P4hyp.SetRho(Correct_Momentum(fRun_number,EVNT[ip].Charge * 211, sector, hsp->P4()));
- //  hsp->SetPiRho(eLoss(&P4hyp,PI_CHARGED_MASS,hsp->Vertex(),ELOSS_TARG_LD2,ELOSS_CELL_g13b)->Rho());
- // //Corrected momentum if proton
- //  P4hyp.SetRho(Correct_Momentum(fRun_number,EVNT[ip].Charge * 2212, sector, hsp->P4()));
- //  hsp->SetPRho(eLoss(&P4hyp,PROTON_MASS,hsp->Vertex(),ELOSS_TARG_LD2,ELOSS_CELL_g13b)->Rho());
- // //Corrected momentum if kaon
- //  P4hyp.SetRho(Correct_Momentum(fRun_number,EVNT[ip].Charge * 321, sector, hsp->P4()));
- //  hsp->SetKRho(eLoss(&P4hyp,KAON_CHARGED_MASS,hsp->Vertex(),ELOSS_TARG_LD2,ELOSS_CELL_g13b)->Rho());
- // //Corrected momentum if electron	
- //  P4hyp.SetRho(Correct_Momentum(fRun_number,EVNT[ip].Charge * -11, sector, hsp->P4()));
- //  hsp->SeteRho(eLoss(&P4hyp,ELECTRON_MASS,hsp->Vertex(),ELOSS_TARG_LD2,ELOSS_CELL_g13b)->Rho());
-  
- 
-  fParticles.push_back(hsp);
+  TLorentzVector P4hyp0=hsp.GetTLorentzVector();
+  TLorentzVector P4hyp=hsp.GetTLorentzVector();
+  // reference run number, PDG ID, sector of particle, four-vector
+  if(EVNT[ip].Charge){
+    hsp.SetHypPPi(eLoss(&P4hyp,PI_CHARGED_MASS,hsp.GetVertex3(),ELOSS_TARG_LH2,ELOSS_CELL_g8b)->P());
+    //Corrected momentum if proton
+    hsp.SetHypPNuc(eLoss(&P4hyp,PROTON_MASS,hsp.GetVertex3(),ELOSS_TARG_LH2,ELOSS_CELL_g8b)->P());
+    //Corrected momentum if kaon
+    hsp.SetHypPK(eLoss(&P4hyp,KAON_CHARGED_MASS,hsp.GetVertex3(),ELOSS_TARG_LH2,ELOSS_CELL_g8b)->P());
+    //Corrected momentum if electron	
+    hsp.SetHypPElGam(eLoss(&P4hyp,ELECTRON_MASS,hsp.GetVertex3(),ELOSS_TARG_LH2,ELOSS_CELL_g8b)->P());
+  }
+  else{ //neutron or gamma
+    
+    
+  }		
+
+    hsp.SetDetector(sector);
+
+    fParticles.push_back(hsp);
  
 }
 Bool_t THSCLASg8::MakeBeam(Float_t Tmid,Float_t Tcut){
@@ -132,14 +136,18 @@ Bool_t THSCLASg8::MakeBeam(Float_t Tmid,Float_t Tcut){
       hsp.SetXYZT(0,0,Egamma,Egamma);
       hsp.SetTime(TAGR[im].TPHO);//TPHO=TRF+zcentre/c
       hsp.SetPath(0); //already at centre
+      hsp.SetDetector(-1);
       //LinPol
       // if (fCurrentPlane == 0) hsp.SetVertex(GetLinPol(0, fCurrentEdge, Egamma*1000., 8, 0.2, 0.3),0,0);
       // else if (fCurrentPlane == 1) hsp.SetVertex(0,GetLinPol(1, fCurrentEdge, Egamma*1000., 8, 0.2, 0.3),0);
       // else  fHSgamma->SetVertex(0,0,0);
        //LinPol
       GetEdge(HEAD[0].NEVENT); //get the current edge position
-      if (fCurrentPlane == 0) hsp.SetVertex(GetPol(im),0,0);
+      // cout<<GetPol(im)<<" "<<fCurrentPlane <<endl;
+      //cout<<" A "<<hsp.Vertex().X()<<" "<<hsp.Vertex().Y()<<" "<<hsp.Vertex().Z()<<" "<<HEAD[0].NEVENT<<endl;
+     if (fCurrentPlane == 0) hsp.SetVertex(GetPol(im),0,0);
       else if (fCurrentPlane == 1) hsp.SetVertex(0,GetPol(im),0);
+     //cout<<" B "<<hsp.Vertex().X()<<" "<<hsp.Vertex().Y()<<" "<<hsp.Vertex().Z()<<endl;
       fParticles.push_back(hsp);	
     }
   }
@@ -191,6 +199,7 @@ Int_t THSCLASg8::EPICSEvent(){
 }
 
 void THSCLASg8::LoadPolarisations(){
+  cout<<"THSCLASg8::LoadPolarisations() "<<fEgSetting<<endl;
   // Polarization
   // Settings based on commandline argument (EgSetting) for energy setting...
   //These need to be changed for each coherent peak position
@@ -258,8 +267,10 @@ void THSCLASg8::LoadPolarisations(){
   }  
 
   // Load the polarization tables
-  if((LoadPolTable(PARA,paraPolTable.Data() ))!=0) return;
-  if((LoadPolTable(PERP,perpPolTable.Data() ))!=0) return;
+  LoadPolTable(PARA,paraPolTable.Data() );
+  LoadPolTable(PERP,perpPolTable.Data() );
+  //  if((LoadPolTable(PARA,paraPolTable.Data() ))!=0) return;
+  //if((LoadPolTable(PERP,perpPolTable.Data() ))!=0) return;
 }
 Double_t THSCLASg8::polFix0(Double_t xE, Int_t plane, Int_t parSet){
   Double_t ldPar[6][2][2]={
@@ -301,7 +312,8 @@ Double_t THSCLASg8::polFix0(Double_t xE, Int_t plane, Int_t parSet){
 // Polarization
 
 Int_t THSCLASg8::LoadPolTable(int plane, const Char_t *PolTableList){
-  FILE *fplist,*fpfile;              //file pointers for filelist and each file therein
+  FILE *fplist=nullptr;
+  FILE *fpfile=nullptr;              //file pointers for filelist and each file therein
   Char_t lline[250];                 //for reading in lines from filelist
   Char_t fline[250];                 //for reading in lines from file
   Char_t filename[250];              //file
@@ -315,27 +327,28 @@ Int_t THSCLASg8::LoadPolTable(int plane, const Char_t *PolTableList){
     return -1;
   }
 
-  fcount=0; 
+  fpolTableN[0]=0;
+  fpolTableN[1]=0;
   //for each file in the list
   while(fgets(lline,240,fplist) != NULL){
     if((lline[0] == '*')||(lline[0] == '#')) continue; //skip comments
     sscanf(lline,"%s",filename);                       //read in filename
-     
+    
     //  cout << "opening " << filename << "   " << endl;
     if((fpfile=fopen(filename,"r"))==NULL){              //open file
       cerr << "Error Couldn't open file: " << filename << endl;
       return -1;
-    }
+    }	
         
-    fgets(fpolFirstLines[plane][fpolTableN[plane]],240,fpfile ); //save the 1st line
-
+    fgets(fpolFirstLines[plane][fpolTableN[plane]],240,fpfile ); //save the 1st line	
+    
     //scan the bit after the last "_" in the filename to get the edge energy
     sscanf(strrchr(filename,'_')+1,"%lg",&fpolTable[plane][fcount][0][EDGE]);
-
+    
     chancount=0;                                             //starting array at 1 for consistency with E_ID
     while((fgets(fline,240,fpfile)) != NULL){
       if((fline[0] == '*')||(fline[0] == '#')) continue;     //skip comments    
-      sscanf(fline,"%d",&eid);                               //first get the E_ID
+      sscanf(fline,"%d",&eid);                               //first get the E_ID	
       sscanf(fline,"%*d%lg%lg%lg%lg%lg%lg%lg%lg",
 	     &fpolTable[plane][fcount][eid][ENERGY],
 	     &fpolTable[plane][fcount][eid][ENH],
@@ -364,21 +377,23 @@ Int_t THSCLASg8::LoadPolTable(int plane, const Char_t *PolTableList){
 
 Double_t THSCLASg8::GetPol(Int_t plane, Double_t edge, Int_t eid, Int_t poltype = PSMOOTH, Double_t lowThresh=0.2, Double_t highThresh=0.3){
   //get polarization based on eid and edge position
-  cout<<"Get Pol 1"<<endl; 
+  //cout<<"Get Pol 1"<<endl; 
   Int_t eIndex=0;
   Double_t pol=-1.0;
+  //cout<<plane<<" "<<edge<<" "<<eid<<" "<<poltype<<" "<<EDGE<<endl;
+  //cout<<fpolTableN[plane]-1<<endl;
+   //Check edge in in range of tables
+  if(fpolTableN[plane]==0)return 0;
+  //cout<<"check "<<edge<<" "<<fpolTable[plane][1][0][EDGE]<<" "<<fpolTable[plane][fpolTableN[plane]-1][0][EDGE]<<endl;
+ if((edge<fpolTable[plane][1][0][EDGE])||(edge>fpolTable[plane][fpolTableN[plane]-1][0][EDGE])) return -1.0;
   
- cout<<"check "<<edge<<" "<<fpolTable[plane][1][0][EDGE]<<" "<<fpolTable[plane][fpolTableN[plane]-1][0][EDGE]<<endl;
-  //Check edge in in range of tables
-  if((edge<fpolTable[plane][1][0][EDGE])||(edge>fpolTable[plane][fpolTableN[plane]-1][0][EDGE])) return -1.0;
-  
-   cout << "In range" << endl;
+  //cout << "In range" << endl;
 
   //find index
   for(eIndex=0;eIndex<fpolTableN[plane];eIndex++){
     if(fpolTable[plane][eIndex][0][EDGE]>=edge) break;
   }
-  cout << "Index = " << eIndex << " "<<fpolTable[plane][eIndex][eid][poltype]<<endl;
+  //cout << "Index = " << eIndex << " "<<fpolTable[plane][eIndex][eid][poltype]<<endl;
 
   pol=fpolTable[plane][eIndex][eid][poltype];
   if((fpolTable[plane][eIndex][0][ENERGY]<edge)&&(pol<lowThresh)) pol = -1.0;
@@ -391,12 +406,12 @@ Double_t THSCLASg8::GetPol(Int_t plane, Double_t edge, Int_t eid, Int_t poltype 
 
 Double_t THSCLASg8:: GetPol(Int_t plane, Double_t edge, Double_t eg, Int_t poltype = PSMOOTH, Double_t lowThresh=0.2, Double_t highThresh=0.3){
   //get polarization based on ephoton energy and edge position
- cout<<"Get Pol 2"<<endl; 
+  //cout<<"Get Pol 2"<<endl; 
  
   Int_t eIndex=0;
   Double_t pol=-1.0;
   Int_t eid=0;
-  cout<<"check "<<edge<<" "<<fpolTable[plane][1][0][EDGE]<<" "<<fpolTable[plane][fpolTableN[plane]-1][0][EDGE]<<endl;
+  //cout<<"check "<<edge<<" "<<fpolTable[plane][1][0][EDGE]<<" "<<fpolTable[plane][fpolTableN[plane]-1][0][EDGE]<<endl;
 
   //Check edge in range of tables
   if((edge<fpolTable[plane][1][0][EDGE])||(edge>fpolTable[plane][fpolTableN[plane]-1][0][EDGE])) return -1.0;
@@ -406,13 +421,13 @@ Double_t THSCLASg8:: GetPol(Int_t plane, Double_t edge, Double_t eg, Int_t polty
   for(int eIndex=0;eIndex<fpolTableN[plane];eIndex++){
     if(fpolTable[plane][eIndex][0][EDGE]>=edge) break;
   }
-  cout << "Index = " << eIndex << endl;
+  //cout << "Index = " << eIndex << endl;
 
   //find eid
   for(eid=1;eid<=384;eid++){
     if(fpolTable[plane][eIndex][eid][ENERGY]<=eg) break;
   }
-  cout << "eid = " << eid <<endl;
+  //cout << "eid = " << eid <<endl;
 
   pol=fpolTable[plane][eIndex][eid][poltype];
   if((fpolTable[plane][eIndex][0][ENERGY]<edge)&&(pol<lowThresh)) pol = -1.0;
@@ -422,22 +437,22 @@ Double_t THSCLASg8:: GetPol(Int_t plane, Double_t edge, Double_t eg, Int_t polty
 }
 
 Int_t  THSCLASg8::LoadEdgeTable(Char_t *EdgeTable){
-  FILE *fpfile;                      //file pointers for filelist and each file therein
+  FILE *fpfile=nullptr;                      //file pointers for filelist and each file therein
   Char_t fline[250];                 //for reading in lines from file
 
   cout << "opening " << EdgeTable << "   " << endl;
+  edgeEventN=0;                      //initialize the counter
+  edgeIndex=0;                       //and index for current table
+  lastEdgeEvent=0;                   //etc
+  lastCohEdge=0.0;
+  lastCohPlane=-1;
   if((fpfile=fopen(EdgeTable,"r"))==NULL){              //open file
     cerr << "Error Couldn't open file: " << EdgeTable << endl;
     return -1;
   }
 
 
-  edgeEventN=0;                      //initialize the counter
-  edgeIndex=0;                       //and index for current table
-  lastEdgeEvent=0;                   //etc
-  lastCohEdge=0.0;
-  lastCohPlane=-1;
-  
+   
   while((fgets(fline,240,fpfile)) != NULL){
     if((fline[0] == '*')||(fline[0] == '#')) continue;     //skip comments
     sscanf(fline,"%d%d%lg%d",        //scan in the tables
@@ -465,9 +480,8 @@ Int_t THSCLASg8::GetEdge(Int_t event){
   //keep going until we're in range or don't find a range 
   while((!((event >= edgeEventLow[edgeIndex])&&(event <= edgeEventHigh[edgeIndex])))&&(edgeIndex<edgeEventN)){edgeIndex++;}
   if(edgeIndex>=edgeEventN){
-    cerr << "Error: event (= " << event << ") is not in the range of this table" << endl;    
+    //cerr << "Error: event (= " << event << ") is not in the range of this table" << endl;    
     edgeIndex=0; //reset to zero
-    exit(0);
     return -1;
   }
   fCurrentEdge = edgeEventEdge[edgeIndex];
@@ -551,6 +565,6 @@ Float_t THSCLASg8::GetPol(Int_t iphot){
       polDegree=mikeTest(polDegree,1000.0*TAGR[iphot].ERG,fCurrentEdge,fCurrentPlane,fEgSetting);  //Ken2
     }
   }
-  cout<<"pol "<<1000.0*TAGR[iphot].ERG<<" "<<polDegree<<endl;
+  //cout<<"pol "<<1000.0*TAGR[iphot].ERG<<" "<<polDegree<<endl;
   return polDegree;
 }

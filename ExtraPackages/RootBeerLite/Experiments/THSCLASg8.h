@@ -64,7 +64,7 @@ class THSCLASg8: public THSRootBeer{
   Int_t edgeEventPlane[5000];
   Int_t edgeEventN;
   Int_t edgeIndex=0;
-  Int_t lastEdgeEvent=0;
+  Long64_t lastEdgeEvent=0;
   Double_t lastCohEdge=0.0;
   Int_t lastCohPlane=-1;
 

@@ -1,6 +1,7 @@
 //Run with  root --rootbeer $G8/RootSetup.C --THSCLASg8.C --hsin=testruns.txt --hsout=/w/work0/home/dglazier/test8/ --Edge=XXX Convertg8.C
 {
-  //loog for edge position
+  //look for edge position
+  //  e.g --Edge=1300 (1500,1700,1900,2100,2300)
   Int_t	 EDGEVAL=0;	
  
   for(Int_t i=1;i<gApplication->Argc();i++){
