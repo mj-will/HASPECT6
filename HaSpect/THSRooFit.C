@@ -965,7 +965,7 @@ void THSRooFit::FitSavedBins(Int_t Nfits,Bool_t cleanup){
 	}
 	else{
 	  hspdf->SetEvTree(chainMC,fCut);
-	  hspdf->AddProtoData(GetDataSet());
+	  hspdf->AddProtoData(rf->GetDataSet());
 	  RooHSEventsHistPDF* histspdf=0;
 	  if((histspdf=dynamic_cast<RooHSEventsHistPDF*>(pdf)))
 	    histspdf->CreateHistPdf();
