@@ -1,3 +1,17 @@
+// Author: Michael Williams 2018 
+   
+/**********************************************************************************
+* Project:                                                                 *
+* Package:                                                                       *
+* Class  : THS2pi                                                                *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                *
+*   Template final class                                                         *
+*                                                                                *
+*   Users should create their own analysis specific project classes              *
+*                                                                                *
+**********************************************************************************/
 
 #ifndef THS2PI_h
 #define THS2PI_h
@@ -39,6 +53,9 @@ class THS2pi : public THSFinalState{
   void SetApplication(THSMVA* setup);
 
   void PrepAddParticle(THSParticle* part);
+  void PrepAddParticle(TString name, THSParticle *part, std::vector<TString> variables={}, std::vector<TString> types={});
+  void SetDefaultVariables(std::vector<TString> variables);
+
   void PrepFillVars();
   void AppFillVars();
 
@@ -80,6 +97,7 @@ class THS2pi : public THSFinalState{
 
   // vector for MVA
   vector<THSParticle * > fParticles;
+  vector<TString> fDefaultVariables;
 
   Int_t fSignalCount=0;
   Int_t fBackgroundCount=0;
@@ -93,6 +111,7 @@ class THS2pi : public THSFinalState{
 
   TEventList * fEventList=nullptr;//!
   std::vector<Split> fSplits;
+
  public:
   virtual void TMVAOutTree(TTree* tree);
   void TMVAFill();
@@ -104,6 +123,7 @@ class THS2pi : public THSFinalState{
 
   void SetNEvents(Int_t N);
   void SetNEvents(Int_t Ntrain, Int_t Ntest);
+  void SetNEvents(Int_t NTot, Int_t NTrain, Int_t NTest);
 
   virtual void FinalStateOutTree(TTree* tree);
 
