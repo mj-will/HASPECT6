@@ -1,23 +1,30 @@
-/**
-	\class THSMVAApp
-	For creating TMVA training tree in THSFinalState
-	Given a THSParticle it will create default branches
-	from datamembers of the THSParticle class
-	For each combitorial event it will then fill the tree
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVAApp                                                             *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     Apply the trained MVA methods on and event by event basis                  *
+*                                                                                *
+**********************************************************************************/
 
-*/
 #include "THSMVAApp.h"
 
 ////////////////////////////////////////////////////////////
-/// Here I put Doxygen readable comments explaing what each function does
 /// Constructor 
+///////////////////////////////////////////////////////////
 
 THSMVAApp::THSMVAApp(){
 
     TMVA::Tools::Instance();
     // set output for TMVA
-    fOutputName = "THSMVAApp.root";
-    fOutputFile = TFile::Open(fOutputName, "RECREATE");
+    //fOutputName = "THSMVAApp.root";
+    //fOutputFile = TFile::Open(fOutputName, "RECREATE");
+    //TMVA::PyMethodBase::PyInitialize();
+    //ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
     fOutputTree = new TTree("OutputTree", "OutputTree");
 }
 
@@ -78,7 +85,9 @@ void THSMVAApp::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
     fVariableCount = 0;
 
     //need original Variables ID (Time, P, Phi, Th...) form THSMVA
+    // different methods depending on varaibles were set
     if (!fVarNames.empty()){
+        // allows for different number of variables per particle
         for (auto const& v : fVarNames[tmpPCount]) {
             if (v == "Time") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaTime(); fVariableCount++;};
             if (v == "Edep") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Edep(); fVariableCount++;};
@@ -93,6 +102,7 @@ void THSMVAApp::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
         }
     }
     else{
+        // assumes all particles have same variables
         for (auto const& v : fVariableID) {
             if (v == "Time") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->DeltaTime(); fVariableCount++;};
             if (v == "Edep") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->Edep(); fVariableCount++;};
@@ -105,38 +115,8 @@ void THSMVAApp::AddVarsFromParticle(THSParticle* tmpParticle, Int_t tmpPCount) {
             if (v == "TrChi2") {fAppVars[tmpPCount][fVariableCount] = tmpParticle->TrChi2(); fVariableCount++;};
             if (v == "Det") {fAppVars[tmpPCount][fVariableCount] = Float_t(tmpParticle->Detector()); fVariableCount++;}
         }
-        
     }
 }
-/**
- * Set branches of tree using all available variables
- * 
- *
- */
-
-void THSMVAApp::SetInputBranches(){
-
-    if (!fAppTree){
-        std::cout<<"ERROR : Input tree for application not set"<<std::endl;
-        exit(1);
-    }
-
-    //if (fAppVars.empty()){fAppVars=fTreeVarsF;};
-
-    fParticleCount = 0;
-    fVariableCount = 0;
-    std::cout<<"Setting branch addresses..."<<std::endl;
-    // set branch addresses
-    for (auto const& p : fAppVariableNames){
-        for (auto const& v : p){
-            fAppTree->SetBranchAddress( v, &(fAppVars[fParticleCount][fVariableCount]));
-            fVariableCount++;
-        }
-        fParticleCount++;
-        fVariableCount=0;
-    }
-}
-
 
 /**
  * Add readers 
@@ -172,8 +152,8 @@ void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader){
     for (UInt_t iPar=0; iPar<fAppVars.size(); iPar++) {
         for (UInt_t iVar=0; iVar<fAppVars[iPar].size(); iVar++) {
             tmpReader->AddVariable( fAppVariableNames[iPar][iVar], &fAppVars[iPar][iVar]);
-            std::cout<<fAppVariableNames[iPar][iVar]<<std::endl;
-            std::cout<<&(fAppVars[iPar][iVar])<<std::endl;
+            //std::cout<<fAppVariableNames[iPar][iVar]<<std::endl;
+            //std::cout<<&(fAppVars[iPar][iVar])<<std::endl;
         }
     }
 }
@@ -194,7 +174,7 @@ void THSMVAApp::SetReaderVariables(TMVA::Reader* tmpReader, Split tmpSplit){
         std::cout<<"    particle: "<<fIdx<<std::endl;
         for (auto const& v : p){
             tmpReader->AddVariable( v,&(fAppVars[fIdx][fVariableCount]) );
-            std::cout<<v<<std::endl;
+            std::cout<<"        "<<v<<std::endl;
             fVariableCount++;
         }
         fParticleCount++;
@@ -351,56 +331,6 @@ Int_t THSMVAApp::CheckSplits(){
     else fReaderIdx = 0;
 
     return fReaderIdx;
-    
-
-}
-
-/**
- * Process tree
- *
- */
-
-void THSMVAApp::ProcessTree(){
-    
-    
-    std::cout << "--- Processing: " << fAppTree->GetEntries() << " events" << std::endl;
-    fSW.Start();
-
-    // will have as many outputs as results
-    if (fMethodResults.empty()){
-        std::cout<<"ERROR : output vector not set"<<std::endl;
-        exit(1);
-    }
-
-    for (Long64_t ievt=0; ievt <fAppTree->GetEntries(); ievt++) {
-        if (ievt%1000 == 0) std::cout << "... Processing event: " << ievt << std::endl;
- 
-        fAppTree->GetEntry(ievt);
-
-        fReaderIdx = CheckSplits();
-
-        if (!fMethods.empty()) {
-           for (UInt_t i = 0; i<fMethods.size(); i++) {
-
-              fMethodName = fMethods[i].GetName() + " method";
-              //std::cout<<"Set name"<<std::endl;
-              fMethodResults[i] = fReaders[fReaderIdx]->EvaluateMVA( (fMethodName) );
-           }
-           //std::cout<<"Looped over all methods"<<std::endl;
-        }
-
-
-        else{
-            fMethodResults[0] = fReaders[fReaderIdx]->EvaluateMVA( ("BDT method"));
-            //std::cout<<"Evaluated event"<<std::endl;
-        }
-
-        fOutputTree->Fill();
-    }
-    
-    fSW.Stop();
-    std::cout << "--- End of event loop: "; fSW.Print();
-
 }
 
 /**
@@ -417,61 +347,32 @@ void THSMVAApp::ProcessEvent(){
     }
 
     if (fEventCount%1000==0) {std::cout<<"  processing event: "<<fEventCount<<std::endl;};
-    //std::cout<<"process event "<<std::endl;
     // remove NaNs from event
     for (UInt_t iPar=0; iPar<fAppVars.size(); iPar++) {
-        //std::cout<<iPar<<" P = ";
         for (UInt_t iVar=0; iVar<fAppVars[iPar].size(); iVar++) {
-            //std::cout<<fNames[iPar][iVar]<<std::endl;
-            //if (iVar == 4) std::cout<<fAppVars[iPar][iVar]<<" "<<&fAppVars[iPar][iVar]<<" ";
-            //std::cout<<iPar<<"  "<<iVar<<std::endl;
             if (!std::isfinite(fAppVars[iPar][iVar])){
                 fAppVars[iPar][iVar] = 0;
             }
         }
-        //std::cout<<std::endl;
     } 
-    // Return the MVA outputs 
-    // loop over methods  
+    //  get index of reader to use
     fReaderIdx = CheckSplits();
-    //std::cout<<fReaderIdx<<std::endl;
-
+    // return MVA outputs
     if (!fMethods.empty()) {
-        //std::cout<<" classifier output"<<std::endl;
        for (UInt_t i = 0; i<fMethods.size(); i++) {
           fMethodName = fMethods[i].GetName() + " method"; // get method name
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(6).GetExternalLink()<<" ";
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(13).GetExternalLink()<<" ";
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(20).GetExternalLink()<<" ";
-          //std::cout<<fReaders[fReaderIdx]->DataInfo().GetVariableInfo(27).GetExternalLink()<<std::endl;
           fMethodResults[i] = fReaders[fReaderIdx]->EvaluateMVA( (fMethodName) );
-          //std::cout<<i<<" "<<fMethodResults[i]<<std::endl;
        }
     }
     else{
         fMethodResults[0] = fReaders[fReaderIdx]->EvaluateMVA( ("BDT method"));
     }
-
     fEventCount++; 
-
 }
 
-/**
- * Finalise application and write results
- *
- */
-
-
-void THSMVAApp::EndApp(){
-    fOutputFile->cd();
-    fOutputTree->Write();
-    fOutputFile->Close();
-
-}
-
-///////////////////////////////////////////////////////////
-///Destructor, here I need to delete any data members that have
-///been constructed via the new operator and not been deleted elsewhere
+////////////////////////////////////////
+///Destructor
+////////////////////////////////////////
 THSMVAApp::~THSMVAApp(){
 
     delete fAppTree;

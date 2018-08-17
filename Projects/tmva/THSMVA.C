@@ -1,21 +1,27 @@
-/**
-	\class THSMVA
-	Base class for MVA analysis within THSFinalState
-	Derived classes THSMVAPrep and THSMVAApp are responsible
-	for preparing training tree and getting the reader response respectively
-	This class inherits from TObject so can be saved to root file
-	and retrieved later
-*/
-
+// Author: Michael Williams 2018 
+   
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                   *
+* Class  : THSMVA                                                                *
+*                                                                                *
+* Description:                                                                   *
+*     Base class for MVA analysis within THSFinalState                           *
+*     Derived classes THSMVAPrep, THSMVATrain and THSMVAApp are responsible      *
+*     for preparing training tree and getting the reader response respectively   *
+*     This class inherits from TObject so can be saved to root file              *
+*     and retrieved later                                                        *
+*                                                                                *
+**********************************************************************************/
 
 #include "THSMVA.h"
-//#include "isnan"
 
 ClassImp(THSMVA);
 
 
-////////////////////////////////////////////////////////////
-/// Here I put Doxygen readable comments explaing what each function does
+///////////////////////////////////////
+/// Constructor
+///////////////////////////////////////
 
 THSMVA::THSMVA(){
 
@@ -31,7 +37,6 @@ std::vector<std::vector<Float_t>> THSMVA::fTreeVarsF;
  * Add a particle and its variables and their types
  *
  */
-
 void THSMVA::AddParticle(TString name, std::vector<TString> variables, std::vector<TString> types){
 
     std::cout<<"    Current number of particles: "<<fNames.size()<<std::endl;
@@ -273,10 +278,9 @@ void THSMVA::PrintSplits(){
 // Split class functions
 //////////////////////////////
 
-/*
- * Default constructor
- *
- */
+//////////////////////////////////
+///Default constructor
+/////////////////////////////////
 
 Split::Split(){
 

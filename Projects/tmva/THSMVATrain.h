@@ -1,3 +1,16 @@
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVATrain                                                           *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     Train MVA methods on the events generated in THSMVAPrep                    *
+*                                                                                *
+**********************************************************************************/
+
 #ifndef THSMVATRAIN_h
 #define THSMVATRAIN_h
 
@@ -10,6 +23,9 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/DataSetInfo.h"
+//#include "TMVA/PyMethodBase.h"
+//#include "TMVA/RMethodBase.h"
+//#include "TRInterface.h"
 
 class THSMVATrain : public THSMVA {
 
@@ -30,6 +46,8 @@ class THSMVATrain : public THSMVA {
         // Names of for outputs
         TString fOutputName;
         TString fDatasetName;
+        TString fFactoryConfig;
+        TString fDataloaderConfig;
         // bools
         Bool_t fTest=false;
         Bool_t fSelectTopologies=false;
@@ -59,6 +77,9 @@ class THSMVATrain : public THSMVA {
         void SetNTrain(Int_t N) {fNTrain = N;};
         void SetNTest(Int_t N) {fNTest = N;};
 
+        void SetFactoryConfig(TString config) {fFactoryConfig = config;};
+        void SetDataloaderConfig(TString config) {fDataloaderConfig = config;};
+
         void SetMVATreeVars();
         void SetMVAVariables();
         void SetMVAVariables(Int_t Topology);
@@ -74,8 +95,8 @@ class THSMVATrain : public THSMVA {
         void Setup(TString datasetName = "");
         void Train();
         void Test();
-        void EnableTest(){fTest=true;};
-        void DisableTest(){fTest=false;};
+        void EnableTest(){fTest=kTRUE;};
+        void DisableTest(){fTest=kFALSE;};
         void AddMethod(Method method);
 
         void EndTraining();

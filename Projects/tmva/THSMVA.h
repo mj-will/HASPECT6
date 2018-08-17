@@ -1,3 +1,19 @@
+// Author: Michael Williams 2018 
+   
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVA                                                                *
+*                                                                                *
+* Description:                                                                   *
+*     Base class for MVA analysis within THSFinalState                           *
+*     Derived classes THSMVAPrep, THSMVATrain and THSMVAApp are responsible      *
+*     for preparing training tree and getting the reader response respectively   *
+*     This class inherits from TObject so can be saved to root file              *
+*     and retrieved later                                                        *
+*                                                                                *
+**********************************************************************************/
+
 #ifndef THSMVA_h
 #define THSMVA_h
 

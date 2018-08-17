@@ -1,16 +1,24 @@
-/**
-	\class THSMVATrain
-	For creating TMVA training tree in THSFinalState
-	Given a THSParticle it will create default branches
-	from datamembers of the THSParticle class
-	For each combitorial event it will then fill the tree
+// Author: Michael Williams 2018 
+    
+/**********************************************************************************
+* Project: THSMVA                                                                *
+* Package:                                                                       *
+* Class  : THSMVATrain                                                           *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                * 
+*     Train MVA methods on the events generated in THSMVAPrep                    *
+*                                                                                *
+**********************************************************************************/
 
-*/
 #include "THSMVATrain.h"
 #include "TROOT.h"
-//#include<TMVA/MethodRXGB.h>
 
 ClassImp(THSMVATrain);
+// initialize static variables
+std::vector<std::vector<TString>> THSMVATrain::fMVAVariables;
+std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
+
 
 
 ////////////////////////////////////////////////////////////
@@ -18,14 +26,12 @@ ClassImp(THSMVATrain);
 /// Constructor 
 
 THSMVATrain::THSMVATrain(){
+    // initialize TMVA
     TMVA::Tools::Instance();
     //TMVA::PyMethodBase::PyInitialize();
     //ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
 }
 
-// initialize static variables
-std::vector<std::vector<TString>> THSMVATrain::fMVAVariables;
-std::vector<std::vector<Float_t>> THSMVATrain::fMVATreeVars;
 
 
 /*
@@ -48,7 +54,6 @@ void THSMVATrain::DefaultTrain(){
             SetMVAVariables(fSplits[i].GetVariables()[0]); 
             
             fSplits[i].AddMVAVariables(fMVAVariables, fMVATreeVars);
-            //fSplits[i].SetPointer(fTopo);
             fSplits[i].SetParticles(fSelectedParticles);
             SetOutputFile("THSMVAClassification"+ fSplits[i].GetSplitName() + ".root");
             Setup(fSplits[i].GetSplitName());
@@ -60,22 +65,23 @@ void THSMVATrain::DefaultTrain(){
             Train();
             if (fTest) { Test(); }
             
+            
         }
     }
     else{
+        // set variables 
+        SetMVAVariables(); 
+        // set output file 
+        SetOutputFile("THSMVAClassification.root");
+        // setup dataloader and factory
+        Setup();
+        // set the trees
+        SetSignalTree();
+        SetBackgroundTree();
 
-       SetMVAVariables(); 
-       
-       SetOutputFile("THSMVAClassification.root");
-
-       Setup();
-
-       SetSignalTree();
-       SetBackgroundTree();
-
-       EnableTest();
-       Train();
-       if (fTest) { Test(); }
+        EnableTest();    // results only saved if testing is enabled
+        Train();
+        if (fTest) { Test(); }
        
     }
 }
@@ -91,7 +97,6 @@ void THSMVATrain::SetMVATreeVars(){
         std::cout<<"ERROR : Variables for MVA not set"<<std::endl;
         exit(1);
     }
-    //fMVATreeVars.resize(fMVAVariables.size() , vector<Float_t>( fMVAVariables[0].size() , 0 ) );
     fMVATreeVars.resize(fMVAVariables.size());
     for (UInt_t i=0; i<fMVATreeVars.size(); i++){
         fMVATreeVars[i].resize(fMVAVariables[i].size(), 0.0);
@@ -227,7 +232,6 @@ void THSMVATrain::SetBackgroundTree(TString Filter){
     // set branch addresses
     for (auto const& p : fMVAVariables){
         for (auto const& v : p){
-            //fBackgroundTree->SetBranchAddress( v, &(fMVATreeVars[fParticleCount][fVariableCount]) );
             fBackgroundTree->SetBranchStatus( v, kTRUE) ;
             fVariableCount++;
         }
@@ -252,14 +256,19 @@ void THSMVATrain::Setup(TString datasetName){
 
     std::cout<<"Setting up factory..."<<std::endl;
 
-    fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification" );
+    if (fFactoryConfig.Sizeof()==1){
+        fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification" );
+    }
+    else{
+        fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,fFactoryConfig );
+    }
 
     std::cout<<"Setting up dataloader..."<<std::endl;
-
+    // setup dataloader
     fDatasetName = "dataset" + datasetName;
     fDataloader = new TMVA::DataLoader(fDatasetName);
 
-    // added variables to dataloader
+    // add variables to dataloader
     for (auto const& p : fMVAVariables){
         for (auto const& vn: p){
             fDataloader->AddVariable( vn, vn, "units", 'F');
@@ -284,9 +293,13 @@ void THSMVATrain::AddMethod(Method method){
 void THSMVATrain::Train(){
 
     fOutputFile->cd();
-
-    //fDataloader->PrepareTrainingAndTestTree((TCut("")),"SplitMode=Random:NormMode=NumEvents:!V" );
-    fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
+    // prep data
+    if (fDataloaderConfig.Sizeof()==1){
+        fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
+    }
+    else{
+        fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,fDataloaderConfig );
+    }
 
     if (fMethods.empty()){
         std::cout<<"No methods provided..."<<std::endl;
@@ -299,7 +312,7 @@ void THSMVATrain::Train(){
         }
 
     }
-
+    //train
     fFactory->TrainAllMethods();
 }
 
@@ -321,7 +334,6 @@ void THSMVATrain::Test(){
  */
 
 void THSMVATrain::EndTraining(){
-    //fTrainTree->SetDirectory(fOutputFile);
     fOutputFile->Close();
 }
 
@@ -339,9 +351,9 @@ void THSMVATrain::WriteTHSMVA(TString name){
     fMVA.Write();
 }
 
-///////////////////////////////////////////////////////////
-///Destructor, here I need to delete any data members that have
-///been constructed via the new operator and not been deleted elsewhere
+///////////////////////////////////
+///Destructor
+///////////////////////////////////
 THSMVATrain::~THSMVATrain(){
 
     delete fFactory;

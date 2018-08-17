@@ -1,13 +1,17 @@
-/**
- * \class THS2pi
- * 
- * Template final class .
- * 
- * Users should create their own analysis specific project classes.
- * 
- */
-
-
+// Author: Michael Williams 2018 
+   
+/**********************************************************************************
+* Project:                                                                 *
+* Package:                                                                       *
+* Class  : THS2pi                                                                *
+*                                                                                *
+* Description:                                                                   *
+*                                                                                *
+*   Template final class                                                         *
+*                                                                                *
+*   Users should create their own analysis specific project classes              *
+*                                                                                *
+**********************************************************************************/
 
 #include "TDatabasePDG.h"
 #include "THS2pi.h"
@@ -27,15 +31,14 @@ THS2pi::THS2pi(){
   AddParticle(&fPip,kTRUE,0);
   AddParticle(&fPim,kTRUE,1);
 
-  PrepAddParticle(&fElectron);
-  PrepAddParticle(&fProton);
-  PrepAddParticle(&fPip);
-  PrepAddParticle(&fPim);
-    
-  // for non 2pi
-  //fMVAPrep.SetParticles({"El", "P"});
-  //fMVAPrep.SetVariables({"E", "P"});
-  //fMVAPrep.SetTypes({"F", "F"})
+  // set particles for MVA analysis  
+  SetDefaultVariables({"P", "Th", "Phi", "Time", "Edep", "DeltaE", "Vz"});
+  // default variabbles will be used unless specified
+  // NOTE: MVA expects floats, to add other variables pass a vector of TStrings with the appropriate labels e.g. {"F", "I", "F"}
+  PrepAddParticle("EL", &fElectron);
+  PrepAddParticle("P", &fProton);
+  PrepAddParticle("Pip", &fPip);
+  PrepAddParticle("Pim", &fPim);
 
   //Set final state parents
   
@@ -86,37 +89,23 @@ void THS2pi::FileStart(){
       std::cout<<"Setting MVA trees..."<<std::endl;
       fMVAPrep.SetNames();
       // add splits: name, exact variable names, pointers, values
-      //fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
-      //fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
-      //fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
-      //fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
-      //fMVATrain.PrintSplits();
-      //fSplits = fMVATrain.GetSplits(); 
-      //
+      fMVATrain.AddSplit("Topo0", "Topo", &fTopoID, 0);
+      fMVATrain.AddSplit("Topo1", "Topo", &fTopoID, 1);
+      fMVATrain.AddSplit("Topo2", "Topo", &fTopoID, 2);
+      fMVATrain.AddSplit("Topo3", "Topo", &fTopoID, 3);
+      fMVATrain.PrintSplits();
+      fSplits = fMVATrain.GetSplits(); 
+
+      // Set methods
       Method method0;
       method0.SetName("BDT0");
       method0.SetType(TMVA::Types::kBDT);
       method0.SetParameters("!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
       fMVATrain.AddMethod(method0);
-      //
-      //Method method1;
-      //method1.fMethodName = "BDT1";
-      //method1.fMethodType = TMVA::Types::kBDT;
-      //method1.fMethodParameters = "!H:!V:NTrees=1200:MinNodeSize=2.5%:MaxDepth=4:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20";
-      //fMVATrain.AddMethod(method1);
-      //Method method2;
-      //method2.fMethodName = "MLP";
-      //method2.fMethodType = TMVA::Types::kMLP;
-      //method2.fMethodParameters = "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator";
-          //"H:!V:NeuronType=ReLU:EstimatorType=CE:learningRate=0.01:VarTransform=I:NCycles=20:HiddenLayers=64:TestRate=5:BatchSize=128:BPMode=batch";
-      
-      //fMVATrain.AddMethod(method2);
 
-      //Method method3;
-      //method3.fMethodName = "DNN";
-      //method3.fMethodType = TMVA::Types::kDNN;
-      //method3.fMethodParameters = "!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:WeightInitialization=XAVIERUNIFORM:Layout=RELU|64,LINEAR:TrainingStrategy=LearningRate=1e-2,Momentum=0.9,Repetitions=1,ConvergenceSteps=300,BatchSize=128,TestRepetitions=15,WeightDecay=0.0,Regularization=NONE,DropConfig=0.0+0.1,DropRepetitions=1,Multithreading=True";
-      //fMVATrain.AddMethod(method3);
+      // Set factory and dataloader configs
+      fMVATrain.SetFactoryConfig("!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification");
+      fMVATrain.SetDataloaderConfig("SplitMode=Random:NormMode=NumEvents:!V");
 
       std::cout<<"  Finished setting methods and splits"<<std::endl;
       fMVAPrep.SetTree(fFinalTree);
@@ -346,6 +335,34 @@ void THS2pi::PrepAddParticle(THSParticle *part){
     fParticles.push_back(part);
 }
 
+void THS2pi::PrepAddParticle(TString name, THSParticle *part, std::vector<TString> variables, std::vector<TString> types){
+    std::cout<<"Adding "<<name<<std::endl;
+    // fill vector of pointers
+    fParticles.push_back(part);
+    if (types.empty()){
+        std::cout<<"    Adding all variables as Float_t"<<std::endl;
+        if (variables.empty()){
+            if (fDefaultVariables.empty()) {std::cout<<"ERROR: no default variables set"; exit(1);};
+                types.resize(fDefaultVariables.size(), "F");
+        }
+        else{
+            types.resize(variables.size(), "F");
+        }
+    }
+    // add particle and its variables
+    if (variables.empty()) fMVAPrep.AddParticle(name, fDefaultVariables, types);
+    else{fMVAPrep.AddParticle(name, variables, types);}
+}
+
+/**
+ *  * Set default variables
+ *   *
+ *    */
+
+void THS2pi::SetDefaultVariables(std::vector<TString> variables){
+        fDefaultVariables = variables;
+}
+
 
 /**
  * Fill variable vector
@@ -393,4 +410,13 @@ void THS2pi::SetNEvents(Int_t NTrain, Int_t NTest){
     fMVATrain.SetNTrain(NTrain);
     fMVATrain.SetNTest(NTest);
     fTotalEvents = NTrain + NTest;
+}
+
+void THS2pi::SetNEvents(Int_t NTot, Int_t NTrain, Int_t NTest){
+    //set number of events
+    fMVATrain.SetNTrain(NTrain);
+    fMVATrain.SetNTest(NTest);
+    // set total number of events
+    if (NTot == -1) {fTotalEvents = std::numeric_limits<Int_t>::max();}
+    else{ fTotalEvents = NTot;}
 }
