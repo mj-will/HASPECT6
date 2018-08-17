@@ -22,9 +22,11 @@
 #include "TMVA/Reader.h"
 #include "TMVA/MethodCuts.h"
 #include "TStopwatch.h"
-#include "TH2F.h"
-#include "TH2D.h"
 #include <THSParticle.h>
+
+//#include "TMVA/PyMethodBase.h"
+//#include "TMVA/RMethodBase.h"
+//#include "TRInterface.h"
 
 
 class THSMVAApp : public THSMVA {
