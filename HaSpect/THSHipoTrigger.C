@@ -28,7 +28,7 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
   if(!fRawScalBank){
     //Add the trigger banks to those to be configured
     Info("THSHipoTrigger","Opened file");
-    fHipo->ConfigOnlyBank("RAW::scaler");
+    //    fHipo->ConfigOnlyBank("RAW::scaler");
   }
   THSHipoReader::Init(filename,name);
   
@@ -41,14 +41,15 @@ Bool_t THSHipoTrigger::Init(TString filename,TString name){
     fRecEvTRG=dynamic_cast<THipoItemL*>(fEvBank->GetItem("TRG"));
     fRecEvHelic=dynamic_cast<THipoItemB*>(fEvBank->GetItem("Helic"));
     fRecEvRFTime=dynamic_cast<THipoItemF*>(fEvBank->GetItem("RFTime"));
+    fRecEvBCG=dynamic_cast<THipoItemF*>(fEvBank->GetItem("BCG"));
   
     
-    fRawScalBank=fHipo->GetBank("RAW::scaler");
+    //fRawScalBank=fHipo->GetBank("RAW::scaler");
     
-    fRawScalChan=dynamic_cast<THipoItemS*>(fRawScalBank->GetItem("channel")); 
-    fRawScalSlot=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("slot"));
-    fRawScalVal=dynamic_cast<THipoItemI*>(fRawScalBank->GetItem("value"));
-    fRawScalHel=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("helicity"));
+    // fRawScalChan=dynamic_cast<THipoItemS*>(fRawScalBank->GetItem("channel")); 
+    // fRawScalSlot=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("slot"));
+    // fRawScalVal=dynamic_cast<THipoItemI*>(fRawScalBank->GetItem("value"));
+    //fRawScalHel=dynamic_cast<THipoItemB*>(fRawScalBank->GetItem("helicity"));
   }
 
   fCharge=0;
