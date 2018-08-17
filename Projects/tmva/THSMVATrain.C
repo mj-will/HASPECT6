@@ -256,7 +256,12 @@ void THSMVATrain::Setup(TString datasetName){
 
     std::cout<<"Setting up factory..."<<std::endl;
 
-    fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification" );
+    if (fFactoryConfig.Sizeof()==1){
+        fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,"!V:!Silent:Color:DrawProgressBar:Transformations=N:AnalysisType=Classification" );
+    }
+    else{
+        fFactory = new TMVA::Factory( "THSMVAClassification", fOutputFile,fFactoryConfig );
+    }
 
     std::cout<<"Setting up dataloader..."<<std::endl;
     // setup dataloader
@@ -289,7 +294,12 @@ void THSMVATrain::Train(){
 
     fOutputFile->cd();
     // prep data
-    fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
+    if (fDataloaderConfig.Sizeof()==1){
+        fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,"SplitMode=Random:NormMode=NumEvents:!V" );
+    }
+    else{
+        fDataloader->PrepareTrainingAndTestTree((TCut("")),fNTrain,fNTrain,fNTest,fNTest,fDataloaderConfig );
+    }
 
     if (fMethods.empty()){
         std::cout<<"No methods provided..."<<std::endl;
